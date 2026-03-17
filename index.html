@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="manifest" href="/patnasuvidha/manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patna Suvidha | Premium Local Services in Bihar</title>
@@ -19,6 +18,11 @@
 
     <!-- Razorpay Checkout -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <!-- Chatbase AI Bot -->
+    <script>
+    (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="qa8rphDBa85zWfaMeGKU2";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+    </script>
 
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -60,8 +64,6 @@
         }
 
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .chat-scroll::-webkit-scrollbar { width: 4px; }
-        .chat-scroll::-webkit-scrollbar-thumb { background: #f59e0b; border-radius: 4px; }
 
         /* Ambient Background blobs */
         .bg-blob {
@@ -107,8 +109,8 @@
     <!-- Welcome Popup -->
     <div id="welcome-popup" class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#020617]/95 backdrop-blur-2xl transition-all duration-700 hidden">
         <div class="text-center p-8 md:p-12 glass-panel rounded-[3rem] border border-amber-500/40 shadow-[0_0_80px_rgba(245,158,11,0.25)] max-w-xl w-[90%] transform transition-transform duration-700 scale-95 opacity-0" id="welcome-content">
-            <div class="w-24 h-24 mx-auto mb-6 rounded-3xl overflow-hidden border-2 border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.4)]">
-                <img src="WhatsApp Image 2026-03-18 at 00.13.31.jpeg" alt="Logo" class="w-full h-full object-cover">
+            <div class="w-24 h-24 mx-auto mb-6 rounded-3xl overflow-hidden border-2 border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.4)] bg-white/5">
+                <img src="https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg" alt="Logo" class="w-full h-full object-cover">
             </div>
             <h2 id="greeting-text" class="text-5xl md:text-6xl font-bihari font-black text-amber-500 drop-shadow-[0_0_25px_rgba(245,158,11,0.8)] mb-6 transition-opacity duration-500 h-16 flex items-center justify-center">Welcome ✨</h2>
             <h3 class="text-3xl font-bold text-white mb-2 tracking-wide">Patna Suvidha</h3>
@@ -135,8 +137,8 @@
             <div class="flex justify-between h-20 items-center">
                 <!-- Logo -->
                 <div class="flex items-center cursor-pointer group" onclick="navigate('home')">
-                    <div class="bg-gradient-to-br from-amber-500 to-orange-600 p-0.5 rounded-xl group-hover:shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all mr-3 overflow-hidden h-10 w-10 flex items-center justify-center border border-white/10">
-                        <img src="WhatsApp Image 2026-03-18 at 00.13.31.jpeg" alt="Patna Suvidha Logo" class="w-full h-full object-cover rounded-xl" onerror="this.src='https://cdn-icons-png.flaticon.com/512/5195/5195038.png'">
+                    <div class="bg-gradient-to-br from-amber-500 to-orange-600 p-0.5 rounded-xl group-hover:shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all mr-3 overflow-hidden h-10 w-10 flex items-center justify-center border border-white/10 bg-white/5">
+                        <img src="https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg" alt="Patna Suvidha Logo" class="w-full h-full object-cover rounded-xl" onerror="this.src='https://cdn-icons-png.flaticon.com/512/5195/5195038.png'">
                     </div>
                     <div class="flex flex-col">
                         <span class="font-bihari font-extrabold text-2xl tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-white leading-none" data-i18n="navTitle">Patna Suvidha</span>
@@ -166,44 +168,19 @@
     <!-- Main Content Container -->
     <main id="app-root" class="flex-grow flex flex-col w-full z-10 relative items-center"></main>
 
-    <!-- AI Chatbot Widget (Patna AI Guide) -->
-    <div id="ai-chat-widget" class="fixed bottom-6 left-6 z-50 flex flex-col items-start pointer-events-none">
-        <div id="ai-chat-window" class="glass-panel border-amber-500/40 rounded-2xl w-[85vw] sm:w-80 h-96 mb-4 flex flex-col overflow-hidden transition-all duration-300 opacity-0 translate-y-4 pointer-events-none hidden shadow-[0_0_30px_rgba(245,158,11,0.15)]">
-            <div class="bg-gradient-to-r from-amber-600 to-orange-600 p-3 text-white font-bold flex justify-between items-center shadow-md">
-                <div class="flex items-center font-bihari text-lg"><i class="ph-fill ph-hands-praying text-xl mr-2 drop-shadow-md"></i> Patna AI Guide</div>
-                <button onclick="toggleChat()" class="hover:text-amber-200 transition-colors p-1"><i class="ph-bold ph-x text-lg"></i></button>
-            </div>
-            <div id="ai-chat-messages" class="flex-grow p-4 overflow-y-auto flex flex-col gap-4 text-sm chat-scroll">
-                <div class="bg-slate-800/90 text-amber-50 p-3 rounded-xl rounded-tl-none self-start border border-amber-500/20 max-w-[85%] leading-relaxed shadow-sm">
-                    Welcome! 🙏 I am your Patna AI Guide. Need help finding a service, or got a question about our beloved Patliputra? 
-                </div>
-            </div>
-            <div class="p-2 border-t border-white/10 bg-slate-900/90 flex items-center">
-                <input type="text" id="ai-chat-input" placeholder="Type your message here..." class="w-full bg-transparent text-white outline-none px-3 py-2 text-sm placeholder-slate-500" onkeypress="if(event.key === 'Enter') sendChatMessage()">
-                <button onclick="sendChatMessage()" class="text-amber-500 p-2 hover:text-amber-400 hover:scale-110 transition-transform"><i class="ph-fill ph-paper-plane-right text-xl"></i></button>
-            </div>
-        </div>
-        <button onclick="toggleChat()" class="bg-gradient-to-r from-amber-600 to-orange-600 text-white w-14 h-14 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:scale-105 transition-transform pointer-events-auto flex items-center justify-center group relative z-50 ring-2 ring-white/10 ring-offset-2 ring-offset-[#020617]">
-            <span class="absolute left-full ml-4 bg-slate-900/90 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-amber-500/30 shadow-lg pointer-events-none flex items-center font-medium font-bihari tracking-wide">
-                <i class="ph-fill ph-sparkle mr-1.5 text-amber-400"></i> Patna AI Guide
-            </span>
-            <i class="ph-fill ph-hands-praying text-2xl"></i>
-        </button>
-    </div>
-
     <!-- Footer -->
     <footer class="glass-panel border-t border-white/5 py-8 mt-auto w-full z-10 relative">
         <div class="max-w-7xl mx-auto px-4 flex flex-col items-center">
             <div class="flex items-center space-x-2 mb-2">
-                <div class="h-6 w-6 rounded-md overflow-hidden mr-1 border border-white/10">
-                    <img src="WhatsApp Image 2026-03-18 at 00.13.31.jpeg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                <div class="h-6 w-6 rounded-md overflow-hidden mr-1 border border-white/10 bg-white/5">
+                    <img src="https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg" alt="Logo" class="w-full h-full object-cover" onerror="this.style.display='none'">
                 </div>
                 <span class="font-bihari font-bold text-xl tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-white">Patna Suvidha</span>
             </div>
             
             <!-- Founder Details -->
             <p class="text-slate-400 text-sm text-center max-w-md mt-1">
-                Founded by <a href="https://indiansamoea.github.io/aanandAaradh" target="_blank" class="text-amber-500 hover:text-amber-400 font-bold underline decoration-amber-500/30 underline-offset-4 transition-colors">Thee Aaradh</a>
+                Founded by <a href="https://indiansamoea.github.io/aanandaaradhpal" target="_blank" class="text-amber-500 hover:text-amber-400 font-bold underline decoration-amber-500/30 underline-offset-4 transition-colors">Thee Aaradh</a>
             </p>
 
             <p class="text-slate-500 text-xs text-center max-w-md mt-2" data-i18n="footerText">
@@ -485,68 +462,6 @@
                     await updateDoc(docRef, { [field]: (b[field] || 0) + 1 });
                 }
             } catch(e) {}
-        };
-
-        // AI Chatbot Logic
-        window.toggleChat = () => {
-            const chatWindow = document.getElementById('ai-chat-window');
-            if(chatWindow.classList.contains('hidden')) {
-                chatWindow.classList.remove('hidden');
-                setTimeout(() => {
-                    chatWindow.classList.remove('opacity-0', 'translate-y-4');
-                    chatWindow.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
-                }, 10);
-            } else {
-                chatWindow.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
-                chatWindow.classList.add('opacity-0', 'translate-y-4');
-                setTimeout(() => { chatWindow.classList.add('hidden'); }, 300);
-            }
-        };
-
-        window.addChatMessage = (text, sender, isTyping = false) => {
-            const messagesDiv = document.getElementById('ai-chat-messages');
-            const id = 'msg-' + Date.now();
-            const alignClass = sender === 'user' ? 'self-end bg-gradient-to-r from-amber-600 to-orange-600 rounded-tr-none text-white' : 'self-start bg-slate-800/90 rounded-tl-none text-amber-50 border border-amber-500/20';
-            let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-            const msgHtml = `<div id="${id}" class="${alignClass} p-3 rounded-xl max-w-[85%] shadow-sm fade-in-up ${isTyping ? 'animate-pulse' : ''} leading-relaxed">${formattedText}</div>`;
-            messagesDiv.insertAdjacentHTML('beforeend', msgHtml);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            return id;
-        };
-
-        window.updateChatMessage = (id, text) => {
-            const msgEl = document.getElementById(id);
-            if(msgEl) {
-                let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-                msgEl.innerHTML = formattedText;
-                msgEl.classList.remove('animate-pulse');
-                const messagesDiv = document.getElementById('ai-chat-messages');
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }
-        };
-
-        window.sendChatMessage = async () => {
-            const input = document.getElementById('ai-chat-input');
-            const text = input.value.trim();
-            if(!text) return;
-            input.value = '';
-            window.addChatMessage(text, 'user');
-            const typingId = window.addChatMessage('<i class="ph ph-dots-three text-2xl animate-pulse"></i>', 'ai', true);
-            
-            try {
-                const apiKey = ""; 
-                const sysPrompt = "You are the 'Patna AI Guide', a helpful assistant for 'Patna Suvidha' (a premium local business directory in Patna, Bihar). Keep answers polite, highly concise, direct, and under 2 sentences. Use bold text for emphasis.";
-                const payload = { contents: [{ parts: [{ text: text }] }], systemInstruction: { parts: [{ text: sysPrompt }] }, generationConfig: { temperature: 0.7 } };
-                
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-                });
-                const data = await response.json();
-                const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, the network is a bit slow. Please try asking again.";
-                window.updateChatMessage(typingId, reply);
-            } catch(e) {
-                window.updateChatMessage(typingId, "Oops! Could not connect right now. Please try again later.");
-            }
         };
 
         window.toggleLanguage = () => { window.appState.lang = window.appState.lang === 'en' ? 'hi' : 'en'; render(); };
@@ -932,7 +847,7 @@
                 "currency": "INR",
                 "name": "Patna Suvidha",
                 "description": isFeatured ? "Featured Business Listing" : "Standard Business Listing",
-                "image": "WhatsApp Image 2026-03-18 at 00.13.31.jpeg", 
+                "image": "https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg", 
                 "handler": async function (response) {
                     submitBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl mr-2"></i> Publishing Listing...';
                     try {
@@ -1130,38 +1045,26 @@
                             </div>
                         </div>
 
-                        <!-- Aaradh Empire Featured Section -->
-                        <div class="max-w-7xl mx-auto px-4 mt-4 mb-10 w-full relative z-10 fade-in-up" style="animation-delay: 0.3s">
-                            <h2 class="text-2xl font-bihari font-bold text-amber-500 mb-6 text-center tracking-wide drop-shadow-md border-b border-amber-500/20 pb-4">
-                                <i class="ph-fill ph-crown text-amber-400"></i> Featured Enterprises <i class="ph-fill ph-crown text-amber-400"></i>
-                            </h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="glass-panel rounded-2xl overflow-hidden border border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.2)] group relative">
-                                    <div class="absolute inset-0 bg-gradient-to-br from-amber-600/10 to-orange-600/10 pointer-events-none"></div>
-                                    <div class="p-6 flex flex-col h-full relative z-10">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <h3 class="text-2xl font-bihari font-black text-white group-hover:text-amber-400 transition-colors">Aaradh Agency</h3>
-                                            <span class="bg-amber-500/20 text-amber-400 text-xs font-bold px-2 py-1 rounded border border-amber-500/30 flex items-center animate-pulse"><i class="ph-fill ph-broadcast mr-1"></i> LIVE</span>
-                                        </div>
-                                        <p class="text-slate-300 text-sm mb-6 flex-grow">Premium Web Development & Digital Marketing Agency bridging local businesses to the global digital landscape.</p>
-                                        <a href="https://indiansamoea.github.io/aaradh/" target="_blank" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center transition-transform hover:-translate-y-1 shadow-lg">
-                                            Visit Live Site <i class="ph-bold ph-arrow-up-right ml-2"></i>
-                                        </a>
+                        <!-- Subtle Our Other Ventures Section -->
+                        <div class="max-w-7xl mx-auto px-4 mt-8 mb-6 w-full relative z-10 fade-in-up" style="animation-delay: 0.3s">
+                            <h3 class="text-sm font-bold text-slate-500 mb-4 text-center uppercase tracking-widest border-b border-white/5 pb-2">
+                                Our Other Ventures
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+                                <a href="https://indiansamoea.github.io/aaradh/" target="_blank" class="glass-panel rounded-xl p-4 flex items-center justify-between border border-white/5 hover:border-amber-500/30 transition-colors group opacity-80 hover:opacity-100">
+                                    <div>
+                                        <h4 class="text-lg font-bihari font-bold text-white group-hover:text-amber-400 transition-colors">Aaradh Agency</h4>
+                                        <p class="text-xs text-slate-400 mt-1 line-clamp-1">Web Development & Digital Marketing</p>
                                     </div>
-                                </div>
-                                <div class="glass-panel rounded-2xl overflow-hidden border border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.2)] group relative">
-                                    <div class="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10 pointer-events-none"></div>
-                                    <div class="p-6 flex flex-col h-full relative z-10">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <h3 class="text-2xl font-bihari font-black text-white group-hover:text-blue-400 transition-colors">Aaradh Properties</h3>
-                                            <span class="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-1 rounded border border-blue-500/30 flex items-center animate-pulse"><i class="ph-fill ph-broadcast mr-1"></i> LIVE</span>
-                                        </div>
-                                        <p class="text-slate-300 text-sm mb-6 flex-grow">Your trusted real estate partner in Patna. Find premium flats, commercial plots, and investments.</p>
-                                        <a href="https://indiansamoea.github.io/Aaradhproperties/" target="_blank" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center transition-transform hover:-translate-y-1 shadow-lg">
-                                            Visit Live Site <i class="ph-bold ph-arrow-up-right ml-2"></i>
-                                        </a>
+                                    <i class="ph-bold ph-arrow-up-right text-slate-500 group-hover:text-amber-400 transition-colors"></i>
+                                </a>
+                                <a href="https://indiansamoea.github.io/Aaradhproperties/" target="_blank" class="glass-panel rounded-xl p-4 flex items-center justify-between border border-white/5 hover:border-blue-500/30 transition-colors group opacity-80 hover:opacity-100">
+                                    <div>
+                                        <h4 class="text-lg font-bihari font-bold text-white group-hover:text-blue-400 transition-colors">Aaradh Properties</h4>
+                                        <p class="text-xs text-slate-400 mt-1 line-clamp-1">Real Estate Partner in Patna</p>
                                     </div>
-                                </div>
+                                    <i class="ph-bold ph-arrow-up-right text-slate-500 group-hover:text-blue-400 transition-colors"></i>
+                                </a>
                             </div>
                         </div>
 
