@@ -1,4 +1,13 @@
 {
+  "name": "Patna Suvidha",
+  "short_name": "Suvidha",
+  "description": "Local services for Patna.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
       "src": "icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
@@ -10,3 +19,5 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ]
+}
