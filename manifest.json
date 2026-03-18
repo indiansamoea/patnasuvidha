@@ -1,24 +1,16 @@
 {
   "name": "Patna Suvidha",
   "short_name": "Suvidha",
-  "description": "Local services and utility app for Patna.",
+  "description": "Local services for Patna.",
   "start_url": "/patnasuvidha/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
-  "orientation": "portrait",
   "icons": [
     {
-      "src": "https://res.cloudinary.com/demo/image/fetch/w_192,h_192,c_fill,f_png/https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://res.cloudinary.com/demo/image/fetch/w_512,h_512,c_fill,f_png/https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg",
+      "src": "https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/jpeg"
     }
   ]
 }
