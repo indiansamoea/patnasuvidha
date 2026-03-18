@@ -1,16 +1,12 @@
 {
-  "name": "Patna Suvidha",
-  "short_name": "Suvidha",
-  "description": "Local services for Patna.",
-  "start_url": "/patnasuvidha/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
-  "icons": [
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
-      "src": "https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg",
+      "src": "icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/jpeg"
+      "type": "image/png",
+      "purpose": "any"
     }
-  ]
-}
