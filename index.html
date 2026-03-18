@@ -2,7 +2,6 @@
 <html lang="en" class="light">
 <head>
     <link rel="manifest" href="/patnasuvidha/manifest.json">
-    <link rel="manifest" href="/patnasuvidha/manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
@@ -13,7 +12,7 @@
     <meta name="apple-mobile-web-app-title" content="Patna Suvidha">
     <link rel="apple-touch-icon" href="https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg">
     
-
+    <title>Patna Suvidha | Bihar Ka Apna Local Network 🇮🇳</title>
     <meta name="description" content="Patna ki apni local directory. Find doctors, plumbers, electricians, and local shops in Patna. Sahi Service, Sahi Daam!">
     
     <!-- Google Fonts for Clean, Highly Legible Vibe -->
@@ -51,12 +50,14 @@
 
     <!-- Theme Initialization Script (Runs immediately to prevent flashing) -->
     <script>
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        // Default to Light Mode. Only use Dark Mode if explicitly enabled by user.
+        if (localStorage.theme === 'dark') {
             document.documentElement.classList.add('dark');
             document.getElementById('theme-color-meta')?.setAttribute('content', '#0b1121');
         } else {
             document.documentElement.classList.remove('dark');
             document.getElementById('theme-color-meta')?.setAttribute('content', '#f8fafc');
+            localStorage.theme = 'light'; // Force default to light
         }
     </script>
 
@@ -159,13 +160,19 @@
         .accordion-active .accordion-content { max-height: 500px; padding-bottom: 1rem; }
         .accordion-active .ph-caret-down { transform: rotate(180deg); }
         
+        /* AI Bot Overrides to prevent overlapping */
+        iframe#chatbase-bubble-button, 
+        iframe#chatbase-bubble-window {
+            z-index: 999999 !important;
+        }
+        
         /* Mobile UI Overrides */
         @media (max-width: 768px) {
-            /* Force Chatbase AI bot above the bottom navigation */
+            /* Force Chatbase AI bot above the bottom navigation and other bottom icons */
             iframe#chatbase-bubble-button, 
             iframe#chatbase-bubble-window {
-                bottom: calc(85px + env(safe-area-inset-bottom)) !important;
-                right: 12px !important;
+                bottom: calc(105px + env(safe-area-inset-bottom)) !important;
+                right: 16px !important;
             }
         }
     </style>
@@ -238,15 +245,12 @@
             <div class="flex justify-between h-[85px] items-center">
                 <!-- Logo -->
                 <div class="flex items-center cursor-pointer group select-none" onclick="navigate('home')">
-                    <div class="bg-white dark:bg-slate-800 p-0.5 rounded-2xl group-hover:shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all mr-4 overflow-hidden h-14 w-14 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-md">
+                    <div class="bg-white dark:bg-slate-800 p-0.5 rounded-2xl group-hover:shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all mr-3 sm:mr-4 overflow-hidden h-12 w-12 sm:h-14 sm:w-14 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-md shrink-0">
                         <img src="https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg" alt="Patna Suvidha Logo" class="w-full h-full object-cover rounded-xl" onerror="this.src='https://cdn-icons-png.flaticon.com/512/5195/5195038.png'">
                     </div>
-                    <div class="flex flex-col">
-                        <span class="font-bihari font-black text-3xl md:text-4xl tracking-tight text-slate-900 dark:text-white leading-none flex items-center" data-i18n="navTitle">
-                            Patna Suvidha <span class="text-xl ml-2 drop-shadow-sm">🇮🇳</span>
-                        </span>
-                        <span class="text-[0.70rem] text-orange-600 dark:text-orange-400 font-black uppercase tracking-widest mt-1.5 flex items-center bg-orange-50 dark:bg-orange-500/10 px-2 py-0.5 rounded-md w-fit border border-orange-100 dark:border-orange-500/20">
-                            <i class="ph-fill ph-map-pin mr-1 text-orange-500"></i> <span data-i18n="navSubtitle">Bihar Ka Apna Network</span>
+                    <div class="flex items-center">
+                        <span class="font-bihari font-black text-2xl sm:text-3xl md:text-4xl tracking-tight text-slate-900 dark:text-white leading-none flex items-center" data-i18n="navTitle">
+                            Patna Suvidha <span class="text-lg sm:text-xl ml-1 sm:ml-2 drop-shadow-sm">🇮🇳</span>
                         </span>
                     </div>
                 </div>
