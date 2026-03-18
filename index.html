@@ -161,18 +161,29 @@
         .accordion-active .ph-caret-down { transform: rotate(180deg); }
         
         /* AI Bot Overrides to prevent overlapping */
-        iframe#chatbase-bubble-button, 
         iframe#chatbase-bubble-window {
             z-index: 999999 !important;
         }
         
         /* Mobile UI Overrides */
         @media (max-width: 768px) {
-            /* Force Chatbase AI bot above the bottom navigation and other bottom icons */
-            iframe#chatbase-bubble-button, 
+            /* Position chatbase bubble exactly over the 5th nav item (AI Chat) */
+            iframe#chatbase-bubble-button {
+                bottom: env(safe-area-inset-bottom, 0) !important;
+                right: 0 !important;
+                width: 20vw !important;
+                height: 64px !important;
+                opacity: 0.001 !important; /* Invisible but clickable */
+                z-index: 999999 !important;
+                transform: none !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
+            }
+            /* Position the opened window above the nav */
             iframe#chatbase-bubble-window {
-                bottom: calc(105px + env(safe-area-inset-bottom)) !important;
-                right: 16px !important;
+                bottom: calc(75px + env(safe-area-inset-bottom, 0)) !important;
+                right: 10px !important;
+                width: calc(100vw - 20px) !important;
             }
         }
     </style>
@@ -215,26 +226,75 @@
     <!-- Promotional Featured Business Popup -->
     <div id="promo-popup-container"></div>
 
+    <!-- Emergency/Helpline Modal -->
+    <div id="helpline-modal" class="fixed inset-0 z-[99999] bg-slate-900/70 backdrop-blur-md items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-darkcard border border-red-200 dark:border-red-900/50 shadow-[0_20px_60px_rgba(220,38,38,0.2)] rounded-[2rem] max-w-md w-[90%] overflow-hidden transform scale-95 transition-transform duration-300 relative" id="helpline-content">
+            <button onclick="toggleHelplines()" class="absolute top-4 right-4 z-30 bg-black/10 hover:bg-black/30 text-white rounded-full p-2.5 transition-colors backdrop-blur-md"><i class="ph-bold ph-x text-lg"></i></button>
+            <div class="bg-gradient-to-br from-red-600 to-red-500 p-8 text-center relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-full h-full opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDBMOCA4Wk04IDBMMCA4WiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEiPjwvcGF0aD4KPC9zdmc+')]"></div>
+                <i class="ph-fill ph-siren text-6xl text-white drop-shadow-md mb-2 relative z-10 animate-pulse"></i>
+                <h3 class="text-3xl font-bihari font-black text-white relative z-10 tracking-wide">Emergency SOS</h3>
+                <p class="text-red-100 font-bold tracking-widest uppercase text-xs mt-1 relative z-10">Zaroori Contacts Patna</p>
+            </div>
+            <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto bg-slate-50 dark:bg-[#080d1a]">
+                <a href="tel:100" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-800 hover:border-red-500 hover:shadow-lg transition-all group">
+                    <div class="flex items-center"><div class="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mr-4"><i class="ph-fill ph-shield-check text-blue-600 dark:text-blue-400 text-2xl"></i></div> <div><p class="font-black text-slate-800 dark:text-white text-lg">Bihar Police</p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Police Help</p></div></div>
+                    <span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-black px-4 py-2.5 rounded-xl text-lg group-hover:bg-red-600 group-hover:text-white dark:group-hover:text-white transition-colors shadow-sm">100</span>
+                </a>
+                <a href="tel:102" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-800 hover:border-red-500 hover:shadow-lg transition-all group">
+                    <div class="flex items-center"><div class="w-12 h-12 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center mr-4"><i class="ph-fill ph-ambulance text-red-600 dark:text-red-400 text-2xl"></i></div> <div><p class="font-black text-slate-800 dark:text-white text-lg">Ambulance</p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Medical</p></div></div>
+                    <span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-black px-4 py-2.5 rounded-xl text-lg group-hover:bg-red-600 group-hover:text-white transition-colors shadow-sm">102</span>
+                </a>
+                <a href="tel:155304" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-800 hover:border-orange-500 hover:shadow-lg transition-all group">
+                    <div class="flex items-center"><div class="w-12 h-12 rounded-full bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center mr-4"><i class="ph-fill ph-buildings text-orange-600 dark:text-orange-400 text-2xl"></i></div> <div><p class="font-black text-slate-800 dark:text-white text-lg">Nagar Nigam</p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Municipal</p></div></div>
+                    <span class="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 font-black px-4 py-2.5 rounded-xl text-lg group-hover:bg-orange-600 group-hover:text-white transition-colors shadow-sm">155304</span>
+                </a>
+                <a href="tel:1091" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-800 hover:border-pink-500 hover:shadow-lg transition-all group">
+                    <div class="flex items-center"><div class="w-12 h-12 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center mr-4"><i class="ph-fill ph-hand-heart text-pink-600 dark:text-pink-400 text-2xl"></i></div> <div><p class="font-black text-slate-800 dark:text-white text-lg">Women Help</p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Safety</p></div></div>
+                    <span class="bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400 font-black px-4 py-2.5 rounded-xl text-lg group-hover:bg-pink-600 group-hover:text-white transition-colors shadow-sm">1091</span>
+                </a>
+                <a href="tel:1930" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-800 hover:border-purple-500 hover:shadow-lg transition-all group">
+                    <div class="flex items-center"><div class="w-12 h-12 rounded-full bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center mr-4"><i class="ph-fill ph-laptop text-purple-600 dark:text-purple-400 text-2xl"></i></div> <div><p class="font-black text-slate-800 dark:text-white text-lg">Cyber Crime</p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Online Fraud</p></div></div>
+                    <span class="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-black px-4 py-2.5 rounded-xl text-lg group-hover:bg-purple-600 group-hover:text-white transition-colors shadow-sm">1930</span>
+                </a>
+                <a href="tel:1098" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-800 hover:border-teal-500 hover:shadow-lg transition-all group">
+                    <div class="flex items-center"><div class="w-12 h-12 rounded-full bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center mr-4"><i class="ph-fill ph-baby text-teal-600 dark:text-teal-400 text-2xl"></i></div> <div><p class="font-black text-slate-800 dark:text-white text-lg">Child Help</p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ChildLine</p></div></div>
+                    <span class="bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 font-black px-4 py-2.5 rounded-xl text-lg group-hover:bg-teal-600 group-hover:text-white transition-colors shadow-sm">1098</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Helplines Button (Side - Visible on ALL screens) -->
+    <button onclick="toggleHelplines()" class="flex fixed left-0 top-1/2 -translate-y-1/2 bg-red-600 hover:bg-red-700 text-white shadow-[0_4px_20px_rgba(220,38,38,0.5)] z-[80] transition-all duration-300 rounded-r-2xl py-4 px-2 md:py-5 md:px-3 flex-col items-center group overflow-hidden border-2 border-red-400 border-l-0">
+        <i class="ph-fill ph-phone-call text-2xl md:text-3xl mb-1 md:mb-2 group-hover:animate-pulse"></i>
+        <span class="text-[10px] md:text-[12px] font-black uppercase tracking-widest writing-vertical-rl rotate-180 mt-1">SOS Help</span>
+    </button>
+
     <!-- Bottom Mobile Navigation Bar (PWA Optimized & Dark Mode Ready) -->
-    <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-darkcard border-t border-slate-200 dark:border-darkborder shadow-[0_-5px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-5px_20px_rgba(0,0,0,0.3)] z-50 nav-safe-padding select-none transition-colors duration-300">
-        <div class="flex justify-around items-center h-[64px] px-2">
-            <button onclick="navigate('home')" id="nav-home" class="flex flex-col items-center justify-center w-1/4 text-orange-600 transition-colors">
+    <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-darkcard border-t border-slate-200 dark:border-darkborder shadow-[0_-5px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-5px_20px_rgba(0,0,0,0.3)] z-[55] nav-safe-padding select-none transition-colors duration-300">
+        <div class="flex justify-around items-center h-[64px] px-1 relative">
+            <button onclick="navigate('home')" id="nav-home" class="flex flex-col items-center justify-center w-1/5 text-orange-600 transition-colors">
                 <i class="ph-fill ph-house text-2xl mb-1"></i>
-                <span class="text-[10px] font-bold">Home</span>
+                <span class="text-[9px] font-bold">Home</span>
             </button>
-            <button onclick="document.getElementById('searchInput')?.focus(); window.scrollTo(0,0);" class="flex flex-col items-center justify-center w-1/4 text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors">
+            <button onclick="document.getElementById('searchInput')?.focus(); window.scrollTo(0,0);" class="flex flex-col items-center justify-center w-1/5 text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors">
                 <i class="ph-bold ph-magnifying-glass text-2xl mb-1"></i>
-                <span class="text-[10px] font-bold">Search</span>
+                <span class="text-[9px] font-bold">Search</span>
             </button>
-            <button onclick="navigate('add-business')" id="nav-add" class="flex flex-col items-center justify-center w-1/4 text-slate-500 dark:text-slate-400 hover:text-orange-500 transition-colors relative h-full">
+            <button onclick="navigate('add-business')" id="nav-add" class="flex flex-col items-center justify-center w-1/5 text-slate-500 dark:text-slate-400 hover:text-orange-500 transition-colors relative h-full">
                 <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full p-3 shadow-lg glow-saffron border-4 border-slate-50 dark:border-darkbg flex items-center justify-center z-10 transition-colors duration-300">
                     <i class="ph-bold ph-plus text-2xl"></i>
                 </div>
-                <span class="text-[10px] font-bold mt-8">Add List</span>
+                <span class="text-[9px] font-bold mt-8">Add</span>
             </button>
-            <button onclick="document.getElementById('listings-header')?.scrollIntoView({behavior: 'smooth'})" class="flex flex-col items-center justify-center w-1/4 text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors">
+            <button onclick="document.getElementById('listings-header')?.scrollIntoView({behavior: 'smooth'})" class="flex flex-col items-center justify-center w-1/5 text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors">
                 <i class="ph-bold ph-squares-four text-2xl mb-1"></i>
-                <span class="text-[10px] font-bold">Services</span>
+                <span class="text-[9px] font-bold">Services</span>
+            </button>
+            <button class="flex flex-col items-center justify-center w-1/5 text-slate-500 dark:text-slate-400 transition-colors relative">
+                <i class="ph-bold ph-robot text-2xl mb-1 text-blue-500"></i>
+                <span class="text-[9px] font-bold text-blue-500">AI Chat</span>
             </button>
         </div>
     </nav>
