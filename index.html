@@ -187,6 +187,11 @@
             }
         }
     </style>
+    <script type="module">
+        import 'https://cdn.jsdelivr.net/npm/@pwabuilder/pwaupdate';
+        const el = document.createElement('pwa-update');
+        document.body.appendChild(el);
+    </script>
 </head>
 <body class="min-h-screen bg-slate-50 dark:bg-darkbg text-slate-800 dark:text-slate-100 flex flex-col relative overflow-x-hidden selection:bg-orange-500 selection:text-white pb-safe md:pb-0 transition-colors duration-300">
 
@@ -226,46 +231,6 @@
     <!-- Promotional Featured Business Popup -->
     <div id="promo-popup-container"></div>
 
-    <!-- Emergency/Helpline Modal -->
-    <div id="helpline-modal" class="fixed inset-0 z-[99999] bg-slate-900/70 backdrop-blur-md items-center justify-center hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-white dark:bg-darkcard border border-red-200 dark:border-red-900/50 shadow-[0_20px_60px_rgba(220,38,38,0.2)] rounded-[2rem] max-w-md w-[90%] overflow-hidden transform scale-95 transition-transform duration-300 relative" id="helpline-content">
-            <button onclick="toggleHelplines()" class="absolute top-4 right-4 z-30 bg-black/10 hover:bg-black/30 text-white rounded-full p-2.5 transition-colors backdrop-blur-md"><i class="ph-bold ph-x text-lg"></i></button>
-            <div class="bg-gradient-to-br from-red-600 to-red-500 p-8 text-center relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-full h-full opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDBMOCA4Wk04IDBMMCA4WiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEiPjwvcGF0aD4KPC9zdmc+')]"></div>
-                <i class="ph-fill ph-siren text-6xl text-white drop-shadow-md mb-2 relative z-10 animate-pulse"></i>
-                <h3 class="text-3xl font-bihari font-black text-white relative z-10 tracking-wide">Emergency SOS</h3>
-                <p class="text-red-100 font-bold tracking-widest uppercase text-xs mt-1 relative z-10">Zaroori Contacts Patna</p>
-            </div>
-            <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto bg-slate-50 dark:bg-[#080d1a]">
-                <a href="tel:100" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-800 hover:border-red-500 hover:shadow-lg transition-all group">
-                    <div class="flex items-center"><div class="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mr-4"><i class="ph-fill ph-shield-check text-blue-600 dark:text-blue-400 text-2xl"></i></div> <div><p class="font-black text-slate-800 dark:text-white text-lg">Bihar Police</p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Police Help</p></div></div>
-                    <span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-black px-4 py-2.5 rounded-xl text-lg group-hover:bg-red-600 group-hover:text-white dark:group-hover:text-white transition-colors shadow-sm">100</span>
-                </a>
-                <a href="tel:102" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-800 hover:border-red-500 hover:shadow-lg transition-all group">
-                    <div class="flex items-center"><div class="w-12 h-12 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center mr-4"><i class="ph-fill ph-ambulance text-red-600 dark:text-red-400 text-2xl"></i></div> <div><p class="font-black text-slate-800 dark:text-white text-lg">Ambulance</p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Medical</p></div></div>
-                    <span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-black px-4 py-2.5 rounded-xl text-lg group-hover:bg-red-600 group-hover:text-white transition-colors shadow-sm">102</span>
-                </a>
-                <a href="tel:155304" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-800 hover:border-orange-500 hover:shadow-lg transition-all group">
-                    <div class="flex items-center"><div class="w-12 h-12 rounded-full bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center mr-4"><i class="ph-fill ph-buildings text-orange-600 dark:text-orange-400 text-2xl"></i></div> <div><p class="font-black text-slate-800 dark:text-white text-lg">Nagar Nigam</p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Municipal</p></div></div>
-                    <span class="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 font-black px-4 py-2.5 rounded-xl text-lg group-hover:bg-orange-600 group-hover:text-white transition-colors shadow-sm">155304</span>
-                </a>
-                <a href="tel:1091" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-800 hover:border-pink-500 hover:shadow-lg transition-all group">
-                    <div class="flex items-center"><div class="w-12 h-12 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center mr-4"><i class="ph-fill ph-hand-heart text-pink-600 dark:text-pink-400 text-2xl"></i></div> <div><p class="font-black text-slate-800 dark:text-white text-lg">Women Help</p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Safety</p></div></div>
-                    <span class="bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400 font-black px-4 py-2.5 rounded-xl text-lg group-hover:bg-pink-600 group-hover:text-white transition-colors shadow-sm">1091</span>
-                </a>
-                <a href="tel:1930" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-800 hover:border-purple-500 hover:shadow-lg transition-all group">
-                    <div class="flex items-center"><div class="w-12 h-12 rounded-full bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center mr-4"><i class="ph-fill ph-laptop text-purple-600 dark:text-purple-400 text-2xl"></i></div> <div><p class="font-black text-slate-800 dark:text-white text-lg">Cyber Crime</p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Online Fraud</p></div></div>
-                    <span class="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-black px-4 py-2.5 rounded-xl text-lg group-hover:bg-purple-600 group-hover:text-white transition-colors shadow-sm">1930</span>
-                </a>
-                <a href="tel:1098" class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-darkcard border border-slate-200 dark:border-slate-800 hover:border-teal-500 hover:shadow-lg transition-all group">
-                    <div class="flex items-center"><div class="w-12 h-12 rounded-full bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center mr-4"><i class="ph-fill ph-baby text-teal-600 dark:text-teal-400 text-2xl"></i></div> <div><p class="font-black text-slate-800 dark:text-white text-lg">Child Help</p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ChildLine</p></div></div>
-                    <span class="bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 font-black px-4 py-2.5 rounded-xl text-lg group-hover:bg-teal-600 group-hover:text-white transition-colors shadow-sm">1098</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
-   
     <!-- Bottom Mobile Navigation Bar (PWA Optimized & Dark Mode Ready) -->
     <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-darkcard border-t border-slate-200 dark:border-darkborder shadow-[0_-5px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-5px_20px_rgba(0,0,0,0.3)] z-[55] nav-safe-padding select-none transition-colors duration-300">
         <div class="flex justify-around items-center h-[64px] px-1 relative">
@@ -418,6 +383,137 @@
         const customImage1 = "data:image/webp;base64,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";
         const customImage2 = "https://th.bing.com/th/id/OIP.gJTKFFiPxiHJYeT4mlpzSAHaEK?pid=ImgDet&rs=1";
 
+        // Define Mock Businesses to prevent ReferenceError crash on init
+        const MOCK_BUSINESSES = [
+            {
+                id: 'mock_1',
+                name: 'Verma Plumbing Services',
+                owner: 'Rahul Verma',
+                phone: '9876543210',
+                address: 'Boring Road, Near Chauraha, Patna',
+                description: 'Expert plumbing services for residential and commercial properties. We fix leaks, install pipes, and repair motors.',
+                category: 'HomeService',
+                dynamicData: { 'Specialty (e.g. AC Repair)': 'Pipe Leakage & Motors', 'Visiting Charge (₹)': '150' },
+                isFeatured: true,
+                rank: 10,
+                createdAt: Date.now() - 86400000, // 1 day ago
+                image: 'https://images.unsplash.com/photo-1607472586893-edb57cbceb42?auto=format&fit=crop&q=80&w=600',
+                waClicks: 45,
+                callClicks: 12
+            },
+            {
+                id: 'mock_2',
+                name: 'Aaradhya Boutique',
+                owner: 'Priya Jha',
+                phone: '8765432109',
+                address: 'Kankarbagh Main Road, Patna',
+                description: 'Latest trendy clothing, kurtis, and custom stitching available for ladies.',
+                category: 'LocalArts',
+                dynamicData: { 'Craft Type': 'Handicrafts', 'Accepts Custom Orders?': 'Yes' },
+                isFeatured: false,
+                rank: 5,
+                createdAt: Date.now() - 172800000,
+                image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=600',
+                waClicks: 20,
+                callClicks: 5
+            },
+            {
+                id: 'mock_3',
+                name: 'Patna Fitness Point',
+                owner: 'Amit Singh',
+                phone: '7654321098',
+                address: 'Ashok Rajpath, Near PMCH, Patna',
+                description: 'Modern gym with AC, personal trainers, and Zumba classes.',
+                category: 'Gym',
+                dynamicData: { 'Monthly Fee (₹)': '1200', 'Personal Trainer?': 'Available' },
+                isFeatured: true,
+                rank: 20,
+                createdAt: Date.now() - 259200000,
+                image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=600',
+                waClicks: 80,
+                callClicks: 34
+            }
+        ];
+
+        // Application State
+        window.appState = {
+            lang: 'en', // Default to English
+            currentRoute: 'home',
+            adminTab: 'dashboard', // For the new SaaS admin portal
+            businesses: MOCK_BUSINESSES, // Init with mock data
+            globalConfig: { adminPass: 'AARADH@2009', noticeText: 'Festive Offer: List your business for just ₹99 today!', noticeEnabled: true, customCategories: [], promoBusinessId: 'mock_1', promoEnabled: true, maintenanceMode: false },
+            user: null,
+            searchQuery: '',
+            selectedCategory: 'All',
+            isLoading: true,
+            uploadedImage: null,
+            selectedBusinessId: null, 
+            editingBusinessId: null,
+            sortBy: 'rank',
+            isMockData: true
+        };
+
+        // Custom Helper Functions Added
+        window.timeAgo = (timestamp) => {
+            if (!timestamp) return 'Recently';
+            const seconds = Math.floor((Date.now() - timestamp) / 1000);
+            let interval = Math.floor(seconds / 31536000);
+            if (interval >= 1) return interval + " years ago";
+            interval = Math.floor(seconds / 2592000);
+            if (interval >= 1) return interval + " months ago";
+            interval = Math.floor(seconds / 86400);
+            if (interval >= 1) return interval + " days ago";
+            interval = Math.floor(seconds / 3600);
+            if (interval >= 1) return interval + " hours ago";
+            interval = Math.floor(seconds / 60);
+            if (interval >= 1) return interval + " minutes ago";
+            return "Just now";
+        };
+
+        window.toggleLanguage = () => {
+            window.appState.lang = window.appState.lang === 'en' ? 'hi' : 'en';
+            const indicator = document.getElementById('lang-indicator');
+            if (indicator) indicator.innerText = window.appState.lang === 'en' ? 'EN / HI' : 'HI / EN';
+            render();
+            showToast(window.appState.lang === 'en' ? "Language changed to English" : "भाषा हिंदी में बदल गई", "info");
+        };
+
+        window.dismissWelcome = () => {
+            const popup = document.getElementById('welcome-popup');
+            const content = document.getElementById('welcome-content');
+            if(content) {
+                content.classList.remove('scale-100', 'opacity-100');
+                content.classList.add('scale-95', 'opacity-0');
+            }
+            setTimeout(() => {
+                if(popup) popup.classList.add('hidden');
+                sessionStorage.setItem('welcomeShown', 'true');
+            }, 300);
+        };
+
+        window.showWelcome = () => {
+            if (!sessionStorage.getItem('welcomeShown')) {
+                const popup = document.getElementById('welcome-popup');
+                const content = document.getElementById('welcome-content');
+                if(popup && content) {
+                    popup.classList.remove('hidden');
+                    setTimeout(() => {
+                        content.classList.remove('scale-95', 'opacity-0');
+                        content.classList.add('scale-100', 'opacity-100');
+                    }, 50);
+                }
+            }
+        };
+
+        window.trackClick = (id, type) => {
+            console.log(`Tracked ${type} click for business ${id}`);
+        };
+
+        window.showPromoPopup = () => {
+            // Implementation placeholder for future promo popup logic
+            // Need this so it doesn't throw a ReferenceError in setupDatabaseListener
+        };
+
         // Custom Toast Function
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
@@ -508,76 +604,6 @@
             } catch(e) {
                 console.log("Failed to fetch live weather. Falling back to default.");
             }
-        };
-
-        // Massive Pre-loaded Mock Data for Patna
-        const MOCK_BUSINESSES = [
-            {
-                id: 'mock_1', name: 'Aaradh Premium Tech & Web Solutions', owner: 'Thee Aaradh', phone: '7764812598', category: 'Influencer',
-                address: 'Boring Road, Patna', description: 'Top rated website and app development agency in Patna. Digital marketing, SEO, and full-stack enterprise solutions.',
-                isFeatured: true, rank: 100, createdAt: Date.now() - 100000, dynamicData: {'Primary Platform': 'LinkedIn/Web', 'Followers / Subscribers': '1M+', 'Collab Type': 'Paid'},
-                image: customImage1, waClicks: 1500, callClicks: 430
-            },
-            {
-                id: 'mock_2', name: 'Sri Ram Catering & Events', owner: 'Ramesh Sharma', phone: '9876543210', category: 'Event',
-                address: 'Kankarbagh Main Road, Patna', description: 'Premium catering services for weddings, corporate events, and parties. Specializing in authentic Bihari and North Indian cuisines.',
-                isFeatured: true, rank: 95, createdAt: Date.now() - 200000, dynamicData: {'Service Type': 'Catering', 'Advance Needed (%)': '30'},
-                image: customImage2, waClicks: 840, callClicks: 320
-            },
-            {
-                id: 'mock_3', name: 'Gupta Ji Pandit & Vastu', owner: 'Pt. Sharma Gupta', phone: '9988776655', category: 'Astrology',
-                address: 'Kadamkuan, Patna', description: 'Expert in Vastu Shastra, Kundali Milan, and Gruh Pravesh Puja. 20 years experience.',
-                isFeatured: false, rank: 80, createdAt: Date.now() - 300000, dynamicData: {'Consultation Type': 'Vastu Shastra', 'Consultation Fee (₹)': '501'},
-                waClicks: 120, callClicks: 45
-            },
-            {
-                id: 'mock_4', name: 'Patna Junction Cabs', owner: 'Vikash Kumar', phone: '8877665544', category: 'Transport',
-                address: 'Patna Junction Railway Station', description: '24/7 Cab service for outstation, airport drop, and local Patna sightseeing. Clean and sanitized AC cars.',
-                isFeatured: true, rank: 90, createdAt: Date.now() - 400000, dynamicData: {'Vehicle Type': 'Cab / Taxi', 'Outstation Available?': 'Yes'},
-                image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=600', waClicks: 560, callClicks: 890
-            },
-            {
-                id: 'mock_5', name: 'Shanti Real Estate & Builders', owner: 'Amit Singh', phone: '7788990011', category: 'RealEstate',
-                address: 'Bailey Road, Patna', description: 'Premium flats, plots, and commercial spaces available across Patna, Danapur, and Bihta.',
-                isFeatured: false, rank: 75, createdAt: Date.now() - 500000, dynamicData: {'Property Type': 'Flat/Apartment', 'Price Range': '40 Lacs - 1.5 Cr'},
-                waClicks: 340, callClicks: 210
-            },
-            {
-                id: 'mock_6', name: 'SuperFit Gym Patna', owner: 'Rahul Yadav', phone: '6677889900', category: 'Gym',
-                address: 'Kankarbagh, Patna', description: 'AC Gym with imported machinery, zumba classes, and certified personal trainers.',
-                isFeatured: false, rank: 70, createdAt: Date.now() - 600000, dynamicData: {'Monthly Fee (₹)': '1200', 'Personal Trainer?': 'Available'},
-                image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=600', waClicks: 400, callClicks: 150
-            },
-            {
-                id: 'mock_7', name: 'Madhubani Arts Hub', owner: 'Sita Devi', phone: '5566778899', category: 'LocalArts',
-                address: 'Maurya Lok Complex, Patna', description: 'Authentic hand-painted Madhubani sarees, canvases, and home decor items. Support local artisans.',
-                isFeatured: true, rank: 85, createdAt: Date.now() - 700000, dynamicData: {'Craft Type': 'Madhubani Painting', 'Accepts Custom Orders?': 'Yes'},
-                image: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Madhubani_painting.jpg', waClicks: 600, callClicks: 50
-            },
-            {
-                id: 'mock_8', name: 'A1 Home AC Repair', owner: 'Suresh Mechanic', phone: '4455667788', category: 'HomeService',
-                address: 'Rajendra Nagar, Patna', description: 'Quick and reliable AC, Fridge, and Washing Machine repair at your doorstep. Same day service guaranteed.',
-                isFeatured: false, rank: 60, createdAt: Date.now() - 800000, dynamicData: {'Specialty (e.g. AC Repair)': 'AC & Fridge', 'Visiting Charge (₹)': '200'},
-                waClicks: 890, callClicks: 1200
-            }
-        ];
-
-        // Application State
-        window.appState = {
-            lang: 'en', // Default to English
-            currentRoute: 'home',
-            adminTab: 'dashboard', // For the new SaaS admin portal
-            businesses: MOCK_BUSINESSES, // Init with mock data
-            globalConfig: { adminPass: 'AARADH@2009', noticeText: 'Festive Offer: List your business for just ₹99 today!', noticeEnabled: true, customCategories: [], promoBusinessId: 'mock_1', promoEnabled: true, maintenanceMode: false },
-            user: null,
-            searchQuery: '',
-            selectedCategory: 'All',
-            isLoading: true,
-            uploadedImage: null,
-            selectedBusinessId: null, 
-            editingBusinessId: null,
-            sortBy: 'rank',
-            isMockData: true
         };
 
         // Accordion Logic for FAQs
@@ -1632,7 +1658,7 @@
                                             </div>
                                         ` : ''}
                                         <div class="pt-8 border-t-2 border-slate-200 dark:border-slate-700 text-sm flex flex-col gap-5">
-                                            <span class="text-slate-500 dark:text-slate-400 font-bold flex items-center text-base"><i class="ph-fill ph-calendar mr-2 text-xl"></i> Listed ${timeAgo(b.createdAt)}</span>
+                                            <span class="text-slate-500 dark:text-slate-400 font-bold flex items-center text-base"><i class="ph-fill ph-calendar mr-2 text-xl"></i> Listed ${window.timeAgo(b.createdAt)}</span>
                                             <button onclick="shareListing('${(b.name||'').replace(/'/g, "\\'")}', '${(b.description||'').replace(/'/g, "\\'").substring(0,50)}...')" class="bg-white dark:bg-slate-700 hover:bg-orange-50 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-black py-4 rounded-2xl border border-slate-200 dark:border-slate-600 hover:border-orange-300 dark:hover:border-orange-500 transition-all flex items-center justify-center w-full shadow-sm text-lg">
                                                 <i class="ph-bold ph-share-network mr-3 text-2xl text-orange-500"></i> Share Profile
                                             </button>
@@ -2203,7 +2229,7 @@
                                     <span class="line-clamp-1 leading-tight font-bold text-slate-700 dark:text-slate-200">${safeAddress}</span>
                                 </div>
                                 <div class="flex justify-between items-center mt-1 text-slate-400 px-1">
-                                    <span class="flex items-center font-black uppercase tracking-widest text-[10px]"><i class="ph-fill ph-clock mr-1.5 text-slate-400 text-base"></i> ${timeAgo(b.createdAt)}</span>
+                                    <span class="flex items-center font-black uppercase tracking-widest text-[10px]"><i class="ph-fill ph-clock mr-1.5 text-slate-400 text-base"></i> ${window.timeAgo(b.createdAt)}</span>
                                 </div>
                             </div>
                         </div>
@@ -2225,6 +2251,9 @@
 
         // Boot
         initAuthAndData(); 
+        
+        // Ensure Welcome Popup fires after initialization
+        setTimeout(window.showWelcome, 1000);
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
