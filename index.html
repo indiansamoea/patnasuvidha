@@ -623,7 +623,7 @@
         const i18n = {
             en: {
                 navTitle: "Patna Suvidha", navSubtitle: "Bihar Ka Apna Network", navAdd: "List Business",
-                heroTitle: "Patna Ki Apni Local Directory", heroSub: "From Boring Road to Ashok Rajpath, everything you need is now on your phone. Verified local experts.",
+                heroTitle: "Patna-wasion ki saari samasyaon ka ek samadhan, Patna Suvidha App", heroSub: "From Boring Road to Ashok Rajpath, everything you need is now on your phone. Verified local experts.",
                 searchPlaceholder: "Search Doctors, Plumbers, Shops...",
                 catAll: "All Services", catInfluencer: "Creators", catEvent: "Wedding & Events", catRealEstate: "Real Estate", catGym: "Fitness", catHome: "Home Services", catFood: "Food & Sweets", catHealth: "Healthcare", catEdu: "Education", catAstrology: "Astrology", catLocalArts: "Local Crafts", catTransport: "Transport",
                 btnContact: "WhatsApp", btnCall: "Call Now", btnShare: "Share Profile",
@@ -637,7 +637,7 @@
             },
             hi: {
                 navTitle: "पटना सुविधा", navSubtitle: "बिहार का अपना नेटवर्क", navAdd: "व्यापार जोड़ें",
-                heroTitle: "पटना की अपनी लोकल डायरेक्टरी", heroSub: "बोरिंग रोड से लेकर अशोक राजपथ तक, आपकी हर जरूरत अब फोन पर। सही सर्विस, सही दाम!",
+                heroTitle: "पटना-वासियों की सारी समस्याओं का एक समाधान, पटना सुविधा ऐप", heroSub: "बोरिंग रोड से लेकर अशोक राजपथ तक, आपकी हर जरूरत अब फोन पर। सही सर्विस, सही दाम!",
                 searchPlaceholder: "डॉक्टर, प्लंबर, दुकानें खोजें...",
                 catAll: "सभी सेवाएं", catInfluencer: "क्रिएटर", catEvent: "शादी-इवेंट", catRealEstate: "ज़मीन-मकान", catGym: "फिटनेस", catHome: "घरेलू सेवाएं", catFood: "भोजन-मिठाई", catHealth: "क्लीनिक-अस्पताल", catEdu: "शिक्षा", catAstrology: "ज्योतिष", catLocalArts: "लोकल कला", catTransport: "ट्रांसपोर्ट",
                 btnContact: "व्हाट्सएप", btnCall: "कॉल करें", btnShare: "शेयर करें",
@@ -1346,7 +1346,7 @@
                                 </span>
                                 
                                 <h1 class="text-4xl sm:text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-4 sm:mb-6 tracking-tight drop-shadow-sm leading-tight font-bihari fade-in-up" style="animation-delay: 0.2s;">
-                                    <span data-i18n="heroTitle">Patna Ki Apni Local Directory</span>
+                                    <span data-i18n="heroTitle">Patna-Wasiyon Ki Saari Samasyaon Ka Ek Samadhan, Patna Suvidha App</span>
                                 </h1>
                                 
                                 <p class="text-base sm:text-lg md:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto mb-10 sm:mb-12 font-bold leading-relaxed fade-in-up px-2" style="animation-delay: 0.3s;" data-i18n="heroSub">
@@ -1571,126 +1571,6 @@
                         </div>
                     </div>
                 `;
-                
-                // Fetch live weather right after rendering home
-                setTimeout(() => { if(window.appState.currentRoute === 'home') window.fetchLiveWeather(); }, 100);
-            } 
-            else if (state.currentRoute === 'business-details') {
-                const b = state.businesses.find(biz => biz.id === state.selectedBusinessId);
-                if(!b) { navigate('home'); return; }
-
-                const catObj = allCats.find(c => c.id === b.category);
-                const catName = getCategoryName(catObj);
-                const catIcon = catObj ? catObj.icon : 'ph-storefront';
-                
-                let dynamicDetailsHtml = '';
-                if (b.dynamicData) {
-                    dynamicDetailsHtml = Object.entries(b.dynamicData).map(([key, val]) => 
-                        `<div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[1.5rem] border border-slate-200 dark:border-slate-700 shadow-sm"><p class="text-xs text-slate-500 dark:text-slate-400 mb-2 font-black uppercase tracking-widest">${key}</p><p class="text-slate-900 dark:text-white font-black text-xl">${val}</p></div>`
-                    ).join('');
-                }
-
-                const whatsappMsg = encodeURIComponent(`Pranam, I found "${b.name}" on Patna Suvidha. I would like to know more.`);
-                const whatsappLink = `https://wa.me/91${b.phone}?text=${whatsappMsg}`;
-
-                html = `
-                    <div class="w-full max-w-5xl mx-auto px-4 py-12 fade-in flex-grow pb-32 md:pb-12">
-                        <button onclick="navigate('home')" class="text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-orange-400 mb-8 flex items-center transition-colors font-black tracking-widest uppercase hover:-translate-x-2 duration-300 bg-white dark:bg-slate-800 px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 w-fit shadow-sm text-sm">
-                            <i class="ph-bold ph-arrow-left mr-3 text-xl"></i> Back to Directory
-                        </button>
-                        
-                        <div class="bg-white dark:bg-darkcard rounded-[3rem] overflow-hidden shadow-xl border-2 ${b.isFeatured ? 'border-orange-400 dark:border-orange-500 glow-saffron' : 'border-slate-100 dark:border-slate-800'} relative transition-colors duration-300">
-                            ${b.isFeatured ? `
-                                <div class="absolute top-6 right-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-full shadow-lg z-20 flex items-center border-2 border-white dark:border-slate-800">
-                                    <i class="ph-fill ph-star mr-2 text-yellow-200 text-lg"></i> Bihar's Pride
-                                </div>
-                            ` : ''}
-
-                            ${b.image ? `
-                                <div class="w-full h-80 md:h-[28rem] bg-slate-100 dark:bg-slate-800 relative">
-                                    <img src="${b.image}" class="w-full h-full object-cover" alt="${b.name}">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
-                                </div>
-                            ` : `<div class="w-full h-48 bg-gradient-to-b from-slate-200 dark:from-slate-800 to-slate-50 dark:to-slate-900"></div>`}
-
-                            <div class="px-6 md:px-16 pb-16 ${b.image ? '-mt-32 relative z-10 text-white' : '-mt-16 relative z-10 text-slate-900 dark:text-white'}">
-                                <div class="inline-flex items-center bg-orange-500 border-2 border-white dark:border-slate-800 text-white text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl mb-6 shadow-md backdrop-blur-md">
-                                    <i class="ph-fill ${catIcon} mr-2 text-xl"></i> ${catName}
-                                </div>
-                                
-                                <h1 class="text-5xl md:text-7xl font-black ${b.image ? 'text-white' : 'text-slate-900 dark:text-white'} mb-4 leading-tight font-bihari drop-shadow-md">${b.name || 'Unnamed Business'}</h1>
-                                <p class="text-2xl ${b.image ? 'text-slate-200' : 'text-slate-600 dark:text-slate-400'} flex items-center font-bold mb-10">
-                                    <i class="ph-fill ph-user-circle text-3xl mr-3 text-orange-500"></i> Managed by ${b.owner || 'Owner'}
-                                </p>
-                            </div>
-                            
-                            <div class="px-6 md:px-16 pb-16">
-                                <!-- Action Buttons -->
-                                <div class="flex flex-col sm:flex-row gap-5 mb-16 border-b-2 border-slate-100 dark:border-slate-800 pb-16">
-                                    <a href="${whatsappLink}" target="_blank" onclick="trackClick('${b.id}', 'whatsapp')" class="flex-1 bg-[#25D366] hover:bg-[#1fa851] text-white font-black py-5 px-6 rounded-2xl transition-all duration-300 flex justify-center items-center shadow-lg hover:shadow-xl hover:-translate-y-1 text-xl border-2 border-transparent">
-                                        <i class="ph-fill ph-whatsapp-logo text-4xl mr-3"></i> Chat on WhatsApp
-                                    </a>
-                                    <a href="tel:${b.phone}" onclick="trackClick('${b.id}', 'call')" class="flex-1 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-white border-2 border-slate-200 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500 font-black py-5 px-6 rounded-2xl transition-all duration-300 flex justify-center items-center shadow-sm hover:shadow-md hover:-translate-y-1 text-xl">
-                                        <i class="ph-fill ph-phone-call text-4xl mr-3 text-orange-500"></i> Call Directly
-                                    </a>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-16">
-                                    <div class="col-span-1 md:col-span-2 space-y-12">
-                                        <section>
-                                            <h3 class="text-3xl font-bihari font-black text-slate-900 dark:text-white mb-6 flex items-center"><i class="ph-fill ph-info mr-3 text-4xl text-orange-500"></i> About the Business</h3>
-                                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xl whitespace-pre-line bg-slate-50 dark:bg-slate-800/50 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm font-medium">${b.description || 'No detailed description available.'}</p>
-                                        </section>
-                                        ${dynamicDetailsHtml ? `
-                                            <section>
-                                                <h3 class="text-3xl font-bihari font-black text-slate-900 dark:text-white mb-6 flex items-center"><i class="ph-fill ph-list-star mr-3 text-4xl text-orange-500"></i> Key Details</h3>
-                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                                    ${dynamicDetailsHtml}
-                                                </div>
-                                            </section>
-                                        ` : ''}
-                                    </div>
-                                    <div class="col-span-1 space-y-8 bg-slate-50 dark:bg-slate-800/50 p-8 rounded-3xl border-2 border-slate-100 dark:border-slate-700 h-fit shadow-sm">
-                                        <div>
-                                            <p class="text-xs text-slate-500 dark:text-slate-400 font-black uppercase tracking-widest mb-3">Exact Location</p>
-                                            <div class="flex items-start text-slate-800 dark:text-white mb-4">
-                                                <i class="ph-fill ph-map-pin text-orange-500 mt-1 mr-3 text-2xl"></i>
-                                                <span class="font-bold text-xl">${b.address || 'Address not listed'}</span>
-                                            </div>
-                                            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((b.name || '') + ', ' + (b.address || ''))}" target="_blank" onclick="trackClick('${b.id}', 'map')" class="inline-flex items-center text-sm font-black uppercase tracking-widest bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 hover:bg-orange-500 hover:text-white dark:hover:bg-orange-500 dark:hover:text-white transition-colors px-4 py-2.5 rounded-xl border border-orange-200 dark:border-orange-800 shadow-sm w-full justify-center">
-                                                <i class="ph-bold ph-map-trifold mr-2 text-lg"></i> View on Google Maps
-                                            </a>
-                                        </div>
-                                        ${b.workingHours ? `
-                                            <div class="pt-8 border-t-2 border-slate-200 dark:border-slate-700">
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-black uppercase tracking-widest mb-3">Working Hours</p>
-                                                <div class="flex items-start text-slate-800 dark:text-white">
-                                                    <i class="ph-fill ph-clock text-orange-500 mt-0.5 mr-3 text-2xl"></i>
-                                                    <span class="font-bold text-xl">${b.workingHours}</span>
-                                                </div>
-                                            </div>
-                                        ` : ''}
-                                        ${b.website || b.socialLink ? `
-                                            <div class="pt-8 border-t-2 border-slate-200 dark:border-slate-700">
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-black uppercase tracking-widest mb-4">Links & Social</p>
-                                                <div class="flex gap-4">
-                                                    ${b.website ? `<a href="${b.website.startsWith('http') ? b.website : 'https://'+b.website}" target="_blank" class="w-14 h-14 rounded-full bg-white dark:bg-slate-700 hover:bg-orange-500 dark:hover:bg-orange-500 hover:text-white border border-slate-200 dark:border-slate-600 flex items-center justify-center transition-all shadow-sm hover:scale-110 text-orange-500" title="Website"><i class="ph-bold ph-globe text-3xl"></i></a>` : ''}
-                                                    ${b.socialLink ? `<a href="${b.socialLink.startsWith('http') ? b.socialLink : 'https://'+b.socialLink}" target="_blank" class="w-14 h-14 rounded-full bg-white dark:bg-slate-700 hover:bg-pink-600 dark:hover:bg-pink-600 hover:text-white border border-slate-200 dark:border-slate-600 flex items-center justify-center transition-all shadow-sm hover:scale-110 text-pink-500" title="Social Media"><i class="ph-bold ph-instagram-logo text-3xl"></i></a>` : ''}
-                                                </div>
-                                            </div>
-                                        ` : ''}
-                                        <div class="pt-8 border-t-2 border-slate-200 dark:border-slate-700 text-sm flex flex-col gap-5">
-                                            <span class="text-slate-500 dark:text-slate-400 font-bold flex items-center text-base"><i class="ph-fill ph-calendar mr-2 text-xl"></i> Listed ${window.timeAgo(b.createdAt)}</span>
-                                            <button onclick="shareListing('${(b.name||'').replace(/'/g, "\\'")}', '${(b.description||'').replace(/'/g, "\\'").substring(0,50)}...', '${b.id}')" class="bg-white dark:bg-slate-700 hover:bg-orange-50 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-black py-4 rounded-2xl border border-slate-200 dark:border-slate-600 hover:border-orange-300 dark:hover:border-orange-500 transition-all flex items-center justify-center w-full shadow-sm text-lg">
-                                                <i class="ph-bold ph-share-network mr-3 text-2xl text-orange-500"></i> Share Profile
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
             }
             else if (state.currentRoute === 'add-business') {
                 html = `
@@ -1716,15 +1596,15 @@
                                     <h3 class="text-3xl font-bihari font-black text-slate-800 dark:text-white mb-8 flex items-center"><i class="ph-fill ph-check-circle text-orange-500 mr-3 text-4xl"></i> Select Validation Plan</h3>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <label class="cursor-pointer group relative">
-                                            <input type="radio" name="listingPlan" value="99" class="peer sr-only" required checked>
-                                            <div class="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-sm rounded-3xl p-8 transition-all duration-300 h-full flex flex-col relative overflow-hidden">
+                                            <input type="radio" name="listingPlan" value="99" class="peer/plan sr-only" required checked>
+                                            <div class="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 peer-checked/plan:border-orange-500 dark:peer-checked/plan:border-orange-500 shadow-sm rounded-3xl p-8 transition-all duration-300 h-full flex flex-col relative overflow-hidden peer-checked/plan:bg-orange-50 dark:peer-checked/plan:bg-orange-900/10">
                                                 <div class="flex justify-between items-start mb-4">
                                                     <div>
                                                         <h4 class="font-black text-slate-800 dark:text-white text-2xl font-bihari">Standard</h4>
                                                         <p class="text-base text-slate-500 dark:text-slate-400 font-bold mt-1">Basic visibility in Patna</p>
                                                     </div>
-                                                    <div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-500 flex items-center justify-center radio-indicator transition-colors">
-                                                        <div class="w-4 h-4 rounded-full bg-white opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                                                    <div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-500 flex items-center justify-center transition-colors peer-checked/plan:border-orange-500 peer-checked/plan:bg-orange-500">
+                                                        <div class="w-4 h-4 rounded-full bg-white opacity-0 peer-checked/plan:opacity-100 transition-opacity"></div>
                                                     </div>
                                                 </div>
                                                 <div class="text-5xl font-black text-slate-900 dark:text-white mt-auto pt-8 font-bihari">
@@ -1733,18 +1613,18 @@
                                             </div>
                                         </label>
                                         <label class="cursor-pointer group relative">
-                                            <input type="radio" name="listingPlan" value="299" class="peer sr-only">
-                                            <div class="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-3xl p-8 transition-all duration-300 h-full flex flex-col relative overflow-hidden hover:border-orange-300 dark:hover:border-orange-500 shadow-sm group-hover:shadow-lg">
+                                            <input type="radio" name="listingPlan" value="299" class="peer/plan sr-only">
+                                            <div class="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 peer-checked/plan:border-orange-500 dark:peer-checked/plan:border-orange-500 rounded-3xl p-8 transition-all duration-300 h-full flex flex-col relative overflow-hidden hover:border-orange-300 dark:hover:border-orange-500 shadow-sm group-hover:shadow-lg peer-checked/plan:shadow-md">
                                                 <div class="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-red-600 text-white text-[10px] font-black tracking-widest px-6 py-2 rounded-bl-3xl z-10 shadow-md uppercase">Highly Recommended</div>
-                                                <div class="absolute inset-0 bg-orange-50/50 dark:bg-orange-900/20 opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                                                <div class="absolute inset-0 bg-orange-50/50 dark:bg-orange-900/20 opacity-0 peer-checked/plan:opacity-100 transition-opacity"></div>
                                                 
                                                 <div class="flex justify-between items-start mb-4 relative z-10">
                                                     <div>
                                                         <h4 class="font-black text-slate-800 dark:text-white text-2xl flex items-center font-bihari"><i class="ph-fill ph-star text-orange-500 mr-2"></i> Featured</h4>
                                                         <p class="text-base text-slate-500 dark:text-slate-400 font-bold mt-1">Top placement & Glow effects</p>
                                                     </div>
-                                                    <div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-500 flex items-center justify-center radio-indicator transition-colors">
-                                                        <div class="w-4 h-4 rounded-full bg-white opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                                                    <div class="w-8 h-8 rounded-full border-2 border-slate-300 dark:border-slate-500 flex items-center justify-center transition-colors peer-checked/plan:border-orange-500 peer-checked/plan:bg-orange-500">
+                                                        <div class="w-4 h-4 rounded-full bg-white opacity-0 peer-checked/plan:opacity-100 transition-opacity"></div>
                                                     </div>
                                                 </div>
                                                 <div class="text-5xl font-black text-slate-900 dark:text-white mt-auto pt-8 relative z-10 font-bihari">
