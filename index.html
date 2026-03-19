@@ -153,9 +153,6 @@
         .toast.success { border-color: #10b981; }
         .toast.error { border-color: #ef4444; }
         .toast.info { border-color: #3b82f6; }
-
-        .admin-nav-active { background-color: #eff6ff; color: #2563eb; border-right: 4px solid #2563eb; font-weight: 800; }
-        .dark .admin-nav-active { background-color: rgba(37,99,235,0.15); color: #60a5fa; border-right-color: #60a5fa; }
         
         .accordion-content { transition: max-height 0.3s ease-out, padding 0.3s ease; max-height: 0; overflow: hidden; }
         .accordion-active .accordion-content { max-height: 500px; padding-bottom: 1rem; }
@@ -272,7 +269,7 @@
                 <div class="h-12 w-12 rounded-xl overflow-hidden mr-2 border-2 border-white shadow-lg bg-white p-0.5">
                     <img src="https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg" alt="Logo" class="w-full h-full object-cover rounded-lg" onerror="this.style.display='none'">
                 </div>
-                <span onclick="secretAdminAccess()" class="font-bihari font-black text-4xl tracking-tight text-white drop-shadow-md cursor-pointer select-none">Patna Suvidha 🇮🇳</span>
+                <span class="font-bihari font-black text-4xl tracking-tight text-white drop-shadow-md select-none">Patna Suvidha 🇮🇳</span>
             </div>
             
             <p class="text-orange-400 font-bold text-xl mb-8 bg-white/10 px-6 py-2 rounded-full border border-white/20 backdrop-blur-sm select-none">"Sahi Service, Sahi Daam. Har Kaam Aasan."</p>
@@ -340,9 +337,9 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'patna-suvidha-premium';
 
         window.appState = {
-            lang: 'en', currentRoute: 'home', adminTab: 'dashboard', businesses: [],
-            globalConfig: { adminPass: 'AARADH@2009', noticeText: 'Festive Offer: List your business for just ₹99 today!', noticeEnabled: true, customCategories: [], promoBusinessId: null, promoEnabled: true, maintenanceMode: false, freeSubmissionEnabled: false },
-            user: null, searchQuery: '', selectedCategory: 'All', isLoading: true, uploadedImage: null, selectedBusinessId: null, editingBusinessId: null, editingCategoryId: null, sortBy: 'rank', isMockData: false
+            lang: 'en', currentRoute: 'home', businesses: [],
+            globalConfig: { noticeText: 'Festive Offer: List your business for just ₹99 today!', noticeEnabled: true, customCategories: [], promoBusinessId: null, promoEnabled: true, maintenanceMode: false, freeSubmissionEnabled: false },
+            user: null, searchQuery: '', selectedCategory: 'All', isLoading: true, uploadedImage: null, selectedBusinessId: null, sortBy: 'rank', isMockData: false
         };
 
         window.timeAgo = (timestamp) => {
@@ -401,17 +398,6 @@
             container.appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 10);
             setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
-        };
-
-        window.adminClickCount = 0;
-        window.secretAdminAccess = () => {
-            window.adminClickCount++;
-            if (window.adminClickCount === 3) {
-                showToast("Admin Portal Unlocked! 🔓", "success");
-                navigate('admin-login');
-                window.adminClickCount = 0;
-            }
-            setTimeout(() => { window.adminClickCount = 0; }, 3000);
         };
 
         window.toggleDarkMode = () => {
@@ -537,8 +523,8 @@
 
         window.navigate = (route) => {
             window.appState.currentRoute = route;
-            if(route !== 'add-business' && route !== 'admin-add' && route !== 'admin-edit') { 
-                window.appState.uploadedImage = null; window.appState.editingBusinessId = null;
+            if(route !== 'add-business') { 
+                window.appState.uploadedImage = null;
             }
             document.querySelectorAll('nav.md\\:hidden button').forEach(b => {
                 b.classList.remove('text-orange-600', 'dark:text-orange-500'); b.classList.add('text-slate-500', 'dark:text-slate-400');
@@ -550,15 +536,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        window.switchAdminTab = (tab) => { window.appState.adminTab = tab; render(); }
         window.viewBusiness = (id) => { window.appState.selectedBusinessId = id; window.navigate('business-details'); };
-
-        window.editBusiness = (id) => {
-            window.appState.editingBusinessId = id;
-            const b = window.appState.businesses.find(x => x.id === id);
-            if(b) window.appState.uploadedImage = b.image || null;
-            window.navigate('admin-edit');
-        };
 
         window.setCategory = (cat) => {
             window.appState.selectedCategory = cat; render();
@@ -638,7 +616,7 @@
             const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_config', 'main');
             unsubscribeConfig = onSnapshot(configRef, (docSnap) => {
                 if(docSnap.exists()) { window.appState.globalConfig = { ...window.appState.globalConfig, ...docSnap.data() }; }
-                renderNotice(); if(window.appState.currentRoute === 'admin' || window.appState.currentRoute === 'add-business') render(); 
+                renderNotice(); if(window.appState.currentRoute === 'add-business') render(); 
             });
 
             const businessesRef = collection(db, 'artifacts', appId, 'public', 'data', 'businesses');
@@ -647,7 +625,7 @@
                 window.appState.businesses = fetched;
                 window.appState.isMockData = false;
                 window.appState.isLoading = false; window.checkDeepLink();
-                if (['home', 'admin', 'business-details'].includes(window.appState.currentRoute)) render();
+                if (['home', 'business-details'].includes(window.appState.currentRoute)) render();
             }, () => { window.appState.isLoading = false; window.checkDeepLink(); render(); });
         }
 
@@ -683,175 +661,6 @@
                     showToast("Image optimized and loaded!", "success");
                 }
             };
-        };
-
-        // --- Admin Advanced Functions ---
-        window.adminLogin = async (e) => {
-            e.preventDefault(); const pass = document.getElementById('adminPass').value; const btn = document.getElementById('admin-login-btn');
-            const originalText = btn.innerHTML; btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2"></i> Verifying...'; btn.disabled = true;
-            
-            try {
-                const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_config', 'main');
-                const snap = await getDoc(configRef); let backendPass = 'AARADH@2009'; 
-                if (snap.exists() && snap.data().adminPass) { backendPass = snap.data().adminPass; } else { await setDoc(configRef, { adminPass: backendPass }, { merge: true }); }
-
-                if (pass === backendPass) { showToast("Admin access granted", "success"); window.appState.adminTab = 'dashboard'; navigate('admin'); } 
-                else {
-                    showToast("Invalid Credentials", "error"); const inputBox = document.getElementById('adminPass');
-                    inputBox.classList.add('border-red-500', 'bg-red-50'); setTimeout(() => { inputBox.classList.remove('border-red-500', 'bg-red-50'); }, 2000);
-                }
-            } catch(err) { showToast("Connection error. Retrying...", "error"); } 
-            finally { btn.innerHTML = originalText; btn.disabled = false; }
-        };
-
-        window.saveGlobalConfig = async (e) => {
-            e.preventDefault(); if(window.appState.isMockData) return showToast("Cannot save config in offline/mock mode", "error");
-            const btn = e.target.querySelector('button[type="submit"]'); const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i>';
-            
-            const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_config', 'main');
-            await setDoc(configRef, { 
-                noticeText: document.getElementById('configNoticeText').value, 
-                noticeEnabled: document.getElementById('configNoticeEnabled').checked, 
-                promoEnabled: document.getElementById('configPromoEnabled').checked,
-                maintenanceMode: document.getElementById('configMaintenance').checked,
-                freeSubmissionEnabled: document.getElementById('configFreeSubmission').checked
-            }, { merge: true });
-
-            showToast("Settings saved successfully", "success");
-            btn.innerHTML = '<i class="ph-bold ph-check text-xl mr-2"></i> Saved';
-            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
-        };
-
-        window.saveSecurityConfig = async(e) => {
-            e.preventDefault(); if(window.appState.isMockData) return showToast("Cannot save config in offline mode", "error");
-            const newPass = document.getElementById('configAdminPass').value; if(!newPass) return;
-            const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_config', 'main');
-            await setDoc(configRef, { adminPass: newPass }, { merge: true });
-            document.getElementById('configAdminPass').value = ''; showToast("Admin Password Updated", "success");
-        }
-
-        window.addCustomCategory = async (e) => {
-            e.preventDefault(); 
-            if(window.appState.isMockData) return showToast("Cannot save config in offline mode", "error");
-            
-            const name = document.getElementById('newCatName').value.trim(); 
-            const icon = document.getElementById('newCatIcon').value.trim() || 'ph-star';
-            const image = document.getElementById('newCatImage') ? document.getElementById('newCatImage').value.trim() : '';
-            if(!name) return;
-            
-            let updatedCategories = [...(window.appState.globalConfig.customCategories || [])];
-            
-            if (window.appState.editingCategoryId) {
-                updatedCategories = updatedCategories.map(c => 
-                    c.id === window.appState.editingCategoryId ? { ...c, name, icon, image } : c
-                );
-                window.appState.editingCategoryId = null;
-            } else {
-                const newCat = { id: 'cat_' + Date.now(), name: name, icon: icon, image: image };
-                updatedCategories.push(newCat);
-            }
-
-            const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_config', 'main');
-            await setDoc(configRef, { customCategories: updatedCategories }, { merge: true });
-            
-            document.getElementById('newCatName').value = '';
-            document.getElementById('newCatIcon').value = '';
-            if(document.getElementById('newCatImage')) document.getElementById('newCatImage').value = '';
-            
-            const btn = document.getElementById('cat-submit-btn');
-            if(btn) btn.innerHTML = 'Add';
-            const title = document.getElementById('cat-form-title');
-            if(title) title.innerHTML = 'Add New Category';
-            
-            showToast("Category Saved", "success");
-        };
-
-        window.editCustomCategory = (id) => {
-            const cat = (window.appState.globalConfig.customCategories || []).find(c => c.id === id);
-            if(cat) {
-                document.getElementById('newCatName').value = cat.name || '';
-                document.getElementById('newCatIcon').value = cat.icon || '';
-                if(document.getElementById('newCatImage')) document.getElementById('newCatImage').value = cat.image || '';
-                
-                window.appState.editingCategoryId = id;
-                
-                const btn = document.getElementById('cat-submit-btn');
-                if(btn) btn.innerHTML = 'Update';
-                const title = document.getElementById('cat-form-title');
-                if(title) title.innerHTML = 'Edit Category';
-                
-                window.scrollTo({top: 0, behavior: 'smooth'});
-            }
-        };
-
-        window.deleteCustomCategory = async (id) => {
-            if(window.appState.isMockData) return showToast("Cannot save config in offline mode", "error");
-            if(!confirm("Delete this custom category?")) return;
-            const updatedCategories = (window.appState.globalConfig.customCategories || []).filter(c => c.id !== id);
-            const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_config', 'main');
-            await setDoc(configRef, { customCategories: updatedCategories }, { merge: true });
-            showToast("Category Deleted", "info");
-        };
-
-        window.updateRank = async (id, currentRank, change) => {
-            if(window.appState.isMockData) return showToast("Cannot edit mock data", "error");
-            const newRank = (currentRank || 0) + change;
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'businesses', id);
-            await updateDoc(docRef, { rank: newRank });
-        };
-
-        window.toggleFeatured = async (id, currentStatus) => {
-            if(window.appState.isMockData) return showToast("Cannot edit mock data", "error");
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'businesses', id);
-            await updateDoc(docRef, { isFeatured: !currentStatus }); showToast("Featured status updated", "success");
-        };
-
-        window.setPromoBusiness = async (id) => {
-            if(window.appState.isMockData) return showToast("Cannot edit mock data", "error");
-            const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_config', 'main');
-            await setDoc(configRef, { promoBusinessId: id, promoEnabled: true }, { merge: true }); showToast("Promo Business Updated!", "success");
-        };
-
-        window.deleteBusiness = async (id) => {
-            if(window.appState.isMockData) return showToast("Cannot edit mock data", "error");
-            if (!confirm("Are you sure you want to permanently remove this listing?")) return;
-            try { const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'businesses', id); await deleteDoc(docRef); showToast("Listing Deleted", "success"); } catch (error) { showToast("Failed to delete. Check permissions.", "error"); }
-        };
-
-        window.submitAdminBusinessForm = async (e) => {
-            e.preventDefault(); const form = e.target;
-            if (!form.checkValidity()) { form.reportValidity(); return; }
-            if (!window.appState.user) return showToast("System connecting securely. Please wait.", "info");
-
-            const submitBtn = document.getElementById('admin-submit-btn'); const originalContent = submitBtn.innerHTML;
-            submitBtn.disabled = true; submitBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-2xl mr-2"></i> Saving...';
-
-            const category = document.getElementById('category').value; const dynamicData = {};
-            if (dynamicFields[category]) { dynamicFields[category].forEach(field => { const el = document.getElementById(`dyn_${field.id}`); if (el) dynamicData[field.labelEN] = el.value; }); }
-
-            const isFeatured = document.getElementById('adminIsFeatured').checked; const isEditing = !!window.appState.editingBusinessId;
-
-            const businessData = {
-                name: document.getElementById('bizName').value, owner: document.getElementById('ownerName').value,
-                phone: document.getElementById('phone').value, address: document.getElementById('address').value,
-                description: document.getElementById('description').value, category: category, dynamicData: dynamicData,
-                website: document.getElementById('website').value || '', socialLink: document.getElementById('socialLink').value || '',
-                workingHours: document.getElementById('workingHours').value || '', isFeatured: isFeatured
-            };
-
-            if (window.appState.uploadedImage !== null) businessData.image = window.appState.uploadedImage;
-
-            try {
-                if (isEditing) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'businesses', window.appState.editingBusinessId);
-                    await updateDoc(docRef, businessData); window.appState.editingBusinessId = null; showToast("Listing Updated Successfully", "success");
-                } else {
-                    businessData.createdAt = Date.now(); businessData.razorpayPaymentId = 'ADMIN_BYPASS'; businessData.rank = 0;
-                    const businessesRef = collection(db, 'artifacts', appId, 'public', 'data', 'businesses'); await addDoc(businessesRef, businessData); showToast("Listing Added Successfully", "success");
-                }
-                window.appState.uploadedImage = null; window.navigate('admin');
-            } catch (error) { showToast("Failed to save. Check your connection.", "error"); submitBtn.disabled = false; submitBtn.innerHTML = originalContent; }
         };
 
         // User Payment Flow (Fix & Free Bypass added)
@@ -1247,269 +1056,6 @@
                     </div>
                 `;
             }
-            else if (state.currentRoute === 'admin-add' || state.currentRoute === 'admin-edit') {
-                const isEditing = state.currentRoute === 'admin-edit';
-                html = `
-                    <div class="w-full max-w-4xl mx-auto px-4 py-12 fade-in flex-grow pb-32 md:pb-12">
-                        <button onclick="navigate('admin')" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 mb-8 flex items-center transition-colors font-black tracking-widest uppercase bg-blue-50 dark:bg-blue-900/30 px-5 py-3 rounded-2xl border border-blue-200 dark:border-blue-800 w-fit hover:-translate-x-2 text-sm shadow-sm"><i class="ph-bold ph-arrow-left mr-3 text-xl"></i> Back to Dashboard</button>
-                        <div class="bg-white dark:bg-darkcard rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 relative transition-colors duration-300">
-                            <div class="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-blue-500 to-blue-700"></div>
-                            <div class="px-8 py-12 text-center relative overflow-hidden bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                                <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 text-blue-600 dark:text-blue-400 mb-5 shadow-sm"><i class="ph-fill ${isEditing ? 'ph-pencil-simple' : 'ph-shield-star'} text-4xl"></i></div>
-                                <h1 class="text-4xl font-bihari font-black text-slate-900 dark:text-white mb-3">${isEditing ? 'Admin: Edit Business' : 'Admin: Direct Business Entry'}</h1>
-                                <p class="text-slate-500 dark:text-slate-400 font-bold text-lg">${isEditing ? 'Update the details of this business.' : 'Add a business securely without triggering payment flow.'}</p>
-                            </div>
-                            <form onsubmit="submitAdminBusinessForm(event)" class="px-6 md:px-12 pb-12 pt-10 space-y-8">
-                                ${formFieldsHtml}
-                                <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl border border-blue-100 dark:border-blue-800 mt-10 flex items-center fade-in-up shadow-sm" style="animation-delay: 0.5s;">
-                                    <input type="checkbox" id="adminIsFeatured" class="w-7 h-7 rounded-md border-gray-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500 cursor-pointer">
-                                    <label for="adminIsFeatured" class="ml-4 font-black text-slate-800 dark:text-slate-200 cursor-pointer flex-1 text-xl">Mark as Featured Listing</label>
-                                    <i class="ph-fill ph-star text-orange-500 text-4xl drop-shadow-sm"></i>
-                                </div>
-                                <button type="submit" id="admin-submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 px-6 rounded-2xl shadow-[0_10px_25px_rgba(37,99,235,0.3)] transition-all duration-300 flex justify-center items-center text-2xl mt-10 hover:-translate-y-1 fade-in-up font-bihari tracking-wide border border-blue-500" style="animation-delay: 0.6s;">${isEditing ? 'Save Changes' : 'Publish Listing (Free)'} <i class="ph-bold ${isEditing ? 'ph-floppy-disk' : 'ph-paper-plane-tilt'} ml-3 text-3xl"></i></button>
-                            </form>
-                        </div>
-                    </div>
-                `;
-
-                if (isEditing && state.editingBusinessId) {
-                    setTimeout(() => {
-                        const b = state.businesses.find(x => x.id === state.editingBusinessId);
-                        if (b) {
-                            const catEl = document.getElementById('category');
-                            if(catEl) { catEl.value = b.category; window.updateDynamicForm(b.category); }
-                            
-                            setTimeout(() => { 
-                                if(document.getElementById('bizName')) document.getElementById('bizName').value = b.name || '';
-                                if(document.getElementById('ownerName')) document.getElementById('ownerName').value = b.owner || '';
-                                if(document.getElementById('phone')) document.getElementById('phone').value = b.phone || '';
-                                if(document.getElementById('address')) document.getElementById('address').value = b.address || '';
-                                if(document.getElementById('description')) document.getElementById('description').value = b.description || '';
-                                if(document.getElementById('website')) document.getElementById('website').value = b.website || '';
-                                if(document.getElementById('socialLink')) document.getElementById('socialLink').value = b.socialLink || '';
-                                if(document.getElementById('workingHours')) document.getElementById('workingHours').value = b.workingHours || '';
-                                if(document.getElementById('adminIsFeatured')) document.getElementById('adminIsFeatured').checked = b.isFeatured || false;
-
-                                if (b.dynamicData) {
-                                    const fields = dynamicFields[b.category] || [];
-                                    fields.forEach(field => {
-                                        const val = b.dynamicData[field.labelEN] || b.dynamicData[field.labelHI];
-                                        if (val !== undefined) { const dynEl = document.getElementById(`dyn_${field.id}`); if (dynEl) dynEl.value = val; }
-                                    });
-                                }
-                                
-                                if(b.image) {
-                                    const previewEl = document.getElementById('image-preview');
-                                    if(previewEl) previewEl.innerHTML = `<img src="${b.image}" class="w-full h-40 object-cover rounded-xl border border-slate-200 shadow-md fade-in">`;
-                                    window.appState.uploadedImage = b.image;
-                                }
-                            }, 50);
-                        }
-                    }, 50);
-                }
-            }
-            else if (state.currentRoute === 'admin-login') {
-                html = `
-                     <div class="w-full max-w-md mx-auto px-4 py-24 flex-grow fade-in flex items-center justify-center pb-32 md:pb-24">
-                        <div class="bg-white dark:bg-darkcard p-12 rounded-[3rem] shadow-2xl border border-slate-200 dark:border-slate-800 text-center relative w-full overflow-hidden transition-colors duration-300">
-                            <div class="absolute inset-x-0 top-0 h-3 bg-gradient-to-r from-slate-500 to-slate-900 dark:from-slate-400 dark:to-white"></div>
-                            <div class="w-28 h-28 bg-slate-50 dark:bg-slate-800 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-slate-200 dark:border-slate-700 shadow-inner"><i class="ph-fill ph-shield-check text-6xl text-slate-700 dark:text-slate-300"></i></div>
-                            <h2 class="text-4xl font-bihari font-black text-slate-900 dark:text-white mb-3">${getTranslation('loginTitle')}</h2>
-                            <p class="text-slate-500 dark:text-slate-400 text-base mb-10 font-bold">System requires backend authorization key.</p>
-                            <form onsubmit="adminLogin(event)">
-                                <div class="relative"><i class="ph-fill ph-key absolute left-6 top-1/2 transform -translate-y-1/2 text-slate-500 text-2xl"></i><input type="password" id="adminPass" required placeholder="${getTranslation('loginPass')}" class="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl py-5 pl-16 pr-6 outline-none mb-3 tracking-[0.4em] font-mono text-slate-900 dark:text-white text-lg transition-all focus:border-slate-800 dark:focus:border-slate-400 shadow-inner"></div>
-                                <div class="flex flex-col gap-4 mt-8">
-                                    <button type="submit" id="admin-login-btn" class="w-full bg-slate-800 dark:bg-slate-100 hover:bg-slate-900 dark:hover:bg-white text-white dark:text-slate-900 font-black py-5 rounded-2xl transition-all shadow-[0_8px_20px_rgba(15,23,42,0.2)] font-bihari text-2xl tracking-wide hover:-translate-y-1 flex justify-center items-center">${getTranslation('btnLogin')}</button>
-                                    <button type="button" onclick="navigate('home')" class="w-full bg-white dark:bg-darkcard border-2 border-slate-200 dark:border-slate-700 py-5 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-black text-lg shadow-sm">Cancel Access</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                `;
-            }
-            else if (state.currentRoute === 'admin') {
-                const config = state.globalConfig;
-                const customCats = config.customCategories || [];
-                const activeTab = state.adminTab || 'dashboard';
-
-                html = `
-                    <div class="w-full flex-grow fade-in flex flex-col md:flex-row min-h-screen bg-slate-50 dark:bg-darkbg transition-colors duration-300">
-                        <div class="w-full md:w-64 bg-white dark:bg-darkcard border-r border-slate-200 dark:border-slate-800 flex-shrink-0 z-20">
-                            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center">
-                                <div class="w-10 h-10 bg-slate-800 dark:bg-slate-100 rounded-xl flex items-center justify-center mr-3 shadow-md"><i class="ph-bold ph-shield-star text-white dark:text-slate-800 text-xl"></i></div>
-                                <div><h2 class="font-black text-slate-900 dark:text-white text-lg leading-tight">Master Admin</h2><span class="text-[10px] uppercase font-bold tracking-widest text-green-500"><span class="w-2 h-2 inline-block rounded-full bg-green-500 mr-1 animate-pulse"></span>System Online</span></div>
-                            </div>
-                            <div class="p-4 space-y-2">
-                                <button onclick="switchAdminTab('dashboard')" class="w-full flex items-center px-4 py-3 rounded-xl transition-colors ${activeTab === 'dashboard' ? 'admin-nav-active' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold'}"><i class="ph-fill ph-chart-pie-slice mr-3 text-xl"></i> Analytics Overview</button>
-                                <button onclick="switchAdminTab('listings')" class="w-full flex items-center px-4 py-3 rounded-xl transition-colors ${activeTab === 'listings' ? 'admin-nav-active' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold'}"><i class="ph-fill ph-database mr-3 text-xl"></i> Manage Listings</button>
-                                <button onclick="switchAdminTab('settings')" class="w-full flex items-center px-4 py-3 rounded-xl transition-colors ${activeTab === 'settings' ? 'admin-nav-active' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold'}"><i class="ph-fill ph-sliders mr-3 text-xl"></i> Global Settings</button>
-                                <button onclick="switchAdminTab('categories')" class="w-full flex items-center px-4 py-3 rounded-xl transition-colors ${activeTab === 'categories' ? 'admin-nav-active' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold'}"><i class="ph-fill ph-squares-four mr-3 text-xl"></i> Category Builder</button>
-                                <button onclick="switchAdminTab('security')" class="w-full flex items-center px-4 py-3 rounded-xl transition-colors ${activeTab === 'security' ? 'admin-nav-active' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold'}"><i class="ph-fill ph-lock-key mr-3 text-xl"></i> Security & Logs</button>
-                            </div>
-                            <div class="p-4 mt-auto border-t border-slate-100 dark:border-slate-800 absolute bottom-0 w-full md:w-64 bg-white dark:bg-darkcard pb-safe md:pb-4">
-                                <button onclick="navigate('home')" class="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3 rounded-xl transition-colors flex items-center justify-center"><i class="ph-bold ph-sign-out mr-2"></i> Exit Portal</button>
-                            </div>
-                        </div>
-
-                        <div class="flex-grow p-4 md:p-10 max-w-7xl pb-32">
-                            ${state.isMockData ? `<div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 dark:text-red-400 px-6 py-4 rounded-r-xl mb-8 font-bold flex items-center shadow-sm"><i class="ph-fill ph-warning-circle text-2xl mr-3 text-red-500"></i> OFFLINE/MOCK MODE. Changes will not be saved to DB.</div>` : ''}
-
-                            ${activeTab === 'dashboard' ? `
-                                <div class="fade-in">
-                                    <h1 class="text-3xl font-bihari font-black text-slate-900 dark:text-white mb-2">Platform Overview</h1>
-                                    <p class="text-slate-500 dark:text-slate-400 font-medium mb-8">Snapshot of Patna Suvidha performance.</p>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                        <div class="bg-white dark:bg-darkcard p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center"><div class="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-blue-500 flex items-center justify-center text-3xl mr-4"><i class="ph-fill ph-buildings"></i></div><div><p class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-xs">Total Businesses</p><p class="text-3xl font-black text-slate-800 dark:text-white">${state.businesses.length}</p></div></div>
-                                        <div class="bg-white dark:bg-darkcard p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center"><div class="w-16 h-16 rounded-2xl bg-green-50 dark:bg-green-900/30 text-green-500 flex items-center justify-center text-3xl mr-4"><i class="ph-fill ph-whatsapp-logo"></i></div><div><p class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-xs">Total Leads (Mock)</p><p class="text-3xl font-black text-slate-800 dark:text-white">${state.businesses.reduce((acc, b) => acc + (b.waClicks || 0) + (b.callClicks || 0), 0)}</p></div></div>
-                                        <div class="bg-white dark:bg-darkcard p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center"><div class="w-16 h-16 rounded-2xl bg-orange-50 dark:bg-orange-900/30 text-orange-500 flex items-center justify-center text-3xl mr-4"><i class="ph-fill ph-star"></i></div><div><p class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-xs">Premium Profiles</p><p class="text-3xl font-black text-slate-800 dark:text-white">${state.businesses.filter(b => b.isFeatured).length}</p></div></div>
-                                    </div>
-                                    <div class="bg-white dark:bg-darkcard rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                                        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center"><h3 class="font-black text-slate-800 dark:text-white text-lg">Quick Actions</h3></div>
-                                        <div class="p-6 flex flex-wrap gap-4">
-                                            <button onclick="navigate('admin-add')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-sm flex items-center"><i class="ph-bold ph-plus mr-2 text-xl"></i> Add New Listing Manually</button>
-                                            <button onclick="switchAdminTab('settings')" class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 font-bold py-3 px-6 rounded-xl transition-colors shadow-sm flex items-center"><i class="ph-bold ph-megaphone mr-2 text-xl"></i> Update Marquee Notice</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ` : ''}
-
-                            ${activeTab === 'listings' ? `
-                                <div class="fade-in">
-                                    <div class="flex justify-between items-center mb-6">
-                                        <div><h1 class="text-3xl font-bihari font-black text-slate-900 dark:text-white mb-2">Manage Listings</h1><p class="text-slate-500 dark:text-slate-400 font-medium">Control all business profiles on the platform.</p></div>
-                                        <button onclick="navigate('admin-add')" class="hidden md:flex bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-md items-center"><i class="ph-bold ph-plus mr-2 text-xl"></i> Add Listing</button>
-                                    </div>
-                                    <div class="space-y-4">
-                                        ${state.businesses.sort((a,b)=>(b.rank||0)-(a.rank||0)).map(b => `
-                                            <div class="bg-white dark:bg-darkcard border ${config.promoBusinessId === b.id ? 'border-pink-400 shadow-[0_0_20px_rgba(236,72,153,0.15)] dark:bg-pink-900/10' : 'border-slate-200 dark:border-slate-800 shadow-sm'} p-6 rounded-2xl flex flex-col xl:flex-row justify-between xl:items-center transition-all gap-6">
-                                                <div>
-                                                    <div class="flex items-center mb-3 flex-wrap gap-2">
-                                                        <span class="px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">${getCategoryName(allCats.find(c => c.id === b.category))}</span>
-                                                        <p class="text-slate-900 dark:text-white font-black text-xl leading-none cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onclick="viewBusiness('${b.id}')">${b.name || 'Unnamed'}</p>
-                                                        ${b.isFeatured ? `<span class="px-2.5 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800 rounded text-[10px] font-bold uppercase"><i class="ph-fill ph-star text-orange-500 mr-1"></i> Featured</span>` : ''}
-                                                        ${config.promoBusinessId === b.id ? `<span class="px-3 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400 border border-pink-300 dark:border-pink-800 rounded-full text-[10px] font-black uppercase"><i class="ph-fill ph-megaphone"></i> Spotlight</span>` : ''}
-                                                    </div>
-                                                    <div class="flex flex-wrap text-slate-500 dark:text-slate-400 text-sm gap-x-5 gap-y-2 font-medium">
-                                                        <span class="flex items-center"><i class="ph-fill ph-user mr-1.5 text-lg"></i> ${b.owner || 'N/A'}</span>
-                                                        <span class="flex items-center"><i class="ph-fill ph-phone mr-1.5 text-lg"></i> ${b.phone || 'N/A'}</span>
-                                                        <span class="flex items-center text-slate-700 dark:text-slate-300 font-bold"><i class="ph-fill ph-whatsapp-logo mr-1.5 text-green-500 text-lg"></i> ${b.waClicks || 0} WA</span>
-                                                    </div>
-                                                </div>
-                                                <div class="flex flex-wrap items-center gap-3 shrink-0">
-                                                    <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 mr-2">
-                                                        <span class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mr-2">Rank</span>
-                                                        <button onclick="updateRank('${b.id}', ${b.rank}, -1)" class="w-6 h-6 bg-white dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 rounded flex items-center justify-center text-slate-600 dark:text-slate-300"><i class="ph-bold ph-minus"></i></button>
-                                                        <span class="text-slate-900 dark:text-white font-black text-base mx-1 w-6 text-center">${b.rank || 0}</span>
-                                                        <button onclick="updateRank('${b.id}', ${b.rank}, 1)" class="w-6 h-6 bg-white dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 rounded flex items-center justify-center text-slate-600 dark:text-slate-300"><i class="ph-bold ph-plus"></i></button>
-                                                    </div>
-                                                    <button onclick="toggleFeatured('${b.id}', ${b.isFeatured})" class="text-[10px] px-3 py-2 rounded-lg border transition-colors font-black uppercase tracking-widest ${b.isFeatured ? 'bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-500 text-orange-700 dark:text-orange-400' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}"><i class="ph-fill ph-star"></i></button>
-                                                    <button onclick="setPromoBusiness('${b.id}')" class="text-[10px] px-3 py-2 rounded-lg border transition-colors font-black uppercase tracking-widest ${config.promoBusinessId === b.id ? 'bg-pink-100 dark:bg-pink-900/30 border-pink-300 dark:border-pink-500 text-pink-700 dark:text-pink-400' : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}" title="Set Global Spotlight"><i class="ph-fill ph-app-window"></i></button>
-                                                    <button onclick="editBusiness('${b.id}')" class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white w-9 h-9 rounded-lg transition-all border border-blue-200 dark:border-blue-800 flex items-center justify-center" title="Edit"><i class="ph-bold ph-pencil-simple text-lg"></i></button>
-                                                    <button onclick="deleteBusiness('${b.id}')" class="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white dark:hover:bg-red-600 dark:hover:text-white w-9 h-9 rounded-lg transition-all border border-red-200 dark:border-red-800 flex items-center justify-center" title="Delete"><i class="ph-bold ph-trash text-lg"></i></button>
-                                                </div>
-                                            </div>
-                                        `).join('')}
-                                        ${state.businesses.length === 0 ? `<div class="text-center py-20 bg-white dark:bg-darkcard rounded-2xl border border-slate-200 dark:border-slate-800"><p class="text-slate-500 dark:text-slate-400 font-bold">No businesses found.</p></div>` : ''}
-                                    </div>
-                                </div>
-                            ` : ''}
-
-                            ${activeTab === 'settings' ? `
-                                <div class="fade-in">
-                                    <h1 class="text-3xl font-bihari font-black text-slate-900 dark:text-white mb-2">Global Settings</h1>
-                                    <p class="text-slate-500 dark:text-slate-400 font-medium mb-8">Control front-end features and behavior.</p>
-
-                                    <form onsubmit="saveGlobalConfig(event)" class="bg-white dark:bg-darkcard p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-8">
-                                        <div>
-                                            <label class="block text-sm font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 mb-3">Notice Text (Marquee)</label>
-                                            <input type="text" id="configNoticeText" value="${config.noticeText || ''}" class="w-full glass-input dark:bg-slate-800 rounded-2xl py-4 px-5 outline-none placeholder-slate-400 font-bold dark:text-white border-slate-200 dark:border-slate-700" placeholder="e.g. Navratri Special Offers Available!">
-                                        </div>
-                                        
-                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            <div class="bg-slate-50 dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center shadow-sm">
-                                                <input type="checkbox" id="configNoticeEnabled" ${config.noticeEnabled ? 'checked' : ''} class="w-6 h-6 rounded border-gray-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500 cursor-pointer">
-                                                <label for="configNoticeEnabled" class="ml-4 font-black text-slate-800 dark:text-slate-200 cursor-pointer flex-1 text-base leading-tight">Enable Notice Bar</label>
-                                            </div>
-                                            <div class="bg-orange-50 dark:bg-orange-900/20 p-5 rounded-2xl border border-orange-200 dark:border-orange-800 flex items-center shadow-sm">
-                                                <input type="checkbox" id="configPromoEnabled" ${config.promoEnabled ? 'checked' : ''} class="w-6 h-6 rounded border-gray-300 dark:border-slate-600 text-orange-600 focus:ring-orange-500 cursor-pointer">
-                                                <label for="configPromoEnabled" class="ml-4 font-black text-orange-800 dark:text-orange-400 cursor-pointer flex-1 text-base leading-tight">Enable Spotlight Pop-up</label>
-                                            </div>
-                                            <div class="bg-green-50 dark:bg-green-900/20 p-5 rounded-2xl border border-green-200 dark:border-green-800 flex items-center shadow-sm">
-                                                <input type="checkbox" id="configFreeSubmission" ${config.freeSubmissionEnabled ? 'checked' : ''} class="w-6 h-6 rounded border-green-300 dark:border-green-600 text-green-600 focus:ring-green-500 cursor-pointer">
-                                                <label for="configFreeSubmission" class="ml-4 font-black text-green-800 dark:text-green-400 cursor-pointer flex-1 text-base leading-tight">Enable Free Standard Listing</label>
-                                            </div>
-                                        </div>
-
-                                        <div class="bg-red-50 dark:bg-red-900/20 p-6 rounded-2xl border border-red-200 dark:border-red-800 shadow-sm">
-                                            <h4 class="font-black text-red-800 dark:text-red-400 mb-2 flex items-center"><i class="ph-fill ph-warning-circle text-2xl mr-2"></i> Maintenance Mode</h4>
-                                            <p class="text-sm text-red-600 dark:text-red-300 mb-4 font-medium">Turning this on will disable user logins and form submissions (Mock feature).</p>
-                                            <div class="flex items-center">
-                                                <input type="checkbox" id="configMaintenance" ${config.maintenanceMode ? 'checked' : ''} class="w-6 h-6 rounded border-red-300 dark:border-red-600 text-red-600 focus:ring-red-500 cursor-pointer">
-                                                <label for="configMaintenance" class="ml-3 font-bold text-red-800 dark:text-red-400 cursor-pointer">Activate Maintenance Mode</label>
-                                            </div>
-                                        </div>
-
-                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-black px-10 py-4 rounded-xl transition-colors shadow-md flex items-center text-lg w-full md:w-auto justify-center">
-                                            <i class="ph-bold ph-floppy-disk mr-2 text-xl"></i> Save All Settings
-                                        </button>
-                                    </form>
-                                </div>
-                            ` : ''}
-
-                            ${activeTab === 'categories' ? `
-                                <div class="fade-in">
-                                    <h1 class="text-3xl font-bihari font-black text-slate-900 dark:text-white mb-2">Category Builder</h1>
-                                    <p class="text-slate-500 dark:text-slate-400 font-medium mb-8">Add or edit custom service categories with icons or images.</p>
-                                    <div class="bg-white dark:bg-darkcard p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
-                                        <h3 class="font-black text-slate-800 dark:text-white mb-4" id="cat-form-title">Add New Category</h3>
-                                        <form onsubmit="addCustomCategory(event)" class="flex flex-col md:flex-row gap-4">
-                                            <input type="text" id="newCatName" required class="flex-1 glass-input dark:bg-slate-800 rounded-xl py-4 px-5 outline-none placeholder-slate-400 font-bold dark:text-white border-slate-200 dark:border-slate-700" placeholder="Category Name (e.g. Plumber)">
-                                            <input type="text" id="newCatIcon" class="w-full md:w-1/4 glass-input dark:bg-slate-800 rounded-xl py-4 px-5 outline-none placeholder-slate-400 font-bold dark:text-white border-slate-200 dark:border-slate-700" placeholder="Icon (e.g. ph-wrench)">
-                                            <input type="url" id="newCatImage" class="w-full md:w-1/4 glass-input dark:bg-slate-800 rounded-xl py-4 px-5 outline-none placeholder-slate-400 font-bold dark:text-white border-slate-200 dark:border-slate-700" placeholder="Image URL (Optional)">
-                                            <button type="submit" id="cat-submit-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-10 py-4 rounded-xl transition-colors shadow-md">Add</button>
-                                        </form>
-                                    </div>
-                                    <div class="bg-slate-50 dark:bg-slate-800/50 p-8 rounded-3xl border border-slate-200 dark:border-slate-800">
-                                        <h3 class="font-black text-slate-800 dark:text-white mb-6">Active Custom Categories</h3>
-                                        <div class="flex flex-wrap gap-4">
-                                            ${customCats.length === 0 ? '<p class="text-slate-500 dark:text-slate-400 font-medium">No custom categories added yet.</p>' : customCats.map(c => `
-                                                <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-5 pr-2 py-2 text-slate-800 dark:text-slate-200 flex items-center font-black shadow-sm">
-                                                    ${c.image ? `<img src="${c.image}" class="w-8 h-8 mr-3 rounded-full object-cover border border-slate-200">` : `<i class="ph-fill ${c.icon || 'ph-star'} mr-3 text-orange-500 text-2xl"></i>`}
-                                                    ${c.name}
-                                                    <button onclick="editCustomCategory('${c.id}')" class="ml-4 text-blue-500 hover:text-white bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-500 dark:hover:bg-blue-600 p-2 rounded-lg transition-colors" title="Edit"><i class="ph-bold ph-pencil-simple"></i></button>
-                                                    <button onclick="deleteCustomCategory('${c.id}')" class="ml-2 text-red-500 hover:text-white bg-red-50 dark:bg-red-900/30 hover:bg-red-500 dark:hover:bg-red-600 p-2 rounded-lg transition-colors" title="Delete"><i class="ph-bold ph-trash"></i></button>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    </div>
-                                </div>
-                            ` : ''}
-
-                            ${activeTab === 'security' ? `
-                                <div class="fade-in">
-                                    <h1 class="text-3xl font-bihari font-black text-slate-900 dark:text-white mb-2">Security & Logs</h1>
-                                    <p class="text-slate-500 dark:text-slate-400 font-medium mb-8">Manage authentication and view system activity.</p>
-                                    <form onsubmit="saveSecurityConfig(event)" class="bg-white dark:bg-darkcard p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
-                                        <h3 class="font-black text-slate-800 dark:text-white mb-4 flex items-center"><i class="ph-fill ph-key mr-2 text-orange-500 text-2xl"></i> Update Admin Master Key</h3>
-                                        <div class="flex flex-col md:flex-row gap-4">
-                                            <input type="password" id="configAdminPass" required class="flex-1 glass-input dark:bg-slate-800 rounded-xl py-4 px-5 outline-none placeholder-slate-400 font-bold font-mono tracking-widest text-lg dark:text-white border-slate-200 dark:border-slate-700" placeholder="Enter new highly secure password...">
-                                            <button type="submit" class="bg-slate-800 dark:bg-slate-100 hover:bg-slate-900 dark:hover:bg-white text-white dark:text-slate-900 font-black px-10 py-4 rounded-xl transition-colors shadow-md flex items-center shrink-0">Update Key</button>
-                                        </div>
-                                    </form>
-                                    <div class="bg-slate-50 dark:bg-slate-800/50 p-8 rounded-3xl border border-slate-200 dark:border-slate-800">
-                                        <h3 class="font-black text-slate-800 dark:text-white mb-6 flex items-center"><i class="ph-fill ph-list-magnifying-glass mr-2 text-blue-500 text-2xl"></i> System Logs (Mock)</h3>
-                                        <div class="space-y-3">
-                                            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center text-sm shadow-sm"><div><span class="font-bold text-slate-800 dark:text-slate-200">Admin Login</span> <span class="text-slate-500 dark:text-slate-400 ml-2">IP: 192.168.1.1</span></div><span class="text-xs font-bold text-slate-400 dark:text-slate-500">Just now</span></div>
-                                            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center text-sm shadow-sm"><div><span class="font-bold text-slate-800 dark:text-slate-200">Listing Updated</span> <span class="text-slate-500 dark:text-slate-400 ml-2">ID: mock_2</span></div><span class="text-xs font-bold text-slate-400 dark:text-slate-500">2 hours ago</span></div>
-                                            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center text-sm shadow-sm"><div><span class="font-bold text-slate-800 dark:text-slate-200">New Payment Received</span> <span class="text-green-600 dark:text-green-400 font-bold ml-2">₹299 via Razorpay</span></div><span class="text-xs font-bold text-slate-400 dark:text-slate-500">1 day ago</span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-            }
             else if (state.currentRoute === 'success') {
                 html = `
                     <div class="w-full max-w-xl mx-auto px-4 py-32 text-center fade-in flex-grow flex items-center justify-center pb-40 md:pb-32">
@@ -1526,7 +1072,7 @@
 
             root.innerHTML = html; updateStaticTranslations();
             if (state.currentRoute === 'home') renderListings();
-            if (state.currentRoute === 'add-business' || state.currentRoute === 'admin-add' || state.currentRoute === 'admin-edit') {
+            if (state.currentRoute === 'add-business') {
                  const catDropdown = document.getElementById('category'); if(catDropdown && catDropdown.value) updateDynamicForm(catDropdown.value);
             }
         };
