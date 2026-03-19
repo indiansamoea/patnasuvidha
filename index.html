@@ -1,15 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" class="light">
 <head>
-    <link rel="manifest" href="/patnasuvidha/manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- PWA & Native App Meta Tags -->
     <meta name="theme-color" content="#f8fafc" id="theme-color-meta">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Patna Suvidha">
     <link rel="apple-touch-icon" href="https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg">
     
     <title>Patna Suvidha | Bihar Ka Apna Local Network 🇮🇳</title>
@@ -176,11 +171,6 @@
             iframe#chatbase-bubble-window { bottom: calc(75px + env(safe-area-inset-bottom, 0)) !important; right: 10px !important; width: calc(100vw - 20px) !important; }
         }
     </style>
-    <script type="module">
-        import 'https://cdn.jsdelivr.net/npm/@pwabuilder/pwaupdate';
-        const el = document.createElement('pwa-update');
-        document.body.appendChild(el);
-    </script>
 </head>
 <body class="min-h-screen bg-slate-50 dark:bg-darkbg text-slate-800 dark:text-slate-100 flex flex-col relative overflow-x-hidden selection:bg-orange-500 selection:text-white pb-safe md:pb-0 transition-colors duration-300">
 
@@ -349,31 +339,10 @@
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'patna-suvidha-premium';
 
-        const MOCK_BUSINESSES = [
-            {
-                id: 'mock_1', name: 'Verma Plumbing Services', owner: 'Rahul Verma', phone: '9876543210', address: 'Boring Road, Near Chauraha, Patna',
-                description: 'Expert plumbing services for residential and commercial properties. We fix leaks, install pipes, and repair motors.', category: 'HomeService',
-                dynamicData: { 'Specialty (e.g. AC Repair)': 'Pipe Leakage & Motors', 'Visiting Charge (₹)': '150' }, isFeatured: true, rank: 10, createdAt: Date.now() - 86400000,
-                image: 'https://images.unsplash.com/photo-1607472586893-edb57cbceb42?auto=format&fit=crop&q=80&w=600', waClicks: 45, callClicks: 12
-            },
-            {
-                id: 'mock_2', name: 'Aaradhya Boutique', owner: 'Priya Jha', phone: '8765432109', address: 'Kankarbagh Main Road, Patna',
-                description: 'Latest trendy clothing, kurtis, and custom stitching available for ladies.', category: 'LocalArts',
-                dynamicData: { 'Craft Type': 'Handicrafts', 'Accepts Custom Orders?': 'Yes' }, isFeatured: false, rank: 5, createdAt: Date.now() - 172800000,
-                image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&q=80&w=600', waClicks: 20, callClicks: 5
-            },
-            {
-                id: 'mock_3', name: 'Patna Fitness Point', owner: 'Amit Singh', phone: '7654321098', address: 'Ashok Rajpath, Near PMCH, Patna',
-                description: 'Modern gym with AC, personal trainers, and Zumba classes.', category: 'Gym',
-                dynamicData: { 'Monthly Fee (₹)': '1200', 'Personal Trainer?': 'Available' }, isFeatured: true, rank: 20, createdAt: Date.now() - 259200000,
-                image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=600', waClicks: 80, callClicks: 34
-            }
-        ];
-
         window.appState = {
-            lang: 'en', currentRoute: 'home', adminTab: 'dashboard', businesses: MOCK_BUSINESSES,
-            globalConfig: { adminPass: 'AARADH@2009', noticeText: 'Festive Offer: List your business for just ₹99 today!', noticeEnabled: true, customCategories: [], promoBusinessId: 'mock_1', promoEnabled: true, maintenanceMode: false, freeSubmissionEnabled: false },
-            user: null, searchQuery: '', selectedCategory: 'All', isLoading: true, uploadedImage: null, selectedBusinessId: null, editingBusinessId: null, sortBy: 'rank', isMockData: true
+            lang: 'en', currentRoute: 'home', adminTab: 'dashboard', businesses: [],
+            globalConfig: { adminPass: 'AARADH@2009', noticeText: 'Festive Offer: List your business for just ₹99 today!', noticeEnabled: true, customCategories: [], promoBusinessId: null, promoEnabled: true, maintenanceMode: false, freeSubmissionEnabled: false },
+            user: null, searchQuery: '', selectedCategory: 'All', isLoading: true, uploadedImage: null, selectedBusinessId: null, editingBusinessId: null, editingCategoryId: null, sortBy: 'rank', isMockData: false
         };
 
         window.timeAgo = (timestamp) => {
@@ -534,7 +503,7 @@
                 lblBizName: "व्यापार का नाम", lblOwner: "मालिक का नाम", lblPhone: "मोबाइल नंबर", lblAddress: "पटना में सटीक स्थान", lblDesc: "विवरण और सुविधाएं", lblCat: "श्रेणी", lblWebsite: "वेबसाइट URL", lblSocial: "इंस्टाग्राम/फेसबुक लिंक", lblHours: "काम के घंटे (सुबह 9 - रात 8)",
                 btnSubmit: "लिस्टिंग के लिए आगे बढ़ें", footerText: "© 2026 पटना सुविधा। पाटलिपुत्र के लोगों के लिए गर्व से निर्मित।",
                 adminTitle: "मास्टर डैशबोर्ड", adminSub: "इकोसिस्टम प्रबंधित करें", btnDelete: "हटाएं",
-                emptyState: "माफ़ करें, कोई सर्विस नहीं मिली। कृपया कुछ और खोजें।",
+                emptyState: "माफ़ करें, कोई सर्विस मिली। कृपया कुछ और खोजें।",
                 successMsg: "बधाई हो! आपकी लिस्टिंग अब लाइव है। पटना के ग्राहक अब सीधे आपसे संपर्क करेंगे।",
                 loginTitle: "प्रतिबंधित सिस्टम एक्सेस", loginPass: "एडमिन कुंजी दर्ज करें", btnLogin: "प्रवेश करें", posted: "सूचीबद्ध",
             }
@@ -656,7 +625,7 @@
             
             setTimeout(() => {
                 if(window.appState.isLoading) {
-                    window.appState.isLoading = false; showToast("Using Offline/Mock Data mode.", "info");
+                    window.appState.isLoading = false; 
                     window.checkDeepLink(); render();
                 }
             }, 3000);
@@ -675,8 +644,8 @@
             const businessesRef = collection(db, 'artifacts', appId, 'public', 'data', 'businesses');
             unsubscribeDb = onSnapshot(businessesRef, (snapshot) => {
                 const fetched = []; snapshot.forEach((doc) => { fetched.push({ id: doc.id, ...doc.data() }); });
-                if(fetched.length > 0) { window.appState.businesses = fetched; window.appState.isMockData = false; }
-                
+                window.appState.businesses = fetched;
+                window.appState.isMockData = false;
                 window.appState.isLoading = false; window.checkDeepLink();
                 if (['home', 'admin', 'business-details'].includes(window.appState.currentRoute)) render();
             }, () => { window.appState.isLoading = false; window.checkDeepLink(); render(); });
@@ -763,16 +732,61 @@
         }
 
         window.addCustomCategory = async (e) => {
-            e.preventDefault(); const name = document.getElementById('newCatName').value.trim(); const icon = document.getElementById('newCatIcon').value.trim() || 'ph-star';
+            e.preventDefault(); 
+            if(window.appState.isMockData) return showToast("Cannot save config in offline mode", "error");
+            
+            const name = document.getElementById('newCatName').value.trim(); 
+            const icon = document.getElementById('newCatIcon').value.trim() || 'ph-star';
+            const image = document.getElementById('newCatImage') ? document.getElementById('newCatImage').value.trim() : '';
             if(!name) return;
-            const newCat = { id: 'cat_' + Date.now(), name: name, icon: icon };
-            const updatedCategories = [...(window.appState.globalConfig.customCategories || []), newCat];
+            
+            let updatedCategories = [...(window.appState.globalConfig.customCategories || [])];
+            
+            if (window.appState.editingCategoryId) {
+                updatedCategories = updatedCategories.map(c => 
+                    c.id === window.appState.editingCategoryId ? { ...c, name, icon, image } : c
+                );
+                window.appState.editingCategoryId = null;
+            } else {
+                const newCat = { id: 'cat_' + Date.now(), name: name, icon: icon, image: image };
+                updatedCategories.push(newCat);
+            }
+
             const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_config', 'main');
             await setDoc(configRef, { customCategories: updatedCategories }, { merge: true });
-            showToast("Category Added", "success");
+            
+            document.getElementById('newCatName').value = '';
+            document.getElementById('newCatIcon').value = '';
+            if(document.getElementById('newCatImage')) document.getElementById('newCatImage').value = '';
+            
+            const btn = document.getElementById('cat-submit-btn');
+            if(btn) btn.innerHTML = 'Add';
+            const title = document.getElementById('cat-form-title');
+            if(title) title.innerHTML = 'Add New Category';
+            
+            showToast("Category Saved", "success");
+        };
+
+        window.editCustomCategory = (id) => {
+            const cat = (window.appState.globalConfig.customCategories || []).find(c => c.id === id);
+            if(cat) {
+                document.getElementById('newCatName').value = cat.name || '';
+                document.getElementById('newCatIcon').value = cat.icon || '';
+                if(document.getElementById('newCatImage')) document.getElementById('newCatImage').value = cat.image || '';
+                
+                window.appState.editingCategoryId = id;
+                
+                const btn = document.getElementById('cat-submit-btn');
+                if(btn) btn.innerHTML = 'Update';
+                const title = document.getElementById('cat-form-title');
+                if(title) title.innerHTML = 'Edit Category';
+                
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
         };
 
         window.deleteCustomCategory = async (id) => {
+            if(window.appState.isMockData) return showToast("Cannot save config in offline mode", "error");
             if(!confirm("Delete this custom category?")) return;
             const updatedCategories = (window.appState.globalConfig.customCategories || []).filter(c => c.id !== id);
             const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_config', 'main');
@@ -1057,7 +1071,7 @@
                                     const catObj = allCats.find(c => c.id === b.category); const catName = getCategoryName(catObj);
                                     const fallbackImg = 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=600';
                                     return `
-                                    <div onclick="viewBusiness('${b.id}')" class="snap-start shrink-0 w-[85vw] sm:w-80 md:w-96 bg-white dark:bg-darkcard border-2 border-orange-200 dark:border-orange-500/50 rounded-[2.5rem] overflow-hidden group shadow-lg dark:shadow-[0_10px_30px_rgba(0,0,0,0.5)] cursor-pointer hover:-translate-y-2 transition-all duration-300 flex flex-col relative">
+                                    <div onclick="viewBusiness('${b.id}')" class="snap-start shrink-0 w-[85vw] sm:w-80 md:w-96 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-2 border-orange-300 dark:border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_40px_rgba(249,115,22,0.6)] rounded-[2.5rem] overflow-hidden group cursor-pointer hover:-translate-y-2 transition-all duration-300 flex flex-col relative glow-saffron">
                                         <div class="absolute top-4 right-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full z-20 flex items-center shadow-sm"><i class="ph-fill ph-star text-yellow-500 mr-1 text-sm"></i><span class="font-black text-xs text-slate-800 dark:text-white">4.9/5</span></div>
                                         <div class="w-full h-56 relative overflow-hidden bg-slate-100 dark:bg-slate-800"><img src="${b.image || fallbackImg}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="${b.name}" loading="lazy"><div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div><div class="absolute bottom-4 left-5 text-white z-10"><span class="bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md mb-2 inline-block">${catName}</span></div></div>
                                         <div class="p-6 flex flex-col flex-grow">
@@ -1088,7 +1102,9 @@
                                 <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
                                     ${allCats.map((cat, index) => `
                                         <button onclick="setCategory('${cat.id}')" class="group flex flex-col items-center justify-center p-3 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] border-2 transition-all duration-300 fade-in-up bg-white dark:bg-darkcard relative overflow-hidden ${state.selectedCategory === cat.id ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 glow-saffron scale-105 z-10' : 'border-slate-100 dark:border-slate-800 shadow-sm hover:border-orange-300 dark:hover:border-orange-500/50 hover:shadow-lg hover:-translate-y-2'}" style="animation-delay: ${index * 0.05}s;">
-                                            <div class="w-14 h-14 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mb-3 sm:mb-4 transition-colors ${state.selectedCategory === cat.id ? 'bg-orange-500 text-white' : 'bg-slate-50 dark:bg-slate-800 text-orange-500 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/30 group-hover:text-orange-600'}"><i class="ph-fill ${cat.icon} text-3xl sm:text-4xl transition-transform duration-300 group-hover:scale-110"></i></div>
+                                            <div class="w-14 h-14 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mb-3 sm:mb-4 transition-colors ${state.selectedCategory === cat.id ? 'bg-orange-500 text-white' : 'bg-slate-50 dark:bg-slate-800 text-orange-500 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/30 group-hover:text-orange-600'}">
+                                                ${cat.image ? `<img src="${cat.image}" class="w-full h-full object-cover rounded-full shadow-inner" alt="${getCategoryName(cat)}">` : `<i class="ph-fill ${cat.icon || 'ph-star'} text-3xl sm:text-4xl transition-transform duration-300 group-hover:scale-110"></i>`}
+                                            </div>
                                             <span class="font-black text-[11px] sm:text-base tracking-wide text-center leading-tight px-1 ${state.selectedCategory === cat.id ? 'text-orange-700 dark:text-orange-400' : 'text-slate-700 dark:text-slate-300'}">${getCategoryName(cat)}</span>
                                         </button>`).join('')}
                                 </div>
@@ -1121,7 +1137,7 @@
                 const b = state.businesses.find(biz => biz.id === state.selectedBusinessId);
                 if(!b) { navigate('home'); return; }
 
-                const catObj = allCats.find(c => c.id === b.category); const catName = getCategoryName(catObj); const catIcon = catObj ? catObj.icon : 'ph-storefront';
+                const catObj = allCats.find(c => c.id === b.category); const catName = getCategoryName(catObj); const catIcon = catObj ? (catObj.icon || 'ph-star') : 'ph-storefront';
                 let dynamicDetailsHtml = '';
                 if (b.dynamicData) { dynamicDetailsHtml = Object.entries(b.dynamicData).map(([key, val]) => `<div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[1.5rem] border border-slate-200 dark:border-slate-700 shadow-sm"><p class="text-xs text-slate-500 dark:text-slate-400 mb-2 font-black uppercase tracking-widest">${key}</p><p class="text-slate-900 dark:text-white font-black text-xl">${val}</p></div>`).join(''); }
                 const whatsappMsg = encodeURIComponent(`Pranam, I found "${b.name}" on Patna Suvidha. I would like to know more.`); const whatsappLink = `https://wa.me/91${b.phone}?text=${whatsappMsg}`;
@@ -1129,7 +1145,7 @@
                 html = `
                     <div class="w-full max-w-5xl mx-auto px-4 py-12 fade-in flex-grow pb-32 md:pb-12">
                         <button onclick="navigate('home')" class="text-slate-600 dark:text-slate-300 hover:text-orange-600 dark:hover:text-orange-400 mb-8 flex items-center transition-colors font-black tracking-widest uppercase hover:-translate-x-2 duration-300 bg-white dark:bg-slate-800 px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 w-fit shadow-sm text-sm"><i class="ph-bold ph-arrow-left mr-3 text-xl"></i> Back to Directory</button>
-                        <div class="bg-white dark:bg-darkcard rounded-[3rem] overflow-hidden shadow-xl border-2 ${b.isFeatured ? 'border-orange-400 dark:border-orange-500 glow-saffron' : 'border-slate-100 dark:border-slate-800'} relative transition-colors duration-300">
+                        <div class="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-[3rem] overflow-hidden shadow-[0_0_30px_rgba(249,115,22,0.3)] border-2 border-orange-300 dark:border-orange-500/50 glow-saffron relative transition-colors duration-300">
                             ${b.isFeatured ? `<div class="absolute top-6 right-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-black uppercase tracking-widest px-5 py-2.5 rounded-full shadow-lg z-20 flex items-center border-2 border-white dark:border-slate-800"><i class="ph-fill ph-star mr-2 text-yellow-200 text-lg"></i> Bihar's Pride</div>` : ''}
                             ${b.image ? `<div class="w-full h-80 md:h-[28rem] bg-slate-100 dark:bg-slate-800 relative"><img src="${b.image}" class="w-full h-full object-cover" alt="${b.name}"><div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div></div>` : `<div class="w-full h-48 bg-gradient-to-b from-slate-200 dark:from-slate-800 to-slate-50 dark:to-slate-900"></div>`}
                             <div class="px-6 md:px-16 pb-16 ${b.image ? '-mt-32 relative z-10 text-white' : '-mt-16 relative z-10 text-slate-900 dark:text-white'}">
@@ -1443,20 +1459,26 @@
                             ${activeTab === 'categories' ? `
                                 <div class="fade-in">
                                     <h1 class="text-3xl font-bihari font-black text-slate-900 dark:text-white mb-2">Category Builder</h1>
-                                    <p class="text-slate-500 dark:text-slate-400 font-medium mb-8">Add or remove custom service categories.</p>
+                                    <p class="text-slate-500 dark:text-slate-400 font-medium mb-8">Add or edit custom service categories with icons or images.</p>
                                     <div class="bg-white dark:bg-darkcard p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
-                                        <h3 class="font-black text-slate-800 dark:text-white mb-4">Add New Category</h3>
+                                        <h3 class="font-black text-slate-800 dark:text-white mb-4" id="cat-form-title">Add New Category</h3>
                                         <form onsubmit="addCustomCategory(event)" class="flex flex-col md:flex-row gap-4">
                                             <input type="text" id="newCatName" required class="flex-1 glass-input dark:bg-slate-800 rounded-xl py-4 px-5 outline-none placeholder-slate-400 font-bold dark:text-white border-slate-200 dark:border-slate-700" placeholder="Category Name (e.g. Plumber)">
                                             <input type="text" id="newCatIcon" class="w-full md:w-1/4 glass-input dark:bg-slate-800 rounded-xl py-4 px-5 outline-none placeholder-slate-400 font-bold dark:text-white border-slate-200 dark:border-slate-700" placeholder="Icon (e.g. ph-wrench)">
-                                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-10 py-4 rounded-xl transition-colors shadow-md">Add</button>
+                                            <input type="url" id="newCatImage" class="w-full md:w-1/4 glass-input dark:bg-slate-800 rounded-xl py-4 px-5 outline-none placeholder-slate-400 font-bold dark:text-white border-slate-200 dark:border-slate-700" placeholder="Image URL (Optional)">
+                                            <button type="submit" id="cat-submit-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-10 py-4 rounded-xl transition-colors shadow-md">Add</button>
                                         </form>
                                     </div>
                                     <div class="bg-slate-50 dark:bg-slate-800/50 p-8 rounded-3xl border border-slate-200 dark:border-slate-800">
                                         <h3 class="font-black text-slate-800 dark:text-white mb-6">Active Custom Categories</h3>
                                         <div class="flex flex-wrap gap-4">
                                             ${customCats.length === 0 ? '<p class="text-slate-500 dark:text-slate-400 font-medium">No custom categories added yet.</p>' : customCats.map(c => `
-                                                <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-5 pr-2 py-2 text-slate-800 dark:text-slate-200 flex items-center font-black shadow-sm"><i class="ph-fill ${c.icon} mr-3 text-orange-500 text-2xl"></i> ${c.name}<button onclick="deleteCustomCategory('${c.id}')" class="ml-4 text-red-500 hover:text-white bg-red-50 dark:bg-red-900/30 hover:bg-red-500 dark:hover:bg-red-600 p-2 rounded-lg transition-colors"><i class="ph-bold ph-trash"></i></button></div>
+                                                <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-5 pr-2 py-2 text-slate-800 dark:text-slate-200 flex items-center font-black shadow-sm">
+                                                    ${c.image ? `<img src="${c.image}" class="w-8 h-8 mr-3 rounded-full object-cover border border-slate-200">` : `<i class="ph-fill ${c.icon || 'ph-star'} mr-3 text-orange-500 text-2xl"></i>`}
+                                                    ${c.name}
+                                                    <button onclick="editCustomCategory('${c.id}')" class="ml-4 text-blue-500 hover:text-white bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-500 dark:hover:bg-blue-600 p-2 rounded-lg transition-colors" title="Edit"><i class="ph-bold ph-pencil-simple"></i></button>
+                                                    <button onclick="deleteCustomCategory('${c.id}')" class="ml-2 text-red-500 hover:text-white bg-red-50 dark:bg-red-900/30 hover:bg-red-500 dark:hover:bg-red-600 p-2 rounded-lg transition-colors" title="Delete"><i class="ph-bold ph-trash"></i></button>
+                                                </div>
                                             `).join('')}
                                         </div>
                                     </div>
@@ -1535,7 +1557,7 @@
             }
 
             container.innerHTML = filtered.map((b, index) => {
-                const catObj = allCats.find(c => c.id === b.category); const catName = getCategoryName(catObj); const catIcon = catObj ? catObj.icon : 'ph-storefront';
+                const catObj = allCats.find(c => c.id === b.category); const catName = getCategoryName(catObj); const catIcon = catObj ? (catObj.icon || 'ph-star') : 'ph-storefront';
                 let dynamicDetailsHtml = '';
                 if (b.dynamicData) { dynamicDetailsHtml = Object.entries(b.dynamicData).slice(0, 2).map(([key, val]) => `<div class="text-sm bg-slate-50 dark:bg-slate-800/50 px-4 py-3 rounded-xl border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex justify-between items-center shadow-inner"><span class="font-bold text-slate-500 dark:text-slate-400 truncate max-w-[45%] mr-2 uppercase tracking-wide text-xs">${key}</span> <span class="text-slate-900 dark:text-white font-black text-right truncate">${val}</span></div>`).join(''); }
 
@@ -1543,7 +1565,7 @@
                 const whatsappMsg = encodeURIComponent(`Pranam, I found "${safeName}" on Patna Suvidha. I would like to know more.`); const whatsappLink = `https://wa.me/91${b.phone}?text=${whatsappMsg}`;
 
                 return `
-                    <div onclick="viewBusiness('${b.id}')" class="bg-white dark:bg-darkcard rounded-[2.5rem] overflow-hidden hover:shadow-[0_20px_50px_rgba(249,115,22,0.15)] dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:-translate-y-2 transition-all duration-300 flex flex-col h-full group fade-in-up border-2 relative cursor-pointer ${b.isFeatured ? 'border-orange-300 dark:border-orange-500/50 shadow-[0_10px_30px_rgba(249,115,22,0.1)] glow-saffron' : 'border-slate-100 dark:border-slate-800 shadow-sm'}" style="animation-delay: ${index * 0.05}s;">
+                    <div onclick="viewBusiness('${b.id}')" class="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_40px_rgba(249,115,22,0.6)] hover:-translate-y-2 transition-all duration-300 flex flex-col h-full group fade-in-up border-2 border-orange-300 dark:border-orange-500/50 relative cursor-pointer glow-saffron" style="animation-delay: ${index * 0.05}s;">
                         ${b.isFeatured ? `<div class="absolute top-0 right-0 w-28 h-28 overflow-hidden z-20 pointer-events-none"><div class="absolute transform rotate-45 bg-gradient-to-r from-orange-400 to-orange-600 text-white text-[10px] font-black py-1.5 right-[-45px] top-[22px] w-[160px] text-center shadow-lg tracking-widest uppercase"><i class="ph-fill ph-star mr-1 text-yellow-200"></i> Pride</div></div>` : ''}
                         ${b.image ? `<div class="w-full h-64 bg-slate-100 dark:bg-slate-800 relative overflow-hidden border-b border-slate-100 dark:border-slate-800"><img src="${b.image}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="${safeName}" loading="lazy"><div class="absolute inset-0 bg-gradient-to-t from-white dark:from-[#151e32] via-white/10 dark:via-transparent to-transparent opacity-90 dark:opacity-100"></div></div>` : ''}
                         <div class="p-8 relative flex-grow ${b.image ? 'pt-4' : ''}">
@@ -1570,7 +1592,6 @@
         }
 
         initAuthAndData(); setTimeout(window.showWelcome, 1000);
-        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').then(r => console.log('SW registered')).catch(e => console.log('SW registration failed')); }); }
     </script>
 </body>
 </html>
