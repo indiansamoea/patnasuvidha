@@ -8,7 +8,7 @@
     <link rel="apple-touch-icon" href="https://image2url.com/r2/default/images/1773777554654-d780b920-e988-4d95-bae0-94c7b617d7cf.jpeg">
     
     <title>Patna Suvidha | Bihar Ka Apna Local Network 🇮🇳</title>
-    <meta name="description" content="Patna ki apni local directory. Find doctors, plumbers, electricians, and local shops in Patna. Sahi Service, Sahi Daam!">
+    <meta name="description" content="Patna Ki Sari Zarooraton Ki One-Stop Suvidha. Ab har service, har dukan, aur har expert bas ek tap door.">
     
     <!-- Google Fonts for Clean, Highly Legible Vibe -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -107,8 +107,22 @@
         }
         .dark .glass-input:focus { box-shadow: 0 0 0 4px rgba(255, 153, 51, 0.25) !important; }
 
-        /* Glows */
+        /* Glows & Glass Effect */
         .glow-saffron { box-shadow: 0 0 25px rgba(255, 153, 51, 0.4); }
+        
+        .glass-hero {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        }
+        .dark .glass-hero {
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
         .bg-pattern {
             position: absolute; inset: 0; z-index: 0; opacity: 0.03; pointer-events: none;
             background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ea580c" fill-opacity="1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
@@ -467,7 +481,7 @@
         const i18n = {
             en: {
                 navTitle: "Patna Suvidha", navSubtitle: "Bihar Ka Apna Network", navAdd: "List Business",
-                heroTitle: "Patna Ki Apni Local Directory", heroSub: "From Boring Road to Ashok Rajpath, everything you need is now on your phone. Verified local experts.",
+                heroTitle: "Patna Ki Sari Zarooraton Ki One-Stop Suvidha", heroSub: "Ab har service, har dukan, aur har expert bas ek tap door. Premium local directory & instant booking.",
                 searchPlaceholder: "Search Doctors, Plumbers, Shops...",
                 catAll: "All Services", catInfluencer: "Creators", catEvent: "Wedding & Events", catRealEstate: "Real Estate", catGym: "Fitness", catHome: "Home Services", catFood: "Food & Sweets", catHealth: "Healthcare", catEdu: "Education", catAstrology: "Astrology", catLocalArts: "Local Crafts", catTransport: "Transport",
                 btnContact: "WhatsApp", btnCall: "Call Now", btnShare: "Share Profile",
@@ -481,7 +495,7 @@
             },
             hi: {
                 navTitle: "पटना सुविधा", navSubtitle: "बिहार का अपना नेटवर्क", navAdd: "व्यापार जोड़ें",
-                heroTitle: "पटना की अपनी लोकल डायरेक्टरी", heroSub: "बोरिंग रोड से लेकर अशोक राजपथ तक, आपकी हर जरूरत अब फोन पर। सही सर्विस, सही दाम!",
+                heroTitle: "पटना की सारी ज़रूरतों की वन-स्टॉप सुविधा", heroSub: "अब हर सर्विस, हर दुकान, और हर एक्सपर्ट बस एक टैप दूर। प्रीमियम लोकल डायरेक्टरी और इंस्टेंट बुकिंग।",
                 searchPlaceholder: "डॉक्टर, प्लंबर, दुकानें खोजें...",
                 catAll: "सभी सेवाएं", catInfluencer: "क्रिएटर", catEvent: "शादी-इवेंट", catRealEstate: "ज़मीन-मकान", catGym: "फिटनेस", catHome: "घरेलू सेवाएं", catFood: "भोजन-मिठाई", catHealth: "क्लीनिक-अस्पताल", catEdu: "शिक्षा", catAstrology: "ज्योतिष", catLocalArts: "लोकल कला", catTransport: "ट्रांसपोर्ट",
                 btnContact: "व्हाट्सएप", btnCall: "कॉल करें", btnShare: "शेयर करें",
@@ -663,7 +677,6 @@
             };
         };
 
-        // User Payment Flow (Fix & Free Bypass added)
         window.initiatePaymentAndSubmit = async (e) => {
             e.preventDefault(); const form = e.target;
             if (!form.checkValidity()) { form.reportValidity(); return; }
@@ -692,7 +705,6 @@
                 isFeatured: isFeatured, rank: 0, createdAt: Date.now(),
             };
 
-            // ---- FREE SUBMISSION BYPASS ----
             if (amountInRupees === 0) {
                 submitBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-2xl mr-3"></i> Publishing Listing...';
                 try {
@@ -707,10 +719,9 @@
                     showToast("Failed to save. Check your connection.", "error");
                     submitBtn.disabled = false; submitBtn.innerHTML = originalContent; submitBtn.classList.remove('opacity-80', 'cursor-not-allowed');
                 }
-                return; // Exit here if free
+                return;
             }
 
-            // ---- REGULAR RAZORPAY FLOW ----
             const options = {
                 "key": "rzp_live_SSIUQLBgFOF2M7", "amount": (amountInRupees * 100).toString(), "currency": "INR",
                 "name": "Patna Suvidha", "description": isFeatured ? "Featured Business Listing" : "Standard Business Listing",
@@ -848,21 +859,22 @@
                 const featuredBusinesses = state.businesses.filter(b => b.isFeatured).slice(0, 5);
                 html = `
                     <div class="w-full fade-in pb-16">
-                        <div class="relative pt-16 pb-24 md:py-32 px-4 text-center overflow-hidden border-b border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-darkbg transition-colors duration-300">
-                            <div class="absolute top-0 right-0 w-96 h-96 bg-orange-300 dark:bg-orange-600 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-20 animate-pulse"></div>
-                            <div class="absolute bottom-0 left-0 w-96 h-96 bg-green-300 dark:bg-green-600 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
+                        <div class="relative pt-12 pb-20 md:py-28 px-4 text-center overflow-hidden border-b border-slate-200 dark:border-slate-800 shadow-sm bg-slate-50 dark:bg-[#080d1a] transition-colors duration-300">
+                            <!-- Background elements to enhance glass effect -->
+                            <div class="absolute top-[-10%] right-[-5%] w-[40rem] h-[40rem] bg-orange-400/30 dark:bg-orange-600/20 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[100px] animate-pulse"></div>
+                            <div class="absolute bottom-[-10%] left-[-5%] w-[40rem] h-[40rem] bg-green-400/30 dark:bg-green-600/20 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
                             
-                            <div class="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
-                                <div id="live-weather-widget" class="bg-white dark:bg-slate-800 border-2 border-orange-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 px-6 py-3 rounded-full text-sm font-black flex items-center shadow-md mb-8 zoom-in glow-saffron transition-colors duration-300">
+                            <div class="relative z-10 max-w-5xl mx-auto flex flex-col items-center glass-hero rounded-[3rem] p-6 sm:p-10 md:p-14 mb-4 mt-4">
+                                <div id="live-weather-widget" class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-white dark:border-slate-700 text-slate-700 dark:text-slate-200 px-6 py-3 rounded-full text-sm font-black flex items-center shadow-sm mb-8 zoom-in transition-colors duration-300">
                                     <i class="ph-bold ph-spinner-gap animate-spin mr-2 text-orange-500 text-xl"></i> Fetching Live Patna Weather...
                                 </div>
-                                <span class="inline-block py-2 px-6 rounded-full bg-gradient-to-r from-orange-100 to-green-100 dark:from-orange-900/30 dark:to-green-900/30 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white text-xs font-black uppercase tracking-widest mb-6 font-bihari shadow-sm fade-in-up" style="animation-delay: 0.1s;">Pride of Bihar 🇮🇳</span>
-                                <h1 class="text-4xl sm:text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-4 sm:mb-6 tracking-tight drop-shadow-sm leading-tight font-bihari fade-in-up" style="animation-delay: 0.2s;"><span data-i18n="heroTitle">Patna Ki Apni Local Directory</span></h1>
-                                <p class="text-base sm:text-lg md:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto mb-10 sm:mb-12 font-bold leading-relaxed fade-in-up px-2" style="animation-delay: 0.3s;" data-i18n="heroSub">Boring Road se lekar Ashok Rajpath tak, aapki har zaroorat ab phone par. Sahi Service, Sahi Daam!</p>
-                                <div class="max-w-3xl w-full mx-auto p-3 bg-white dark:bg-slate-800 rounded-full flex items-center shadow-[0_15px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_15px_40px_rgba(0,0,0,0.4)] border-2 border-slate-100 dark:border-slate-700 group focus-within:border-orange-400 dark:focus-within:border-orange-500 focus-within:shadow-[0_15px_50px_rgba(249,115,22,0.15)] transition-all fade-in-up" style="animation-delay: 0.4s;">
-                                    <i class="ph-bold ph-magnifying-glass pl-5 pr-3 text-orange-500 text-3xl group-focus-within:scale-110 transition-transform"></i>
-                                    <input type="text" id="searchInput" onkeyup="handleSearch(event)" placeholder="${getTranslation('searchPlaceholder')}" class="w-full bg-transparent border-none outline-none text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 py-3 md:py-4 px-2 text-lg md:text-xl font-bold">
-                                    <button onclick="document.getElementById('searchInput').focus()" class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black py-4 px-10 rounded-full shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 hidden sm:block text-lg">Khojein</button>
+                                <span class="inline-block py-2 px-6 rounded-full bg-orange-100/80 dark:bg-orange-900/40 border border-orange-200/50 dark:border-orange-800/50 text-slate-800 dark:text-white text-xs font-black uppercase tracking-widest mb-6 font-bihari shadow-sm fade-in-up backdrop-blur-sm" style="animation-delay: 0.1s;">Pride of Bihar 🇮🇳</span>
+                                <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white mb-5 tracking-tight drop-shadow-sm leading-tight font-bihari fade-in-up" style="animation-delay: 0.2s;"><span data-i18n="heroTitle">Patna Ki Sari Zarooraton Ki One-Stop Suvidha</span></h1>
+                                <p class="text-base sm:text-lg md:text-xl text-slate-700 dark:text-slate-300 max-w-3xl mx-auto mb-10 sm:mb-12 font-bold leading-relaxed fade-in-up px-2" style="animation-delay: 0.3s;" data-i18n="heroSub">Ab har service, har dukan, aur har expert bas ek tap door. Premium local directory & instant booking.</p>
+                                <div class="max-w-3xl w-full mx-auto p-2 sm:p-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-full flex items-center shadow-[0_15px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] border-2 border-white dark:border-slate-600 group focus-within:border-orange-400 dark:focus-within:border-orange-500 transition-all fade-in-up" style="animation-delay: 0.4s;">
+                                    <i class="ph-bold ph-magnifying-glass pl-4 sm:pl-5 pr-2 sm:pr-3 text-orange-500 text-2xl sm:text-3xl group-focus-within:scale-110 transition-transform"></i>
+                                    <input type="text" id="searchInput" onkeyup="handleSearch(event)" placeholder="${getTranslation('searchPlaceholder')}" class="w-full bg-transparent border-none outline-none text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 py-3 px-2 text-base sm:text-lg font-bold">
+                                    <button onclick="document.getElementById('searchInput').focus()" class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black py-3 sm:py-4 px-6 sm:px-10 rounded-full shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 hidden sm:block text-base sm:text-lg whitespace-nowrap">Khojein</button>
                                 </div>
                             </div>
                         </div>
