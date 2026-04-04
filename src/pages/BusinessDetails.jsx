@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { getCategoryById } from '../utils/categories';
+import BookingModal from '../components/BookingModal';
 
 export default function BusinessDetails() {
   const { id } = useParams();
@@ -11,6 +12,8 @@ export default function BusinessDetails() {
 
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, text: '', userName: '' });
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedServiceIndex, setSelectedServiceIndex] = useState(0);
 
   if (!biz) return (
     <div style={{ background: 'transparent', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -65,7 +68,10 @@ export default function BusinessDetails() {
             <i className="ph-bold ph-arrow-left" style={{ color: '#fff', fontSize: '1.125rem' }}></i>
           </button>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={() => toggleFavorite(biz.id)} style={{
+            <button onClick={() => {
+              if (!currentUser) return navigate('/login');
+              toggleFavorite(biz.id);
+            }} style={{
               width: '40px', height: '40px', borderRadius: '50%',
               background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer',
@@ -160,7 +166,7 @@ export default function BusinessDetails() {
         <section style={{ display: 'flex', gap: '0.625rem', marginBottom: '1.5rem', justifyContent: 'center' }}>
           {[
             { icon: 'ph-phone', label: 'Call', color: '#138808', href: `tel:${biz.phone}` },
-            { icon: 'ph-whatsapp-logo', label: 'WhatsApp', color: '#25D366', href: biz.whatsapp ? `https://wa.me/91${biz.whatsapp}` : null },
+            { icon: 'ph-calendar-plus', label: 'Book Now', color: '#ff9159', action: () => setIsBookingModalOpen(true) },
             { icon: 'ph-map-trifold', label: 'Directions', color: '#0284c7', href: `https://maps.google.com/?q=${encodeURIComponent(biz.address)}` },
             { icon: 'ph-share-network', label: 'Share', color: '#8b5cf6', action: () => {
               if (navigator.share) {
@@ -244,7 +250,7 @@ export default function BusinessDetails() {
                     <p style={{ fontFamily: "'Manrope'", fontSize: '0.875rem', fontWeight: 600, color: 'var(--on-surface)' }}>{svc.name}</p>
                     <p style={{ fontFamily: "'Manrope'", fontSize: '0.8125rem', fontWeight: 700, color: 'var(--primary)' }}>₹{typeof svc.price === 'number' ? svc.price.toLocaleString() : svc.price}</p>
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); navigate(`/book/${biz.id}?service=${i}`); }} style={{
+                  <button onClick={(e) => { e.stopPropagation(); setSelectedServiceIndex(i); setIsBookingModalOpen(true); }} style={{
                     fontFamily: "'Plus Jakarta Sans'", fontSize: '0.75rem', fontWeight: 700,
                     background: 'var(--gradient-primary)', color: 'var(--on-primary)',
                     padding: '0.5rem 1rem', borderRadius: '999px', border: 'none', cursor: 'pointer',
@@ -307,7 +313,7 @@ export default function BusinessDetails() {
           <p style={{ fontFamily: "'Manrope'", fontSize: '0.75rem', color: 'var(--on-surface-variant)', textAlign: 'center', marginBottom: '0.75rem' }}>
             Price range: <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{biz.priceRange}</span>
           </p>
-          <button onClick={() => navigate(`/book/${biz.id}`)} style={{
+          <button onClick={() => setIsBookingModalOpen(true)} style={{
             width: '100%', fontFamily: "'Plus Jakarta Sans'", fontSize: '1rem', fontWeight: 700,
             background: 'var(--gradient-primary)', color: 'var(--on-primary)',
             padding: '1rem', borderRadius: '1rem', border: 'none', cursor: 'pointer',
@@ -320,6 +326,13 @@ export default function BusinessDetails() {
             <i className="ph-bold ph-calendar-check" style={{ marginRight: '0.5rem' }}></i>Book a Service
           </button>
         </div>
+
+        <BookingModal 
+          isOpen={isBookingModalOpen} 
+          onClose={() => setIsBookingModalOpen(false)} 
+          business={biz}
+          selectedServiceIndex={selectedServiceIndex}
+        />
       </div>
     </div>
   );

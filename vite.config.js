@@ -4,4 +4,17 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
+  build: {
+    outDir: 'dist',
+    commonjsOptions: {
+      ignore: ['firebase-admin', 'jsonwebtoken']
+    },
+    rollupOptions: {
+      external: ['api/**', 'functions/**']
+    }
+  },
+  optimizeDeps: {
+    exclude: ['firebase-admin', 'jsonwebtoken']
+  }
 })

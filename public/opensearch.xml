@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>Patna Suvidha</ShortName>
+  <Description>Search for local services in Patna - plumbers, electricians, doctors, salons and more</Description>
+  <Url type="text/html" template="https://patnasuvidha.vercel.app/explore?q={searchTerms}"/>
+  <Image width="16" height="16">https://patnasuvidha.vercel.app/icon-192x192.png</Image>
+  <Language>hi-in</Language>
+  <Language>en-in</Language>
+  <OutputEncoding>UTF-8</OutputEncoding>
+  <InputEncoding>UTF-8</InputEncoding>
+</OpenSearchDescription>

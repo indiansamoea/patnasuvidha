@@ -23,16 +23,17 @@ export default function BotProtection() {
   };
 
   return (
-    <div style={{ display: 'none' }}>
+    <div style={{ visibility: 'hidden', height: 0, width: 0, overflow: 'hidden' }}>
       <Turnstile
         ref={turnstileRef}
         siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAACw2a6MzcEneQin7'}
         onSuccess={onSuccess}
         onError={onError}
         options={{
-          appearance: 'always', // Or 'execute' for invisible but we'll hide it via CSS
+          appearance: 'execute',
           theme: 'auto',
           size: 'invisible',
+          retry: 'never'
         }}
       />
     </div>

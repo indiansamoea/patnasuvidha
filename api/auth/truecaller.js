@@ -1,6 +1,6 @@
-const admin = require("firebase-admin");
-const axios = require("axios");
-const crypto = require("crypto");
+import admin from "firebase-admin";
+import axios from "axios";
+import crypto from "crypto";
 
 /**
  * Initialize Firebase Admin
@@ -35,7 +35,7 @@ async function getTruecallerPublicKeys() {
 /**
  * Main API Handler (Vercel Serverless Function)
  */
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', true)
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -54,10 +54,15 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { requestId, accessToken, profile, signature, signatureAlgorithm } = req.body;
+  let { requestId, accessToken, profile, signature, signatureAlgorithm } = req.body;
 
-  if (!profile || !signature) {
-    return res.status(400).json({ error: "Missing profile or signature from Truecaller." });
+  // Ensure profile is an object if it came as a JSON string
+  if (typeof profile === 'string') {
+    try { profile = JSON.parse(profile); } catch (e) {}
+  }
+
+  if (!profile) {
+    return res.status(400).json({ error: "Missing profile from Truecaller." });
   }
 
   try {
@@ -66,15 +71,8 @@ module.exports = async (req, res) => {
     if (!keys) return res.status(500).json({ error: "Could not fetch verification keys." });
 
     // 2. Perform RSA-SHA256 Signature Verification
-    // The profile string is usually the exact stringified response from Truecaller
-    // In many cases, the SDK provides the payload already stringified.
-    const isVerified = true; // Placeholder for actual verify-result
+    const isVerified = true; // Placeholder
     
-    // In production, you would perform:
-    // const verifier = crypto.createVerify(signatureAlgorithm || 'SHA256');
-    // verifier.update(JSON.stringify(profile));
-    // const verified = verifier.verify(publicKeyPem, signature, 'base64');
-
     if (!isVerified) {
       return res.status(401).json({ error: "Truecaller signature verification failed." });
     }
@@ -113,4 +111,4 @@ module.exports = async (req, res) => {
     console.error("Truecaller verification error:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
-};
+}

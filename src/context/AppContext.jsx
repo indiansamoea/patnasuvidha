@@ -48,7 +48,7 @@ export function AppProvider({ children }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('rating');
-  const [favorites, setFavorites] = useState(() => loadFromStorage('ps_favorites', []));
+  const [favorites, setFavorites] = useState([]); // Default to empty, will be synced from Firestore
   const [filters, setFilters] = useState({ openNow: false, verified: false, nearMe: false });
   const [showGreeting, setShowGreeting] = useState(() => !sessionStorage.getItem('ps_greeting_shown'));
 
@@ -75,31 +75,30 @@ export function AppProvider({ children }) {
 
   useEffect(() => { saveToStorage('ps_lang', lang); }, [lang]);
   useEffect(() => { saveToStorage('ps_theme', theme); }, [theme]);
-  useEffect(() => { saveToStorage('ps_favorites', favorites); }, [favorites]);
 
   useEffect(() => {
     document.documentElement.className = theme === 'dark' ? 'dark-theme' : 'light-theme';
   }, [theme]);
 
+  // Auth & Global Real-time Listeners
   useEffect(() => {
-    if (!auth) return;
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!db) {
+    if (!auth || !db) {
       setNoDb(true);
       setLoading(false);
       return;
     }
 
+    // 1. Auth Listener
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+
+    // 2. Global Settings Listener
     const unsubSettings = onSnapshot(doc(db, 'settings', 'global'), (doc) => {
       if (doc.exists()) setSettings(doc.data());
     });
 
+    // 3. Global Businesses Listener
     const qBiz = query(collection(db, 'businesses'), orderBy('createdAt', 'desc'), limit(businessesPerPage));
     const unsubBiz = onSnapshot(qBiz, (snapshot) => {
       const bizData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
@@ -113,39 +112,92 @@ export function AppProvider({ children }) {
       setLoading(false);
     });
 
-    const unsubBookings = onSnapshot(collection(db, 'bookings'), (snapshot) => {
-      setBookings(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
-    });
-
+    // 4. Global Deals Listener
     const unsubDeals = onSnapshot(collection(db, 'deals'), (snapshot) => {
       setDeals(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
     });
 
     return () => {
+      unsubAuth();
       unsubSettings();
       unsubBiz();
-      unsubBookings();
       unsubDeals();
     };
   }, []);
+
+  // User-Specific Real-time Listeners (Wishlist & Bookings)
+  useEffect(() => {
+    if (!db || !currentUser) {
+      setFavorites([]);
+      setBookings([]);
+      return;
+    }
+
+    // 1. User Bookings Listener (Secure & Synchronized)
+    const qBookings = query(
+      collection(db, 'bookings'), 
+      where('userId', '==', currentUser.uid),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubBookings = onSnapshot(qBookings, (snapshot) => {
+      setBookings(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+    });
+
+    // 2. User Wishlist Listener (Cross-Device Sync)
+    const unsubWishlist = onSnapshot(collection(db, 'users', currentUser.uid, 'wishlist'), (snapshot) => {
+      const wishlistIds = snapshot.docs.map(doc => doc.id);
+      setFavorites(wishlistIds);
+    });
+
+    return () => {
+      unsubBookings();
+      unsubWishlist();
+    };
+  }, [currentUser]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
   const toggleThemeMode = () => toggleTheme();
 
   const isFavorite = (id) => favorites.includes(id);
-  const toggleFavorite = (id) => {
-    setFavorites(prev => prev.includes(id) ? prev.filter(fid => fid !== id) : [...prev, id]);
+
+  const toggleFavorite = async (id) => {
+    if (!currentUser) return; // Must be logged in
+    const wishlistRef = doc(db, 'users', currentUser.uid, 'wishlist', id);
+    
+    if (favorites.includes(id)) {
+      await deleteDoc(wishlistRef);
+    } else {
+      await setDoc(wishlistRef, { 
+        businessId: id, 
+        addedAt: serverTimestamp() 
+      });
+    }
   };
 
   const getFavoriteBusinesses = () => businesses.filter(b => favorites.includes(b.id));
 
   const addBooking = async (booking) => {
-    const newBooking = { ...booking, createdAt: new Date().toISOString(), status: 'sent_to_whatsapp' };
+    if (!currentUser) return;
+    const newBooking = { 
+      ...booking, 
+      userId: currentUser.uid, // Tie to current user
+      createdAt: serverTimestamp(), // Use server timestamp for reliable sync
+      status: 'sent_to_whatsapp' 
+    };
     await addDoc(collection(db, 'bookings'), newBooking);
   };
 
   const addBusiness = async (biz) => {
-    const newBiz = { ...biz, createdAt: serverTimestamp(), status: 'pending', isVerified: false, isFeatured: false, rating: 0, reviews: 0 };
+    const newBiz = { 
+      ...biz, 
+      ownerId: currentUser?.uid || null,
+      createdAt: serverTimestamp(), 
+      status: 'pending', 
+      isVerified: false, 
+      isFeatured: false, 
+      rating: 0, 
+      reviews: 0 
+    };
     await addDoc(collection(db, 'businesses'), newBiz);
   };
 
@@ -203,7 +255,7 @@ export function AppProvider({ children }) {
     // Use fuzzy search results if there's a query, otherwise use all active businesses
     let filtered = searchQuery ? fuzzyResults : businesses;
 
-    // Always filter by status for privacy/security (unless it's sample data)
+    // Always filter by status for privacy/security
     filtered = filtered.filter(b => b.status === 'active' || !b.status);
 
     if (targetCat !== 'all') {
@@ -214,7 +266,6 @@ export function AppProvider({ children }) {
       filtered = filtered.filter(b => b.isVerified);
     }
 
-    // Default sorting (can be expanded later)
     if (sortBy === 'rating') {
       filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     } else if (sortBy === 'name') {
@@ -224,7 +275,7 @@ export function AppProvider({ children }) {
     return filtered;
   };
 
-  const getBusinessById = (id) => businesses.find(b => b.id === id);
+  const getBusinessById = (id) => sourceBusinesses.find(b => b.id === id);
   const getFeaturedBusinesses = () => businesses.filter(b => b.isFeatured && (b.status === 'active' || !b.status)).slice(0, 10);
   const getSuggestedBusinesses = () => businesses.filter(b => (b.isSuggested || b.isSponsored) && (b.status === 'active' || !b.status)).slice(0, 10);
   const getPromotedBusinesses = () => businesses.filter(b => b.isPromoted && (b.status === 'active' || !b.status)).slice(0, 8);
@@ -260,13 +311,17 @@ export function AppProvider({ children }) {
     deals, addDeal: async (d) => await addDoc(collection(db, 'deals'), d),
     settings, updateSettings: async (s) => await updateDoc(doc(db, 'settings', 'global'), s),
     reviews: SAMPLE_REVIEWS, trendingSearches: TRENDING_SEARCHES,
-    addBusiness, addBusinessFree, approveListing, rejectListing, deleteBusiness, updateBusiness, toggleFeatured, toggleTopRated, toggleSuggested,
-    getFilteredBusinesses,
+    getBusinessById,
     getFeaturedBusinesses, getSuggestedBusinesses, getPromotedBusinesses, getRecommendedBusinesses, getTopRated, getRecentlyListed,
     showGreeting, dismissGreeting: () => { setShowGreeting(false); sessionStorage.setItem('ps_greeting_shown', 'true'); },
     loadMoreBusinesses, hasMore, loadingMore,
+    getFilteredBusinesses,
     currentUser, logout,
     turnstileToken, setTurnstileToken,
+    addDailyOffer: async (offer) => {
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      await addDoc(collection(db, 'daily_offers'), { ...offer, expiresAt, createdAt: serverTimestamp() });
+    },
   };
 
   return (
