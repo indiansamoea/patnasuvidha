@@ -11,7 +11,13 @@ export default defineConfig({
       ignore: ['firebase-admin', 'jsonwebtoken']
     },
     rollupOptions: {
-      external: ['api/**', 'functions/**']
+      external: ['api/**', 'functions/**'],
+      output: {
+        manualChunks: {
+          'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/messaging'],
+          'vendor-ui': ['framer-motion', '@phosphor-icons/react', 'react-router-dom'],
+        }
+      }
     }
   },
   optimizeDeps: {
