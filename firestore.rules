@@ -1,0 +1,88 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && getUserData().role == 'admin';
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // ─── Rules ───────────────────────────────────────────────────────────────
+
+    // Categories: Public can read, only Admin can write
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Businesses (Providers): Public can read, only Admin can write
+    match /businesses/{businessId} {
+      allow read: if true;
+      allow write: if isAdmin();
+      
+      // Reviews sub-collection
+      match /reviews/{reviewId} {
+        allow read: if true;
+        allow create: if isSignedIn();
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Bookings: Users can see/create their own. Admins can do everything.
+    match /bookings/{bookingId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin(); // Status changes etc via Admin panel
+      allow delete: if isAdmin();
+    }
+
+    // User Profiles & Private Data
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId);
+      
+      // Addresses sub-collection
+      match /addresses/{addressId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // Global Settings
+    match /settings/{settingId} {
+      allow read: if true; // Everyone reads 'global' for support phone etc.
+      allow write: if isAdmin();
+    }
+
+    // Service Offers (Hero sections)
+    match /service_offers/{offerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Deals
+    match /deals/{dealId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

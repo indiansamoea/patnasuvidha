@@ -7,7 +7,7 @@ export default function BookService() {
   const [searchParams] = useSearchParams();
   const serviceIndex = parseInt(searchParams.get('service') || '0');
   const navigate = useNavigate();
-  const { getBusinessById, addBooking, lang, currentUser } = useAppContext();
+  const { getBusinessById, addBooking, lang, currentUser, bookingsEnabled } = useAppContext();
   const biz = getBusinessById(id);
 
   const [selectedDate, setSelectedDate] = useState(0);
@@ -187,18 +187,25 @@ _यह बुकिंग Patna Suvidha (patnasuvidha.com) से की गई
         </div>
 
         {/* Book via WhatsApp CTA */}
-        <button onClick={handleBookViaWhatsApp} disabled={!name || !phone || !selectedTime} style={{
-          width: '100%', fontFamily: "'Plus Jakarta Sans'", fontSize: '1rem', fontWeight: 700,
-          background: (!name || !phone || !selectedTime) ? '#21262e' : 'linear-gradient(135deg, #22c55e, #16a34a)',
-          color: (!name || !phone || !selectedTime) ? '#72767c' : '#fff',
-          padding: '1rem', borderRadius: '1rem', border: 'none',
-          cursor: (!name || !phone || !selectedTime) ? 'not-allowed' : 'pointer',
-          boxShadow: (!name || !phone || !selectedTime) ? 'none' : '0 8px 25px rgba(34,197,94,0.3)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-        }}>
-          <i className="ph-fill ph-whatsapp-logo" style={{ fontSize: '1.25rem' }}></i>
-          {lang === 'hi' ? 'WhatsApp पर बुक करीं' : 'Book on WhatsApp'}
-        </button>
+        {bookingsEnabled ? (
+          <button onClick={handleBookViaWhatsApp} disabled={!name || !phone || !selectedTime} style={{
+            width: '100%', fontFamily: "'Plus Jakarta Sans'", fontSize: '1rem', fontWeight: 700,
+            background: (!name || !phone || !selectedTime) ? '#21262e' : 'linear-gradient(135deg, #22c55e, #16a34a)',
+            color: (!name || !phone || !selectedTime) ? '#72767c' : '#fff',
+            padding: '1rem', borderRadius: '1rem', border: 'none',
+            cursor: (!name || !phone || !selectedTime) ? 'not-allowed' : 'pointer',
+            boxShadow: (!name || !phone || !selectedTime) ? 'none' : '0 8px 25px rgba(34,197,94,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+          }}>
+            <i className="ph-fill ph-whatsapp-logo" style={{ fontSize: '1.25rem' }}></i>
+            {lang === 'hi' ? 'WhatsApp पर बुक करीं' : 'Book on WhatsApp'}
+          </button>
+        ) : (
+          <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '1rem', borderRadius: '1rem', textAlign: 'center', fontFamily: "'Manrope'", fontSize: '0.875rem', fontWeight: 700, border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+            <i className="ph-fill ph-warning-circle" style={{ fontSize: '1.25rem', marginBottom: '0.25rem', display: 'block' }}></i>
+            {lang === 'hi' ? 'बुकिंग अभी बंद है। कृपया बाद में प्रयास करें।' : 'Bookings are currently paused. Please try again later.'}
+          </div>
+        )}
       </div>
     </div>
   );

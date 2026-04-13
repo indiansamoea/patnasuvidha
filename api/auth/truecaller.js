@@ -36,10 +36,23 @@ async function getTruecallerPublicKeys() {
  * Main API Handler (Vercel Serverless Function)
  */
 export default async function handler(req, res) {
-  // CORS Headers
+  // CORS Headers - restrict to authorized domains
+  const allowedOrigins = [
+    'https://patnasuvidha.com',
+    'https://www.patnasuvidha.com',
+    'https://patnasuvidha.online',
+    'https://www.patnasuvidha.online',
+    'https://patnasuvidha.vercel.app',
+    'https://patnasuvidha-5o2s7z1cs-indiansamoeas-projects.vercel.app',
+    'http://localhost:5173' // for local dev
+  ];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
   res.setHeader('Access-Control-Allow-Credentials', true)
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS')
   res.setHeader(
     'Access-Control-Allow-Headers',
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
@@ -56,33 +69,65 @@ export default async function handler(req, res) {
 
   let { requestId, accessToken, profile, signature, signatureAlgorithm } = req.body;
 
-  // Ensure profile is an object if it came as a JSON string
-  if (typeof profile === 'string') {
-    try { profile = JSON.parse(profile); } catch (e) {}
+  // 1. Input Validation
+  if (!profile || !signature) {
+    return res.status(400).json({ error: "Missing profile or signature from Truecaller." });
   }
 
-  if (!profile) {
-    return res.status(400).json({ error: "Missing profile from Truecaller." });
+  // Ensure profile is an object for analysis, but we need the raw string for signature check
+  let profileObj = profile;
+  let profileStr = typeof profile === 'string' ? profile : JSON.stringify(profile);
+  
+  if (typeof profile === 'string') {
+    try { profileObj = JSON.parse(profile); } catch (e) {
+      return res.status(400).json({ error: "Invalid profile format." });
+    }
   }
 
   try {
-    // 1. Fetch Truecaller Public Keys
+    // 2. Fetch Truecaller Public Keys
     const keys = await getTruecallerPublicKeys();
-    if (!keys) return res.status(500).json({ error: "Could not fetch verification keys." });
+    if (!keys || !Array.isArray(keys)) {
+      return res.status(500).json({ error: "Could not fetch verification keys." });
+    }
 
-    // 2. Perform RSA-SHA256 Signature Verification
-    const isVerified = true; // Placeholder
+    // 3. Perform RSA-SHA256 Signature Verification
+    let isVerified = false;
+    
+    // Truecaller uses multiple keys. We need to find the right one (usually based on key id if provided, or try all)
+    // For the Web SDK, we often verify the profile string
+    for (const key of keys) {
+      try {
+        const verifier = crypto.createVerify(signatureAlgorithm || 'SHA256');
+        verifier.update(profileStr);
+        // Note: The public key from Truecaller is in a specific format, we might need to wrap it in PEM
+        const publicKey = `-----BEGIN PUBLIC KEY-----\n${key.key}\n-----END PUBLIC KEY-----`;
+        if (verifier.verify(publicKey, signature, 'base64')) {
+          isVerified = true;
+          break;
+        }
+      } catch (err) {
+        // Continue to next key if verification fails for this specific key
+      }
+    }
     
     if (!isVerified) {
+      // Security Log: Potential impersonation attempt
+      console.warn(`[SECURITY] Signature verification failed for phone: ${profileObj.phoneNumber || profileObj.phone}`);
       return res.status(401).json({ error: "Truecaller signature verification failed." });
     }
 
-    // 3. Extract User Data
-    const phone = profile.phoneNumber || profile.phone;
-    const name = profile.firstName + (profile.lastName ? ' ' + profile.lastName : '');
+    // 4. Extract User Data
+    const phone = profileObj.phoneNumber || profileObj.phone;
+    const name = (profileObj.firstName || 'User') + (profileObj.lastName ? ' ' + profileObj.lastName : '');
+    
+    if (!phone) {
+      return res.status(400).json({ error: "Profile missing phone number." });
+    }
+    
     const formattedPhone = phone.startsWith('+') ? phone : '+' + phone;
 
-    // 4. Firebase User Sync
+    // 5. Firebase User Sync
     let userRecord;
     try {
       userRecord = await admin.auth().getUserByPhoneNumber(formattedPhone);
@@ -97,7 +142,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 5. Generate Custom Token
+    // 6. Generate Custom Token
     const customToken = await admin.auth().createCustomToken(userRecord.uid);
 
     return res.status(200).json({ 

@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 import { getFunctions } from 'firebase/functions';
@@ -20,11 +20,23 @@ export let auth = null;
 export let functions = null;
 
 if (firebaseConfig.apiKey) {
-  app = initializeApp(firebaseConfig);
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-  });
-  storage = getStorage(app);
-  auth = getAuth(app);
-  functions = getFunctions(app, 'us-central1');
+  try {
+    app = initializeApp(firebaseConfig);
+    
+    // Attempt Firestore with persistent cache
+    try {
+      db = initializeFirestore(app, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+      });
+    } catch (e) {
+      console.warn("Firestore persistent cache failed, falling back to standard:", e);
+      db = getFirestore(app);
+    }
+
+    storage = getStorage(app);
+    auth = getAuth(app);
+    functions = getFunctions(app, 'us-central1');
+  } catch (err) {
+    console.error("Firebase init failed:", err);
+  }
 }

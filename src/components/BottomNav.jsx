@@ -1,18 +1,18 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 
-const NAV_ITEMS = [
-  { path: '/', label: 'Home', labelHi: 'होम', icon: 'ph ph-house', iconFill: 'ph-fill ph-house' },
-  { path: '/explore', label: 'Explore', labelHi: 'खोजें', icon: 'ph ph-compass', iconFill: 'ph-fill ph-compass' },
-  { path: '/add-business', label: 'Add Free', labelHi: 'जोड़ें', icon: 'ph ph-plus', iconFill: 'ph-bold ph-plus', isCenter: true },
-  { path: '/favorites', label: 'Saved', labelHi: 'सेव', icon: 'ph ph-heart', iconFill: 'ph-fill ph-heart' },
-  { path: '/account', label: 'Account', labelHi: 'खाता', icon: 'ph ph-user-circle', iconFill: 'ph-fill ph-user-circle' }
-];
-
 export default function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { lang } = useAppContext();
+
+  const items = [
+    { path: '/', label: 'Home', labelHi: 'होम', icon: 'ph ph-house', iconFill: 'ph-fill ph-house' },
+    { path: '/services', label: 'Services', labelHi: 'सेवाएं', icon: 'ph ph-grid-four', iconFill: 'ph-fill ph-grid-four' },
+    { path: '/updates', label: 'Updates', labelHi: 'अपडेट्स', icon: 'ph ph-bell', iconFill: 'ph-fill ph-bell-ringing', isCenter: true },
+    { path: '/bookings', label: 'Bookings', labelHi: 'बुकिंग', icon: 'ph ph-calendar-check', iconFill: 'ph-fill ph-calendar-check' },
+    { path: '/account', label: 'Account', labelHi: 'खाता', icon: 'ph ph-user-circle', iconFill: 'ph-fill ph-user-circle' }
+  ];
 
   return (
     <nav className="liquid-glass" style={{
@@ -24,14 +24,14 @@ export default function BottomNav() {
         maxWidth: '480px', margin: '0 auto', padding: '0.75rem 0.5rem 0.5rem',
         position: 'relative'
       }}>
-        {NAV_ITEMS.map(item => {
+        {items.map((item, idx) => {
           const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path);
           const text = lang === 'hi' ? item.labelHi : item.label;
 
           // The center FLOATING Action Button
           if (item.isCenter) {
             return (
-              <div key={item.path} style={{ position: 'relative', width: '64px', display: 'flex', justifyContent: 'center' }}>
+              <div key="center" style={{ position: 'relative', width: '64px', display: 'flex', justifyContent: 'center' }}>
                 <button onClick={() => navigate(item.path)} style={{
                   position: 'absolute', bottom: '-10px',
                   width: '58px', height: '58px', borderRadius: '20px',
@@ -44,15 +44,15 @@ export default function BottomNav() {
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
                 >
-                  <i className={item.icon} style={{ fontSize: '1.5rem', color: 'var(--on-primary)', fontWeight: 'bold' }}></i>
+                  <i className={isActive ? item.iconFill : item.icon} style={{ fontSize: '1.5rem', color: 'var(--on-primary)', fontWeight: 'bold' }}></i>
+                  {/* Small red dot for notifications indicator could be added here */}
                 </button>
               </div>
             );
           }
 
-          // Standard Nav Items
           return (
-            <button key={item.path} onClick={() => navigate(item.path)} style={{
+            <button key={idx} onClick={() => navigate(item.path)} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem',
               padding: '0.5rem 1rem', background: isActive ? 'var(--primary-container)' : 'transparent',
               borderRadius: '20px', border: 'none',

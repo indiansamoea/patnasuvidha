@@ -24,7 +24,7 @@ export default function Login() {
     const initTruecaller = () => {
       console.log("Truecaller: Initialization logic triggered");
       try {
-        const partnerKey = import.meta.env.NEXT_PUBLIC_TRUECALLER_PARTNER_KEY;
+        const partnerKey = import.meta.env.VITE_TRUECALLER_PARTNER_KEY;
         console.log("Truecaller: Checking Key:", partnerKey ? "Key Exists" : "KEY IS MISSING");
         
         if (!partnerKey) {
@@ -220,39 +220,43 @@ export default function Login() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0e13]">
-      <div className="clay-card w-full max-w-md p-8 flex flex-col items-center">
-        <h1 className="text-2xl font-bold text-white mb-2 font-['Plus_Jakarta_Sans']">Welcome Back</h1>
-        <p className="text-gray-400 mb-8 font-['Manrope'] text-sm text-center">Join 10,000+ users in Patna</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.25rem', background: 'var(--surface)' }}>
+      <div className="clay-card animate-fade-up-plus" style={{ width: '100%', maxWidth: '448px', padding: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px solid var(--outline-variant)' }}>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--on-surface)', marginBottom: '0.5rem', fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>
+          Welcome Back
+        </h1>
+        <p style={{ color: 'var(--on-surface-variant)', marginBottom: '2.5rem', fontFamily: 'var(--font-body)', fontSize: '0.875rem', textAlign: 'center', fontWeight: 600 }}>
+          Join 10,000+ users in Patna
+        </p>
 
         {error && (
-          <div className="w-full mb-6 space-y-3">
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs text-center">
+          <div style={{ width: '100%', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ padding: '0.75rem', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '12px', color: '#dc2626', fontSize: '0.75rem', textAlign: 'center', fontWeight: 600 }}>
               {error === 'TRUECALLER_NOT_RESPONDING' 
                 ? 'Truecaller app not responding or not found.' 
                 : error}
             </div>
             
             {error === 'TRUECALLER_NOT_RESPONDING' && (
-              <div className="p-4 bg-white/5 border border-white/10 rounded-xl space-y-2">
-                <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Troubleshooting</p>
-                <ul className="text-[11px] text-gray-400 space-y-2">
-                  <li className="flex gap-2">
-                    <i className="ph-bold ph-check-circle text-primary"></i>
+              <div style={{ padding: '1rem', background: 'var(--surface-container-high)', border: '1px solid var(--outline-variant)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <p style={{ fontSize: '0.625rem', textTransform: 'uppercase', fontWeight: 800, color: 'var(--on-surface-variant)', letterSpacing: '0.05em' }}>Troubleshooting</p>
+                <ul style={{ fontSize: '0.6875rem', color: 'var(--on-surface)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <li style={{ display: 'flex', gap: '0.5rem' }}>
+                    <i className="ph-bold ph-check-circle" style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }}></i>
                     <span>Open <b>Chrome Browser</b> directly (links inside Facebook/Instagram often block deep links).</span>
                   </li>
-                  <li className="flex gap-2">
-                    <i className="ph-bold ph-check-circle text-primary"></i>
+                  <li style={{ display: 'flex', gap: '0.5rem' }}>
+                    <i className="ph-bold ph-check-circle" style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }}></i>
                     <span>Ensure <b>Truecaller app</b> is installed and you are logged into it.</span>
                   </li>
-                  <li className="flex gap-2">
-                    <i className="ph-bold ph-check-circle text-primary"></i>
+                  <li style={{ display: 'flex', gap: '0.5rem' }}>
+                    <i className="ph-bold ph-check-circle" style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }}></i>
                     <span>Check if you are in <b>Incognito Mode</b> (Deep links are often disabled in Incognito).</span>
                   </li>
                 </ul>
                 <button 
                   onClick={triggerTruecaller}
-                  className="w-full py-1.5 mt-2 bg-primary/20 text-primary text-[11px] font-bold rounded-lg hover:bg-primary/30 transition-colors"
+                  style={{ width: '100%', padding: '0.5rem', marginTop: '0.5rem', background: 'var(--primary-container)', color: 'var(--primary)', fontSize: '0.6875rem', fontWeight: 800, borderRadius: '8px', cursor: 'pointer', border: 'none' }}
                 >
                   Retry Truecaller Login
                 </button>
@@ -265,8 +269,16 @@ export default function Login() {
         <button 
           onClick={triggerTruecaller}
           disabled={loading || !isSdkReady}
-          className={`w-full flex items-center justify-center gap-3 bg-[#0056D2] hover:bg-[#004bb8] disabled:bg-gray-800 disabled:opacity-50 text-white font-semibold py-3.5 px-4 rounded-xl transition-all active:scale-[0.98] mb-4 shadow-lg shadow-blue-900/20 
-          ${isPreparing ? 'animate-pulse' : ''}`}
+          className={isPreparing ? 'animate-pulse' : ''}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
+            background: '#0056D2', color: '#ffffff', border: 'none',
+            padding: '0.875rem 1rem', borderRadius: '12px', fontWeight: 600,
+            transition: 'all 0.2s', cursor: (loading || !isSdkReady) ? 'not-allowed' : 'pointer',
+            opacity: (loading || !isSdkReady) ? 0.5 : 1,
+            boxShadow: '0 4px 12px rgba(0,86,210,0.2)',
+            marginBottom: '1rem'
+          }}
         >
           {isPreparing ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -275,37 +287,47 @@ export default function Login() {
               <path d="M12.0001 0.444336C5.62763 0.444336 0.44458 5.62739 0.44458 12C0.44458 18.3726 5.62763 23.5557 12.0001 23.5557C18.3727 23.5557 23.5557 18.3726 23.5557 12C23.5557 5.62739 18.3727 0.444336 12.0001 0.444336ZM8.73024 18.8413C7.55562 18.8413 6.64133 17.8533 6.64133 16.6343C6.64133 15.4152 7.55562 14.4272 8.73024 14.4272C9.07008 14.4272 9.38379 14.5055 9.67138 14.6361C8.75635 12.7836 8.3512 11.0366 8.24647 9.38356C8.1942 8.56391 8.3245 7.42777 8.92506 6.57797C9.52561 5.72816 10.3754 5.25745 11.2372 5.06173C11.668 4.97034 12.0991 4.91807 12.5168 4.90491V6.99381C12.3338 6.99381 12.1511 7.00697 11.9682 7.03313C11.511 7.11146 11.132 7.34639 10.8318 7.69894C10.5316 8.05149 10.4533 8.39088 10.4665 8.76916C10.5187 9.87919 10.8841 11.1062 11.6545 12.7109C12.4249 14.3156 12.634 14.9031 12.634 14.9031H12.6343L12.6472 14.9292C12.6472 14.9292 12.8561 14.3417 13.6265 12.7371C14.3969 11.1324 14.7623 9.90547 14.8145 8.79544C14.8277 8.41716 14.7494 8.07777 14.4491 7.72522C14.1489 7.37267 13.7699 7.13774 13.3128 7.05941C13.13 7.03325 12.9472 7.02008 12.7643 7.02008V4.93118C13.1818 4.94424 13.6128 4.99651 14.0436 5.0879C14.9056 5.28362 15.7554 5.75442 16.3559 6.60423C16.9565 7.45404 17.087 8.58988 17.0347 9.40983C16.93 11.0628 16.5248 12.8099 15.6098 14.6624C15.8974 14.5318 16.2111 14.4534 16.5509 14.4534C17.7256 14.4534 18.6398 15.4414 18.6398 16.6605C18.6398 17.8795 17.7256 18.8675 16.5509 18.8675C15.3763 18.8675 14.462 17.8795 14.462 16.6605C14.462 16.3339 14.5273 16.0337 14.6578 15.7594C14.1616 16.7909 13.6261 17.8223 13.2996 18.5275C13.1039 18.9452 12.8427 19.3891 12.5292 19.7416C12.2157 20.0942 11.7847 20.3554 11.2363 20.4599C10.688 20.5644 10.257 20.4599 9.94317 20.251C9.62933 20.0421 9.4336 19.7418 9.27684 19.3499C9.27684 19.3499 8.95048 18.5796 8.53272 17.6525C8.38915 17.979 8.31071 18.3444 8.31071 18.7231H8.73024V18.8413Z"/>
             </svg>
           )}
-          <span className="font-['Plus_Jakarta_Sans']">
+          <span style={{ fontFamily: 'var(--font-display)' }}>
             {isPreparing ? 'Preparing Truecaller...' : (isSdkReady ? '1-Tap Login with Truecaller' : 'Login with Truecaller')}
           </span>
         </button>
 
-        <div className="w-full flex items-center gap-4 my-4">
-          <div className="flex-1 h-[1px] bg-gray-800"></div>
-          <span className="text-gray-500 text-xs font-bold font-['Manrope']">OR</span>
-          <div className="flex-1 h-[1px] bg-gray-800"></div>
+
+        <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '1rem', margin: '1rem 0' }}>
+          <div style={{ flex: 1, height: '1px', background: 'var(--outline-variant)' }}></div>
+          <span style={{ color: 'var(--on-surface-variant)', fontSize: '0.75rem', fontWeight: 800, fontFamily: 'var(--font-body)' }}>OR</span>
+          <div style={{ flex: 1, height: '1px', background: 'var(--outline-variant)' }}></div>
         </div>
 
         {/* Google Button */}
         <button 
           onClick={handleGoogleLogin}
           disabled={loading}
-          className={`w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-black font-semibold py-3.5 px-4 rounded-xl transition-all active:scale-[0.98] 
-          ${tcFailed ? 'ring-4 ring-primary/30 border-2 border-primary animate-pulse' : ''}`}
+          className={tcFailed ? 'animate-pulse-glow' : ''}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
+            background: 'var(--surface-container-highest)', color: 'var(--on-surface)',
+            border: tcFailed ? '2px solid var(--primary)' : '1px solid var(--outline-variant)',
+            padding: '0.875rem 1rem', borderRadius: '12px', fontWeight: 800,
+            transition: 'all 0.2s', cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.6 : 1
+          }}
         >
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-          <span className="font-['Plus_Jakarta_Sans']">Continue with Google</span>
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{ width: '20px', height: '20px' }} />
+          <span style={{ fontFamily: 'var(--font-display)' }}>Continue with Google</span>
         </button>
 
         {loading && (
-          <div className="mt-6 flex flex-col items-center gap-2">
-            <div className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full"></div>
-            <span className="text-xs text-gray-500 font-['Manrope']">Securely authenticating...</span>
+          <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="spinner" style={{ width: '20px', height: '20px' }}></div>
+            <span style={{ fontSize: '0.75rem', color: 'var(--on-surface-variant)', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
+              Securely authenticating...
+            </span>
           </div>
         )}
 
-        <p className="mt-8 text-[10px] text-gray-600 text-center font-['Manrope']">
-          By continuing, you agree to our <span className="text-primary underline cursor-pointer">Terms</span> & <span className="text-primary underline cursor-pointer">Privacy Policy</span>
+        <p style={{ marginTop: '2rem', fontSize: '0.6875rem', color: 'var(--on-surface-variant)', textAlign: 'center', fontFamily: 'var(--font-body)', fontWeight: 600, lineHeight: 1.5 }}>
+          By continuing, you agree to our <span style={{ color: 'var(--primary)', textDecoration: 'underline', cursor: 'pointer' }}>Terms</span> & <span style={{ color: 'var(--primary)', textDecoration: 'underline', cursor: 'pointer' }}>Privacy Policy</span>
         </p>
       </div>
     </div>

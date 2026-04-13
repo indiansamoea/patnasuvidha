@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 
 export default function AiAssistant() {
@@ -30,17 +31,24 @@ export default function AiAssistant() {
         body: JSON.stringify({ message: userMsg, context })
       });
       
+      if (!res.ok) {
+        throw new Error(lang === 'hi' ? 'सर्वर से संपर्क नहीं हो पाया' : 'Could not reach server');
+      }
+
       const data = await res.json();
-      setChat(prev => [...prev, { role: 'assistant', text: data.response || 'Sorry, I am having trouble connecting.' }]);
+      setChat(prev => [...prev, { role: 'assistant', text: data.response || (lang === 'hi' ? 'माफ़ करें, मुझे समझ नहीं आया' : 'Sorry, I am having trouble connecting.') }]);
     } catch (e) {
-      setChat(prev => [...prev, { role: 'assistant', text: 'Error connecting to Patna AI.' }]);
+      setChat(prev => [...prev, { role: 'assistant', text: lang === 'hi' ? 'माफ़ करें, अभी सहायक उपलब्ध नहीं है। कृपया थोड़ी देर बाद प्रयास करें।' : 'Sorry, the assistant is temporarily unavailable. Please try again in a moment.' }]);
     } finally {
       setLoading(false);
     }
   };
 
+  const location = useLocation();
+  const isServiceLanding = location.pathname.startsWith('/service/');
+
   return (
-    <div style={{ position: 'fixed', bottom: '80px', right: '20px', zIndex: 1000 }}>
+    <div style={{ position: 'fixed', bottom: isServiceLanding ? '180px' : '90px', right: '20px', zIndex: 1000 }}>
       {/* FAB */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
@@ -87,7 +95,7 @@ export default function AiAssistant() {
               value={msg} onChange={e => setMsg(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
               placeholder="Ask anything..."
-              style={{ flex: 1, background: '#0a0e13', border: 'none', padding: '0.625rem 1rem', borderRadius: '999px', color: '#fff', fontSize: '0.8125rem', outline: 'none' }}
+              style={{ flex: 1, background: '#21262e', border: '1px solid rgba(255,255,255,0.12)', padding: '0.625rem 1rem', borderRadius: '999px', color: '#f4f6fe', fontSize: '0.8125rem', outline: 'none' }}
             />
             <button onClick={handleSend} style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#ff9159', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               <i className="ph-bold ph-paper-plane-right" style={{ color: '#401500' }}></i>

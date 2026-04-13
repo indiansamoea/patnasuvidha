@@ -1,5 +1,5 @@
-import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import React, { useEffect, lazy, Suspense, Component } from 'react';
+import { BrowserRouter, Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import BottomNav from './components/BottomNav';
 import BotProtection from './components/BotProtection';
@@ -8,17 +8,19 @@ import MarqueeBanner from './components/MarqueeBanner';
 import { Toaster } from 'react-hot-toast';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import Home from './pages/Home';
-import Explore from './pages/Explore';
-import BusinessDetails from './pages/BusinessDetails';
+import Services from './pages/Services';
 import BookService from './pages/BookService';
 import BookingSuccess from './pages/BookingSuccess';
-import Favorites from './pages/Favorites';
-import AddBusiness from './pages/AddBusiness';
 const Admin = lazy(() => import('./pages/Admin'));
 import Account from './pages/Account';
 import Login from './pages/Login';
+import ServiceLanding from './pages/ServiceLanding';
+import Bookings from './pages/Bookings';
+import Updates from './pages/Updates';
 import AiAssistant from './components/AiAssistant';
 import InstallPrompt from './components/InstallPrompt';
+import Onboarding from './pages/Onboarding';
+import { useAppContext } from './context/AppContext';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -30,15 +32,27 @@ function ScrollToTop() {
 
 function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isAdmin = location.pathname.startsWith('/admin');
+  const isOnboarding = location.pathname === '/onboarding';
+  const { userData, currentUser, loading } = useAppContext();
   const { requestPermission } = usePushNotifications();
+
+  // Onboarding Gate: If user is logged in but profile is incomplete, force onboarding
+  useEffect(() => {
+    if (!loading && currentUser && userData && userData.onboardingCompleted === false && !isOnboarding) {
+      navigate('/onboarding', { replace: true });
+    }
+  }, [currentUser, userData, loading, isOnboarding]);
 
   // Listen for push permissions on mount
   useEffect(() => {
-    if (!isAdmin) {
+    if (!isAdmin && !isOnboarding) {
       requestPermission().catch(console.error);
     }
-  }, [isAdmin]);
+  }, [isAdmin, isOnboarding]);
+
+  const isServiceLanding = location.pathname.startsWith('/service/');
 
   return (
     <>
@@ -56,33 +70,74 @@ function AppLayout() {
         <Suspense fallback={<div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff9159' }}>Loading Patna Suvidha...</div>}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/explore" element={<Explore />} />
-            <Route path="/explore/:category" element={<Explore />} />
-            <Route path="/business/:id" element={<BusinessDetails />} />
+            <Route path="/explore" element={<Navigate to="/services" replace />} />
+            <Route path="/explore/:category" element={<Navigate to="/services" replace />} />
+            <Route path="/business/:id" element={<Navigate to="/" replace />} />
+            <Route path="/favorites" element={<Navigate to="/account" replace />} />
+            
+            {/* New Routes */}
+            <Route path="/services" element={<Services />} />
+            <Route path="/service/:category" element={<ServiceLanding />} />
+            <Route path="/bookings" element={<Bookings />} />
+            <Route path="/updates" element={<Updates />} />
+            
+            {/* Kept Routes */}
             <Route path="/book/:id" element={<BookService />} />
             <Route path="/booking-success" element={<BookingSuccess />} />
-            <Route path="/favorites" element={<Favorites />} />
             <Route path="/account" element={<Account />} />
-            <Route path="/add-business" element={<AddBusiness />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/onboarding" element={<Onboarding />} />
           </Routes>
         </Suspense>
-        {!isAdmin && <AiAssistant />}
-        {!isAdmin && <InstallPrompt />}
-        {!isAdmin && <BottomNav />}
+        {!isAdmin && !isOnboarding && <AiAssistant />}
+        {!isAdmin && !isOnboarding && <InstallPrompt />}
+        {!isAdmin && !isOnboarding && !isServiceLanding && <BottomNav />}
       </div>
     </>
   );
 }
 
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('ErrorBoundary caught:', error, errorInfo);
+    this.setState({ errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '2rem', color: '#ff9159', background: '#0a0e13', minHeight: '100vh', fontFamily: 'monospace' }}>
+          <h2>💥 Application Crashed</h2>
+          <p style={{ color: '#ef4444' }}>{this.state.error?.toString()}</p>
+          <pre style={{ background: '#151a20', padding: '1rem', overflowX: 'auto', fontSize: '0.8rem', color: '#a8abb2' }}>
+            {this.state.errorInfo?.componentStack}
+          </pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   return (
-    <BrowserRouter>
-      <AppProvider>
-        <AppLayout />
-      </AppProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AppProvider>
+          <AppLayout />
+        </AppProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

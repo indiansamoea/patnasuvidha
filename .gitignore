@@ -10,3 +10,5 @@ dist
 .firebaserc
 firebase-debug.log*
 .vercel
+firebase-key.json
+*.log

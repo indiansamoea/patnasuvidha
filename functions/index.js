@@ -11,7 +11,11 @@ admin.initializeApp();
  */
 async function verifyTurnstile(token) {
   if (!token) return false;
-  const secretKey = process.env.TURNSTILE_SECRET_KEY || "0x4AAAAAACw2a6g_wZjSuKCQO0I6z-tcdQQ";
+  const secretKey = process.env.TURNSTILE_SECRET_KEY;
+  if (!secretKey) {
+    console.error("Missing TURNSTILE_SECRET_KEY environment variable.");
+    return false;
+  }
   
   try {
     const response = await axios.post(
@@ -50,10 +54,11 @@ async function getTruecallerPublicKeys() {
 exports.verifyTruecallerLogin = onCall({ cors: true }, async (request) => {
   const { requestId, accessToken, profile, signature, signatureAlgorithm, turnstileToken } = request.data;
 
-  // 1. Bot Check (Optional but recommended)
-  if (turnstileToken) {
-    const isHuman = await verifyTurnstile(turnstileToken);
-    if (!isHuman) throw new HttpsError("failed-precondition", "Bot detection failed.");
+  // 1. Bot Check (Mandatory for security)
+  const isHuman = await verifyTurnstile(turnstileToken);
+  if (!isHuman) {
+    console.error("[SECURITY] Turnstile verification failed.");
+    throw new HttpsError("failed-precondition", "Bot detection failed. Please try again.");
   }
 
   // 2. Validate Profile Data
@@ -61,38 +66,48 @@ exports.verifyTruecallerLogin = onCall({ cors: true }, async (request) => {
     throw new HttpsError("invalid-argument", "Missing profile or signature from Truecaller.");
   }
 
+  // Ensure profile is a string for cryptographic verification
+  const profileStr = typeof profile === 'string' ? profile : JSON.stringify(profile);
+  const profileObj = typeof profile === 'string' ? JSON.parse(profile) : profile;
+
   try {
-    // 3. Signature Verification Logic
-    // In a real implementation, you would:
-    // a. Get public keys from Truecaller
-    // b. Use crypto.createVerify(signatureAlgorithm || 'SHA256')
-    // c. .update(profile_data_string)
-    // d. .verify(publicKey, signature, 'base64')
+    // 3. Fetch Truecaller Public Keys
+    const keys = await getTruecallerPublicKeys();
     
-    // For this implementation, we will perform the lookup and verification:
-    // Note: Truecaller Web SDK v2 actually recommends server-side accessToken verification
-    // But since the user explicitly asked for Signature Verification:
+    // 4. Perform RSA-SHA256 Signature Verification
+    let isVerified = false;
     
-    // Mocking the cryptographic verification for this template:
-    // (In production, use the fetched keys and the profile payload string)
-    const isVerified = true; // Replace with actual crypto.verify result
+    for (const key of keys) {
+      try {
+        const verifier = crypto.createVerify(signatureAlgorithm || 'SHA256');
+        verifier.update(profileStr);
+        const publicKey = `-----BEGIN PUBLIC KEY-----\n${key.key}\n-----END PUBLIC KEY-----`;
+        if (verifier.verify(publicKey, signature, 'base64')) {
+          isVerified = true;
+          break;
+        }
+      } catch (err) {
+        // Skip invalid keys or verification errors
+      }
+    }
     
     if (!isVerified) {
+      console.warn(`[SECURITY] Truecaller signature verification failed for: ${profileObj.phoneNumber || profileObj.phone}`);
       throw new HttpsError("unauthenticated", "Truecaller signature verification failed.");
     }
 
-    // 4. Extract User Data
-    const phone = profile.phoneNumber || profile.phone;
-    const name = profile.firstName + (profile.lastName ? ' ' + profile.lastName : '');
+    // 5. Extract User Data
+    const phone = profileObj.phoneNumber || profileObj.phone;
+    const name = (profileObj.firstName || 'User') + (profileObj.lastName ? ' ' + profileObj.lastName : '');
     
     if (!phone) {
       throw new HttpsError("invalid-argument", "Truecaller profile missing phone number.");
     }
 
-    // 5. Firebase Native Auth Integration
-    let userRecord;
     const formattedPhone = phone.startsWith('+') ? phone : '+' + phone;
     
+    // 6. Firebase Native Auth Integration
+    let userRecord;
     try {
       userRecord = await admin.auth().getUserByPhoneNumber(formattedPhone);
     } catch (error) {
@@ -106,7 +121,7 @@ exports.verifyTruecallerLogin = onCall({ cors: true }, async (request) => {
       }
     }
 
-    // 6. Generate Custom Token
+    // 7. Generate Custom Token
     const customToken = await admin.auth().createCustomToken(userRecord.uid);
     
     return { 
@@ -117,7 +132,8 @@ exports.verifyTruecallerLogin = onCall({ cors: true }, async (request) => {
     };
 
   } catch (error) {
+    if (error instanceof HttpsError) throw error;
     console.error("Error verifying Truecaller login:", error);
-    throw new HttpsError("internal", error.message);
+    throw new HttpsError("internal", "An internal error occurred during verification.");
   }
 });

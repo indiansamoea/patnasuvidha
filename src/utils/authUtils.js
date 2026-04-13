@@ -14,6 +14,7 @@ export const syncUserToFirestore = async (user, additionalData = {}) => {
       email: user.email || null,
       phone: user.phoneNumber || additionalData.phone || null,
       authProvider: additionalData.provider || 'unknown',
+      onboardingCompleted: false, // Force onboarding for new users
       createdAt: serverTimestamp(),
       ...additionalData
     };

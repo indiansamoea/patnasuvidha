@@ -55,42 +55,72 @@ export default function InstallPrompt() {
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-20 left-4 right-4 md:left-auto md:right-8 md:w-96 z-50"
+        initial={{ y: 200, opacity: 0, scale: 0.9 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 100, opacity: 0, scale: 0.9 }}
+        transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+        style={{ 
+          position: 'fixed', bottom: '1.25rem', left: '1.25rem', right: '1.25rem', 
+          maxWidth: '440px', margin: '0 auto', zIndex: 1100 
+        }}
+        className="liquid-glass clay-card"
       >
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-4 shadow-2xl">
+        <div style={{ position: 'relative', padding: '1.5rem', borderRadius: '28px', border: '1px solid var(--primary-container)', background: 'var(--surface)' }}>
           <button
             onClick={handleDismiss}
-            className="absolute top-2 right-2 p-2 text-slate-400 hover:text-white transition-colors"
+            style={{ 
+              position: 'absolute', top: '0.75rem', right: '0.75rem', 
+              width: '32px', height: '32px', borderRadius: '50%', 
+              background: 'var(--surface-container-high)', border: 'none', 
+              color: 'var(--on-surface-variant)', display: 'flex', 
+              alignItems: 'center', justifyContent: 'center', cursor: 'pointer' 
+            }}
           >
-            <X size={20} />
+            <X size={18} weight="bold" />
           </button>
           
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-citrus-500 to-orange-500 flex items-center justify-center shadow-lg">
-              <Download size={28} weight="fill" className="text-white" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+            <div style={{ 
+              width: '4.5rem', height: '4.5rem', borderRadius: '22px', 
+              background: 'var(--gradient-primary)', display: 'flex', 
+              alignItems: 'center', justifyContent: 'center', 
+              boxShadow: 'var(--shadow-glow)', flexShrink: 0 
+            }}>
+              <Download size={32} weight="fill" style={{ color: 'white' }} />
             </div>
             
-            <div className="flex-1">
-              <h3 className="text-white font-semibold text-lg">Install Patna Suvidha</h3>
-              <p className="text-slate-400 text-sm">Add to home screen for quick access</p>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.125rem', fontWeight: 900, color: 'var(--primary)', marginBottom: '0.25rem' }}>
+                Install Patna Suvidha
+              </h3>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.875rem', color: 'var(--on-surface-variant)', fontWeight: 600, lineHeight: 1.4 }}>
+                Experience a faster, better way to book home services.
+              </p>
             </div>
           </div>
           
-          <div className="flex gap-3 mt-4">
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
             <button
               onClick={handleDismiss}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-slate-700 text-slate-300 font-medium hover:bg-slate-600 transition-colors"
+              style={{ 
+                flex: 1, padding: '0.875rem', borderRadius: '16px', 
+                background: 'var(--surface-container-highest)', 
+                color: 'var(--on-surface-variant)', border: 'none', 
+                fontWeight: 800, fontSize: '0.9375rem', cursor: 'pointer' 
+              }}
             >
-              Not Now
+              Maybe Later
             </button>
             <button
               onClick={handleInstall}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-citrus-500 to-orange-500 text-white font-semibold hover:opacity-90 transition-opacity"
+              style={{ 
+                flex: 1, padding: '0.875rem', borderRadius: '16px', 
+                background: 'var(--gradient-primary)', color: 'white', 
+                border: 'none', fontWeight: 900, fontSize: '1rem', 
+                cursor: 'pointer', boxShadow: 'var(--shadow-glow)' 
+              }}
             >
-              Install
+              Install Now
             </button>
           </div>
         </div>

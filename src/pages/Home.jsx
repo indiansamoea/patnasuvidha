@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { CATEGORIES, getCategoryById } from '../utils/categories';
+import { getCategoryById, CATEGORIES } from '../utils/categories';
 import WeatherWidget from '../components/WeatherWidget';
 import QuoteWidget from '../components/QuoteWidget';
 import StoriesFeed from '../components/StoriesFeed';
@@ -45,17 +45,21 @@ const T = {
 
 export default function Home() {
   const navigate = useNavigate();
-  const { theme, toggleTheme, lang, toggleLang, searchQuery, setSearchQuery, setSelectedCategory, deals, trendingSearches, getTopRated, getFeaturedBusinesses, getSuggestedBusinesses, getPromotedBusinesses, getRecommendedBusinesses, getRecentlyListed, settings } = useAppContext();
+  const { 
+    theme, toggleTheme, lang, toggleLang, 
+    searchQuery, setSearchQuery, 
+    trendingSearches, settings,
+    serviceOffers = [],
+    categories = []
+  } = useAppContext();
+  
   const [showAllCats, setShowAllCats] = useState(false);
 
   const t = T[lang] || T.en;
-  const topRated = getTopRated();
-  const featured = getFeaturedBusinesses();
-  const suggested = getSuggestedBusinesses();
-  const promoted = getPromotedBusinesses();
-  const recommended = getRecommendedBusinesses();
-  const recentlyListed = getRecentlyListed();
+  const isHi = lang === 'hi';
   const [isListening, setIsListening] = useState(false);
+  
+  const activeOffers = serviceOffers.filter(o => o.active);
 
   // Speech Recognition Logic
   const startListening = () => {
@@ -189,73 +193,52 @@ export default function Home() {
           <QuoteWidget />
         </div>
 
-        {/* Categories Grid */}
+        {/* Categories Grid (Top row only) */}
         <section className="animate-fade-up-plus delay-3" style={{ padding: '1rem 1.25rem 2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <h3 className="text-glowing" style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase' }}>{t.categories}</h3>
-            <button onClick={() => setShowAllCats(!showAllCats)} style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.8125rem', fontWeight: 800, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}>
-              {showAllCats ? (lang === 'hi' ? 'कम देखें' : 'Show Less') : t.viewAll}
+            <button onClick={() => navigate('/services')} style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.8125rem', fontWeight: 800, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              {t.viewAll}
             </button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
-            {CATEGORIES.slice(1, showAllCats ? undefined : 9).map(cat => (
-              <button key={cat.id} onClick={() => { setSelectedCategory(cat.id); navigate(`/explore/${cat.id}`); }}
+            {(categories.length > 0 ? categories : CATEGORIES.filter(c => c.id !== 'all')).slice(0, 8).map(cat => (
+              <button key={cat.id} id={`cat-chip-${cat.id}`} onClick={() => navigate(`/service/${cat.id}`)}
                 className="clay-btn"
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 0', cursor: 'pointer' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: `linear-gradient(135deg, ${cat.gradient[0]}, ${cat.gradient[1]})`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                  <i className={`ph-fill ${cat.icon}`} style={{ fontSize: '1.5rem', color: '#fff' }}></i>
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem', padding: '0.75rem 0', cursor: 'pointer' }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: cat.gradient ? `linear-gradient(135deg, ${cat.gradient[0]}, ${cat.gradient[1]})` : 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  <i className={`ph-fill ${cat.icon || 'ph-gear'}`} style={{ fontSize: '1.25rem', color: '#fff' }}></i>
                 </div>
-                <span style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.6875rem', fontWeight: 700, color: 'var(--on-surface)', textAlign: 'center', lineHeight: 1.2 }}>
-                  {lang === 'hi' && cat.nameHi ? cat.nameHi : cat.name}
+                <span style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.625rem', fontWeight: 700, color: 'var(--on-surface)', textAlign: 'center', lineHeight: 1.2 }}>
+                  {isHi && (cat.nameHi) ? cat.nameHi : cat.name}
                 </span>
               </button>
             ))}
           </div>
         </section>
 
-        {/* Hot Deals */}
-        {deals.length > 0 && (
+        {/* ── Admin Service Offers Carousel ── */}
+        {activeOffers.length > 0 && (
           <section className="animate-fade-up-plus delay-4" style={{ padding: '0.5rem 0 2rem' }}>
-            <h3 className="text-glowing" style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.25rem', color: 'var(--primary)', padding: '0 1.25rem', marginBottom: '1.25rem', textTransform: 'uppercase' }}>{t.hotDeals}</h3>
+            <h3 className="text-glowing" style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.25rem', color: 'var(--primary)', padding: '0 1.25rem', marginBottom: '1.25rem', textTransform: 'uppercase' }}>
+              {isHi ? 'एक्सक्लूसिव ऑफर्स' : 'Exclusive Offers'}
+            </h3>
             <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', padding: '0 1.25rem 1rem', scrollSnapType: 'x mandatory' }} className="hide-scrollbar">
-              {deals.map((deal, i) => {
-                const g = Array.isArray(deal.gradient) ? `linear-gradient(135deg, ${deal.gradient[0]}, ${deal.gradient[1]})` : (deal.gradient || 'var(--gradient-primary)');
+              {activeOffers.map((offer, i) => {
+                const g = Array.isArray(offer.gradient) ? `linear-gradient(135deg, ${offer.gradient[0]}, ${offer.gradient[1]})` : 'var(--gradient-primary)';
                 return (
-                  <div key={deal.id || i} className="liquid-glass" style={{ flexShrink: 0, width: '280px', borderRadius: '1.5rem', overflow: 'hidden', padding: '1.5rem', scrollSnapAlign: 'start', cursor: 'pointer', transform: 'translateZ(0)', position: 'relative' }}
-                    onClick={() => navigate(deal.businessId ? `/business/${deal.businessId}` : '/explore')}>
+                  <div key={offer.id || i} className="liquid-glass"
+                    style={{ flexShrink: 0, width: '280px', borderRadius: '1.5rem', overflow: 'hidden', padding: '1.5rem', scrollSnapAlign: 'start', cursor: 'pointer', transform: 'translateZ(0)', position: 'relative' }}
+                    onClick={() => navigate(`/service/${offer.category}`)}
+                  >
                     <div className="animate-pulse-glow" style={{ position: 'absolute', inset: 0, background: g, opacity: 0.15, zIndex: 0 }}></div>
-                    <div style={{ position: 'relative', zIndex: 1 }}>
-                      <p style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 900, fontSize: '1.5rem', color: 'var(--primary)', lineHeight: 1.1, marginBottom: '0.5rem', letterSpacing: '-0.02em', textTransform: 'uppercase' }}>{deal.title}</p>
-                      {deal.subtitle && <p style={{ fontFamily: "'Manrope'", fontWeight: 800, fontSize: '0.875rem', color: 'var(--on-surface-variant)' }}>{deal.subtitle}</p>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* Top Rated */}
-        {topRated.length > 0 && (
-          <section className="animate-fade-up-plus delay-5" style={{ padding: '0.5rem 0 2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 1.25rem', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.25rem', fontWeight: 800, color: 'var(--on-surface)' }}>{t.topRated}</h3>
-              <button onClick={() => navigate('/explore')} style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.8125rem', fontWeight: 800, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}>{t.viewAll}</button>
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', padding: '0 1.25rem 1rem', scrollSnapType: 'x mandatory' }} className="hide-scrollbar">
-              {topRated.map(biz => {
-                const cat = getCategoryById(biz.category);
-                return (
-                  <div key={biz.id} onClick={() => navigate(`/business/${biz.id}`)} className="clay-card"
-                    style={{ flexShrink: 0, width: '180px', overflow: 'hidden', cursor: 'pointer', scrollSnapAlign: 'start', margin: '0.25rem 0' }}>
-                    <div style={{ height: '110px', overflow: 'hidden' }}>
-                      <img src={biz.image} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
-                    </div>
-                    <div style={{ padding: '0.875rem' }}>
-                      <h4 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.875rem', fontWeight: 800, color: 'var(--on-surface)', marginBottom: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{biz.name}</h4>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        <i className="ph-fill ph-star" style={{ color: '#fbb423', fontSize: '0.625rem' }}></i>
-                        <span style={{ fontFamily: "'Manrope'", fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)' }}>{biz.rating}</span>
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: g, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <i className={`ph-fill ${offer.icon || 'ph-tag'}`} style={{ color: '#fff', fontSize: '1.5rem' }} />
+                      </div>
+                      <div>
+                        <p style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 900, fontSize: '1.125rem', color: 'var(--primary)', lineHeight: 1.1, marginBottom: '0.25rem' }}>{offer.title}</p>
+                        {offer.subtitle && <p style={{ fontFamily: "'Manrope'", fontWeight: 800, fontSize: '0.75rem', color: 'var(--on-surface-variant)' }}>{offer.subtitle}</p>}
                       </div>
                     </div>
                   </div>
@@ -265,90 +248,45 @@ export default function Home() {
           </section>
         )}
 
-        {/* Featured */}
-        {featured.length > 0 && (
-          <section className="animate-fade-up-plus delay-5" style={{ padding: '0.5rem 0 2rem' }}>
-            <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary)', padding: '0 1.25rem', marginBottom: '1.25rem', textTransform: 'uppercase' }}>{t.featured}</h3>
-            <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', padding: '0 1.25rem 1rem' }} className="hide-scrollbar">
-              {featured.map(biz => (
-                <div key={biz.id} onClick={() => navigate(`/business/${biz.id}`)} className="clay-card" style={{ flexShrink: 0, width: '220px', padding: '0.75rem', cursor: 'pointer' }}>
-                   <img src={biz.image} alt={biz.name} style={{ width: '100%', height: '130px', borderRadius: '1rem', objectFit: 'cover', marginBottom: '0.75rem' }} />
-                   <h4 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.9375rem', fontWeight: 800, color: 'var(--on-surface)' }}>{biz.name}</h4>
-                   <p style={{ fontFamily: "'Manrope'", fontSize: '0.6875rem', color: 'var(--on-surface-variant)' }}>{getCategoryById(biz.category).name}</p>
+        {/* ── How it Works ── */}
+        <section className="animate-fade-up-plus delay-5" style={{ padding: '0.5rem 1.25rem 2rem' }}>
+          <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.25rem', fontWeight: 800, color: 'var(--on-surface)', marginBottom: '1.25rem' }}>
+            {isHi ? 'यह कैसे काम करता है?' : 'How Patna Suvidha Works'}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {[
+              { icon: 'ph-hand-tap', title: isHi ? 'सेवा चुनें' : 'Choose a Service', desc: isHi ? 'अपनी जरूरत के हिसाब से कैटेगरी सेलेक्ट करें' : 'Pick from our wide range of professional services' },
+              { icon: 'ph-calendar-check', title: isHi ? 'टाइम और बुक करें' : 'Pick Time & Book', desc: isHi ? 'अपना पता और सुविधाजनक समय चुनें' : 'Select your address and a convenient time slot' },
+              { icon: 'ph-house-line', title: isHi ? 'घर पर सेवा पायें' : 'Get Service at Home', desc: isHi ? 'हमारा प्रोफेशनल आपके घर आकर सेवा देगा' : 'Our verified professional arrives at your doorstep' },
+            ].map((step, i) => (
+              <div key={i} className="clay-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,140,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <i className={`ph-fill ${step.icon}`} style={{ color: 'var(--primary)', fontSize: '1.25rem' }} />
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
+                <div>
+                  <h4 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.875rem', fontWeight: 800, color: 'var(--on-surface)', marginBottom: '0.125rem' }}>{step.title}</h4>
+                  <p style={{ fontFamily: "'Manrope'", fontSize: '0.75rem', color: 'var(--on-surface-variant)' }}>{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
-        {/* Promoted */}
-        {promoted.length > 0 && (
-          <section className="animate-fade-up-plus delay-6" style={{ padding: '0.5rem 1.25rem 2rem' }}>
-            <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '1.25rem', textTransform: 'uppercase' }}>{t.promoted}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {promoted.map(biz => (
-                <div key={biz.id} onClick={() => navigate(`/business/${biz.id}`)} className="clay-card" style={{ display: 'flex', gap: '1rem', padding: '0.75rem', cursor: 'pointer', alignItems: 'center' }}>
-                  <img src={biz.image} alt={biz.name} style={{ width: '60px', height: '60px', borderRadius: '0.75rem', objectFit: 'cover' }} />
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.875rem', fontWeight: 800, color: 'var(--on-surface)' }}>{biz.name}</h4>
-                    <span style={{ fontSize: '0.625rem', background: 'var(--primary-container)', color: 'var(--primary)', padding: '0.125rem 0.5rem', borderRadius: '4px', fontWeight: 900 }}>PARTNER</span>
-                  </div>
-                  <i className="ph-bold ph-caret-right" style={{ color: 'var(--outline-variant)' }}></i>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Suggested */}
-        {suggested.length > 0 && (
-          <section className="animate-fade-up-plus delay-6" style={{ padding: '0.5rem 0 2rem' }}>
-            <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.25rem', fontWeight: 800, color: 'var(--on-surface)', padding: '0 1.25rem', marginBottom: '1.25rem' }}>{t.suggested}</h3>
-            <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', padding: '0 1.25rem 1rem' }} className="hide-scrollbar">
-              {suggested.map(biz => (
-                <div key={biz.id} onClick={() => navigate(`/business/${biz.id}`)} className="clay-card" style={{ flexShrink: 0, width: '160px', padding: '0.75rem', cursor: 'pointer', textAlign: 'center' }}>
-                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 0.75rem', border: '2px solid var(--primary-container)' }}>
-                    <img src={biz.image} alt={biz.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                  <h4 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.8125rem', fontWeight: 800, color: 'var(--on-surface)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{biz.name}</h4>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Recommended */}
-        {recommended.length > 0 && (
-          <section className="animate-fade-up-plus delay-7" style={{ padding: '0.5rem 0 2rem' }}>
-            <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary)', padding: '0 1.25rem', marginBottom: '1.25rem', textTransform: 'uppercase' }}>{t.recommended}</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', padding: '0 1.25rem' }}>
-              {recommended.map(biz => (
-                <div key={biz.id} onClick={() => navigate(`/business/${biz.id}`)} className="clay-card" style={{ padding: '0.75rem', cursor: 'pointer' }}>
-                  <img src={biz.image} alt={biz.name} style={{ width: '100%', height: '100px', borderRadius: '0.75rem', objectFit: 'cover', marginBottom: '0.5rem' }} />
-                  <h4 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.8125rem', fontWeight: 800, color: 'var(--on-surface)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{biz.name}</h4>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Recently Listed */}
-        {recentlyListed.length > 0 && (
-          <section className="animate-fade-up-plus delay-7" style={{ padding: '0.5rem 0 2rem' }}>
-             <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.25rem', fontWeight: 800, color: 'var(--on-surface)', padding: '0 1.25rem', marginBottom: '1.25rem' }}>{t.recent}</h3>
-             <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', padding: '0 1.25rem 1rem' }} className="hide-scrollbar">
-              {recentlyListed.map(biz => (
-                <div key={biz.id} onClick={() => navigate(`/business/${biz.id}`)} className="clay-card" style={{ flexShrink: 0, width: '200px', display: 'flex', gap: '0.75rem', padding: '0.75rem', alignItems: 'center' }}>
-                  <img src={biz.image} alt={biz.name} style={{ width: '50px', height: '50px', borderRadius: '0.5rem', objectFit: 'cover' }} />
-                  <div style={{ minWidth: 0 }}>
-                    <h4 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.75rem', fontWeight: 800, color: 'var(--on-surface)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{biz.name}</h4>
-                    <p style={{ fontFamily: "'Manrope'", fontSize: '0.625rem', color: 'var(--on-surface-variant)' }}>Just joined</p>
-                  </div>
-                </div>
-              ))}
-             </div>
-          </section>
-        )}
+        {/* ── Trust Section ── */}
+        <section className="animate-fade-up-plus delay-6" style={{ padding: '0.5rem 1.25rem 2rem' }}>
+          <div style={{
+            background: 'var(--primary-container)', borderRadius: '1.25rem', padding: '1.5rem',
+            border: '1px solid rgba(255,140,0,0.3)', textAlign: 'center'
+          }}>
+            <i className="ph-fill ph-shield-check" style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '0.75rem' }} />
+            <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.125rem', fontWeight: 800, color: 'var(--on-surface)', marginBottom: '0.5rem' }}>
+              {isHi ? '100% सुरक्षित और वेरीफाइड' : '100% Safe & Verified'}
+            </h3>
+            <p style={{ fontFamily: "'Manrope'", fontSize: '0.8125rem', color: 'var(--on-surface-variant)' }}>
+              {isHi ? 'सभी प्रोफेशनल्स का बैकग्राउंड चेक किया गया है। 7-दिन की सर्विस वारंटी के साथ पूरी शांति।' : 'All professionals undergo strict background checks. Complete peace of mind with our 7-day service warranty.'}
+            </p>
+          </div>
+        </section>
 
         <footer style={{ padding: '2rem 1.5rem 7rem', textAlign: 'center' }}>
           <p style={{ fontFamily: "'Manrope'", fontSize: '0.8125rem', color: 'var(--on-surface-variant)', fontWeight: 800 }}>

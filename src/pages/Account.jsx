@@ -1,14 +1,204 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { getCategoryById } from '../utils/categories';
+import { toast } from 'react-hot-toast';
 
 const FAQS = [
-  { q: "How do I add my business?", a: "To add your business, tap on the 'Add Free' button in the center of the bottom navigation bar and fill out your details." },
-  { q: "Is listing my business free?", a: "Yes! Basic listings are 100% free. We also offer premium placements for better visibility." },
-  { q: "How do I edit my business details?", a: "Please contact support through the Feedback section. Our team will verify and update your information." },
-  { q: "How do I report an incorrect listing?", a: "You can send us a message via the 'Send Feedback' button below to report any incorrect data." }
+  { q: "How do I book a service?", a: "Simply browse categories, select a service provider, and click 'Book'. You can choose to book via WhatsApp or through our direct booking system." },
+  { q: "Are the service providers verified?", a: "Yes, we conduct initial background checks and verification for all service professionals listed on Patna Suvidha for your safety and peace of mind." },
+  { q: "How do I pay for the services?", a: "You can pay online through our secure payment gateway at the time of booking, or choose 'Pay After Service' to pay the professional directly in cash." },
+  { q: "Can I cancel my booking?", a: "Yes, you can cancel any booking before the service starts. For online payments, cancellations made within the allowed window are eligible for refunds." },
+  { q: "How do I contact support?", a: "You can reach us directly via the 'Call Us' or 'Email' buttons below, or send us a message on WhatsApp through the Feedback section." }
 ];
+
+const LEGAL_CONTENT = {
+  privacy: {
+    title: "Privacy Policy",
+    content: `Effective Date: April 13, 2024\n\n1. Information Collection: We collect your name, phone number, and location only to facilitate service bookings.\n2. Use of Information: Your data is shared only with the service provider you choose to book.\n3. Data Security: We use industry-standard encryption to protect your personal data.\n4. Cookies: We use minimal cookies to maintain your login session and preferences.\n5. Your Rights: You can request deletion of your account and data at any time through our support channel.`
+  },
+  terms: {
+    title: "Terms & Conditions",
+    content: `1. Platform Role: Patna Suvidha is a hyperlocal directory facilitator. We connect users with independent service providers.\n2. Service Responsibility: The quality of service is the responsibility of the individual professional. We are not liable for disputes between users and providers.\n3. User Conduct: Users must provide accurate information and respect the service professionals.\n4. Content Ownership: All images and listings are owned by their respective businesses or Patna Suvidha.\n5. Limitation of Liability: We are not responsible for any direct or indirect damages arising from the use of our platform.`
+  },
+  refund: {
+    title: "Refund Policy",
+    content: `1. Cancellation: Full refunds are provided for online payments if the booking is cancelled at least 2 hours before the scheduled time.\n2. Failed Services: If a provider fails to show up, a full refund will be initiated to your original payment method within 5-7 working days.\n3. Processing Time: Refunds may take 5-10 business days to reflect in your bank account depending on your bank's policy.\n4. Disputed Services: For unsatisfactory services, please contact support within 24 hours for mediation.\n5. Non-Refundable: Booking fees (if applicable) are non-refundable once the service has been initiated.`
+  }
+};
+
+function PolicyModal({ type, onClose }) {
+  const policy = LEGAL_CONTENT[type];
+  if (!policy) return null;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.25rem' }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)' }}></div>
+      <div className="clay-card animate-scale-up" style={{ 
+        position: 'relative', width: '100%', maxWidth: '500px', maxHeight: '80vh',
+        background: 'var(--surface)', padding: '2rem', overflowY: 'auto',
+        border: '1px solid var(--primary-container)', borderRadius: '28px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 900, color: 'var(--primary)' }}>
+            {policy.title}
+          </h3>
+          <button onClick={onClose} style={{ border: 'none', background: 'var(--surface-container-high)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <i className="ph-bold ph-x" />
+          </button>
+        </div>
+        <div style={{ whiteSpace: 'pre-wrap', fontFamily: "'Manrope'", fontSize: '0.875rem', color: 'var(--on-surface-variant)', lineHeight: 1.7 }}>
+          {policy.content}
+        </div>
+        <button onClick={onClose} style={{ width: '100%', marginTop: '2rem', padding: '1rem', borderRadius: '16px', background: 'var(--gradient-primary)', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer' }}>
+          I Understand
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ProfileEditModal({ user, onClose, onSave, isHi }) {
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async () => {
+    if (!name || (phone && phone.length < 10)) {
+       toast.error(isHi ? "कृपया सही जानकारी भरें" : "Please enter valid details");
+       return;
+    }
+    setLoading(true);
+    try {
+      await onSave({ name, phone });
+      toast.success(isHi ? "प्रोफ़ाइल अपडेट हो गई!" : "Profile updated!");
+      onClose();
+    } catch (err) {
+      toast.error(isHi ? "अपडेट विफल रहा" : "Update failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.25rem' }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}></div>
+      <div className="clay-card animate-scale-up" style={{ 
+        position: 'relative', width: '100%', maxWidth: '400px', 
+        background: 'var(--surface)', padding: '1.75rem',
+        border: '1px solid var(--primary-container)', borderRadius: '24px'
+      }}>
+        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.125rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '1.5rem' }}>
+          {isHi ? "प्रोफ़ाइल संपादित करें" : "Edit Profile"}
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="input-group">
+            <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--on-surface-variant)', marginBottom: '0.375rem', display: 'block' }}>{isHi ? "नाम" : "Name"}</label>
+            <input 
+              type="text" value={name} onChange={e => setName(e.target.value)} 
+              className="input-field" style={{ width: '100%' }} placeholder={isHi ? "पूरा नाम" : "Full Name"} 
+            />
+          </div>
+          <div className="input-group">
+            <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--on-surface-variant)', marginBottom: '0.375rem', display: 'block' }}>{isHi ? "फोन नंबर" : "Phone Number"}</label>
+            <input 
+              type="tel" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} 
+              className="input-field" style={{ width: '100%' }} placeholder={isHi ? "10 अंकों का नंबर" : "10-digit phone number"} 
+            />
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '2rem' }}>
+          <button onClick={onClose} style={{ flex: 1, padding: '0.875rem', borderRadius: '12px', background: 'var(--surface-container-high)', border: 'none', color: 'var(--on-surface)', fontWeight: 800, cursor: 'pointer' }}>
+            {isHi ? "बंद करें" : "Cancel"}
+          </button>
+          <button onClick={handleSave} disabled={loading} style={{ flex: 1, padding: '0.875rem', borderRadius: '12px', background: 'var(--gradient-primary)', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
+            {loading ? (isHi ? "हो रहा है..." : "Saving...") : (isHi ? "सुरक्षित करें" : "Save Changes")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddressEditModal({ address, onClose, onSave, isHi }) {
+  const [label, setLabel] = useState(address?.label || '');
+  const [text, setText] = useState(address?.label || address?.text || '');
+  const [loading, setLoading] = useState(false);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+
+  const handleRetrieveLocation = useCallback(() => {
+    if (!navigator.geolocation) return;
+    setIsFetchingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
+          const data = await res.json();
+          if (data && data.display_name) {
+            const readable = data.display_name.split(', ').slice(0, 5).join(', ');
+            setText(readable);
+          }
+        } catch (e) { console.error(e); } finally { setIsFetchingLocation(false); }
+      },
+      () => setIsFetchingLocation(false),
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  }, []);
+
+  const handleSave = async () => {
+    if (!text) { toast.error(isHi ? "पता लिखें" : "Please enter address"); return; }
+    setLoading(true);
+    try {
+      await onSave({ label: text, type: 'home', updatedAt: new Date().toISOString() });
+      toast.success(isHi ? "पता सुरक्षित हो गया!" : "Address saved!");
+      onClose();
+    } catch (err) {
+      toast.error(isHi ? "त्रुटि" : "Error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.25rem' }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}></div>
+      <div className="clay-card animate-scale-up" style={{ 
+        position: 'relative', width: '100%', maxWidth: '400px', 
+        background: 'var(--surface)', padding: '1.75rem',
+        border: '1px solid var(--primary-container)', borderRadius: '24px'
+      }}>
+        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.125rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '1.5rem' }}>
+          {address ? (isHi ? "पता संपादित करें" : "Edit Address") : (isHi ? "नया पता जोड़ें" : "Add New Address")}
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="input-group relative">
+            <textarea 
+              value={text} onChange={e => setText(e.target.value)} 
+              className="input-field" style={{ width: '100%', minHeight: '100px', paddingTop: '1rem', paddingRight: '3rem' }} 
+              placeholder={isHi ? "अपना पूरा पता लिखें..." : "Enter full address..."} 
+            />
+            <button
+              onClick={handleRetrieveLocation}
+              disabled={isFetchingLocation}
+              style={{ position: 'absolute', right: '10px', bottom: '10px', width: '36px', height: '36px', borderRadius: '50%', background: 'var(--primary-container)', border: 'none', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            >
+              {isFetchingLocation ? <div className="spinner" style={{ width: '14px', height: '14px' }} /> : <i className="ph-fill ph-target" style={{ fontSize: '1.2rem' }} />}
+            </button>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '2rem' }}>
+          <button onClick={onClose} style={{ flex: 1, padding: '0.875rem', borderRadius: '12px', background: 'var(--surface-container-high)', border: 'none', color: 'var(--on-surface)', fontWeight: 800, cursor: 'pointer' }}>
+            {isHi ? "रद्द करें" : "Cancel"}
+          </button>
+          <button onClick={handleSave} disabled={loading} style={{ flex: 1, padding: '0.875rem', borderRadius: '12px', background: 'var(--gradient-primary)', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
+            {isHi ? "सुरक्षित करें" : "Save Address"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const LINKS = [
   {
@@ -24,19 +214,30 @@ const LINKS = [
 ];
 
 export default function Account() {
-  const { lang, currentUser, logout, bookings, getFavoriteBusinesses } = useAppContext();
+  const { 
+    lang, currentUser, logout, bookings, 
+    userData, completeOnboarding, savedAddresses, addAddress, updateAddress, deleteAddress
+  } = useAppContext();
   const navigate = useNavigate();
   const [showFaq, setShowFaq] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
+  const [activePolicy, setActivePolicy] = useState(null);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showAddAddress, setShowAddAddress] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null);
 
-  const favs = getFavoriteBusinesses();
+  const isHi = lang === 'hi';
   
   const myBookings = useMemo(() => {
     if (!currentUser) return [];
     return bookings.filter(b => 
       b.userId === currentUser.uid || 
       (b.customerPhone && currentUser.phoneNumber && b.customerPhone.includes(currentUser.phoneNumber.slice(-10)))
-    ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    ).sort((a, b) => {
+      const dateA = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : (a.createdAt instanceof Date ? a.createdAt.getTime() : new Date(a.createdAt || 0).getTime());
+      const dateB = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : (b.createdAt instanceof Date ? b.createdAt.getTime() : new Date(b.createdAt || 0).getTime());
+      return dateB - dateA;
+    });
   }, [bookings, currentUser]);
 
   const handleFeedback = () => {
@@ -52,30 +253,60 @@ export default function Account() {
       manage: 'अपनी बुकिंग और पसंदीदा प्रबंधित करें',
       continue: 'जारी रखें',
       bookings: 'मेरी बुकिंग',
-      wishlist: 'मेरी पसंद',
       noBookings: 'अभी तक कोई बुकिंग नहीं',
-      noFavs: 'अभी तक कोई पसंदीदा नहीं',
       network: 'हमारा नेटवर्क',
       contact: 'संपर्क करें',
       help: 'फीडबैक और मदद',
       logout: 'लॉगआउट',
-    },
-    en: {
-      title: 'Account',
-      hello: 'Hello',
-      login: 'Login / Sign Up',
-      manage: 'Manage your bookings & favorites',
-      continue: 'Continue',
-      bookings: 'My Bookings',
-      wishlist: 'My Wishlist',
-      noBookings: 'No bookings yet',
-      noFavs: 'No favorites yet',
-      network: 'Our Network',
-      contact: 'Get in Touch',
-      help: 'Feedback & Help',
-      logout: 'Logout',
-    }
-  }[lang] || { en: {} };
+      service: 'सेवा',
+      date: 'तारीख',
+      price: 'कीमत',
+      status: 'स्थिति',
+      manageAddresses: 'सहेजे गए पते',
+      addAddress: 'नया पता जोड़ें',
+      edit: 'संपादित करें',
+      delete: 'हटाएं'
+     },
+       en: {
+         title: 'Account',
+         hello: 'Hello',
+         login: 'Login / Sign Up',
+         manage: 'Manage your bookings & favorites',
+         continue: 'Continue',
+         bookings: 'My Bookings',
+         noBookings: 'No bookings yet',
+         network: 'Our Network',
+         contact: 'Get in Touch',
+         help: 'Feedback & Help',
+         logout: 'Logout',
+         service: 'Service',
+         date: 'Date',
+         price: 'Price',
+         status: 'Status',
+         manageAddresses: 'Saved Addresses',
+         addAddress: 'Add New Address',
+         edit: 'Edit',
+         delete: 'Delete'
+       }
+    }[lang] || {
+        title: 'Account',
+        hello: 'Hello',
+        login: 'Login / Sign Up',
+        manage: 'Manage your bookings & favorites',
+        continue: 'Continue',
+        bookings: 'My Bookings',
+        wishlist: 'My Wishlist',
+        noBookings: 'No bookings yet',
+        noFavs: 'No favorites yet',
+        network: 'Our Network',
+        contact: 'Get in Touch',
+        help: 'Feedback & Help',
+        legal: 'Legal & Policies',
+        privacy: 'Privacy',
+        terms: 'Terms',
+        refund: 'Refunds',
+        logout: 'Logout',
+    };
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh', paddingBottom: '7rem', color: 'var(--on-surface)' }}>
@@ -93,7 +324,12 @@ export default function Account() {
       <div style={{ maxWidth: '480px', margin: '0 auto', padding: '1.25rem' }}>
 
         {/* User Profile / Login Card (Personalized Greeting) */}
-        <div className="clay-card animate-fade-up-plus" style={{ marginBottom: '1.75rem', padding: '1.5rem', background: 'var(--gradient-subtle)', border: '1px solid var(--primary)' }}>
+        <div className="clay-card animate-fade-up-plus" style={{ 
+          marginBottom: '1.75rem', padding: '1.75rem', 
+          background: 'var(--surface-container)', 
+          border: '1.5px solid var(--primary-container)',
+          boxShadow: 'var(--shadow-glow)'
+        }}>
           {currentUser ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -106,16 +342,21 @@ export default function Account() {
                 </div>
                 <div>
                   <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.125rem', fontWeight: 900, color: 'var(--on-surface)', marginBottom: '0.125rem' }}>
-                    {t.hello}, {currentUser.displayName?.split(' ')[0] || 'User'}! 👋
+                    {t.hello}, {userData?.name?.split(' ')[0] || currentUser.displayName?.split(' ')[0] || 'User'}! 👋
                   </h3>
-                  <p style={{ fontFamily: "'Manrope'", fontSize: '0.75rem', color: 'var(--on-surface-variant)', fontWeight: 700 }}>
-                    {currentUser.email || currentUser.phoneNumber || 'Patna Suvidha Member'}
-                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <p style={{ fontFamily: "'Manrope'", fontSize: '0.75rem', color: 'var(--on-surface-variant)', fontWeight: 700 }}>
+                      {userData?.phone || currentUser.phoneNumber || currentUser.email || 'Member'}
+                    </p>
+                    <button onClick={() => setShowEditProfile(true)} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <i className="ph ph-pencil-simple" style={{ fontSize: '1rem' }}></i>
+                    </button>
+                  </div>
                 </div>
               </div>
               <button 
                 onClick={logout}
-                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', padding: '0.5rem 1rem', borderRadius: '0.75rem', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}
+                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', padding: '0.5rem 0.875rem', borderRadius: '0.75rem', fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer' }}
               >
                 {t.logout}
               </button>
@@ -140,91 +381,133 @@ export default function Account() {
           )}
         </div>
 
-        {/* My Bookings History */}
+
+
+        {/* My Bookings Section */}
         {currentUser && (
-          <section className="animate-fade-up-plus delay-1" style={{ marginBottom: '1.75rem' }}>
+          <section className="animate-fade-up-plus delay-2" style={{ marginBottom: '1.75rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h2 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1rem', fontWeight: 800, color: 'var(--on-surface)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {t.bookings}
-                </h2>
-                <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: 'var(--primary)', background: 'var(--primary-container)', padding: '0.25rem 0.625rem', borderRadius: '999px' }}>
-                    {myBookings.length} Total
-                </span>
+              <h2 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1rem', fontWeight: 800, color: 'var(--on-surface)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {t.bookings}
+              </h2>
             </div>
-            
+
             {myBookings.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    {myBookings.map((b, i) => (
-                        <div key={b.id || i} className="liquid-glass" style={{ padding: '1rem', borderRadius: '1.25rem', display: 'flex', gap: '0.875rem', alignItems: 'center' }}>
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--surface-container)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <i className="ph-fill ph-calendar-check" style={{ fontSize: '1.25rem', color: 'var(--primary)' }}></i>
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.9375rem', fontWeight: 800, color: 'var(--on-surface)', marginBottom: '0.125rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {b.service || 'Service Booking'}
-                                </p>
-                                <p style={{ fontFamily: "'Manrope'", fontSize: '0.75rem', fontWeight: 700, color: 'var(--on-surface-variant)' }}>
-                                    {b.businessName} • {b.date}
-                                </p>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <span style={{ fontFamily: "'Manrope'", fontSize: '0.625rem', fontWeight: 800, color: b.status === 'sent_to_whatsapp' ? '#059669' : 'var(--primary)', background: b.status === 'sent_to_whatsapp' ? 'rgba(16,185,129,0.1)' : 'var(--primary-container)', padding: '0.25rem 0.5rem', borderRadius: '999px', textTransform: 'uppercase' }}>
-                                    {b.status?.replace(/_/g, ' ') || 'Pending'}
-                                </span>
-                            </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {myBookings.map((b, i) => {
+                  const cfg = STATUS_CONFIG[b.status] || STATUS_CONFIG.pending;
+                  const isCompleted = b.status === 'completed';
+                  return (
+                    <div key={b.id || i} className="clay-card" style={{ padding: '1.25rem', border: isCompleted ? '1px solid var(--primary)20' : '1px solid transparent' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                        <div>
+                          <p style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.9375rem', fontWeight: 900, color: 'var(--primary)' }}>{b.service}</p>
+                          <p style={{ fontFamily: "'Manrope'", fontSize: '0.75rem', fontWeight: 700, color: 'var(--on-surface-variant)' }}>{b.date} · {b.time}</p>
                         </div>
-                    ))}
-                </div>
+                        <div style={{
+                          padding: '0.3rem 0.65rem', borderRadius: '999px', fontSize: '0.625rem', fontWeight: 800, textTransform: 'uppercase',
+                          display: 'flex', alignItems: 'center', gap: '0.25rem',
+                          background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}30`
+                        }}>
+                          <i className={`ph-fill ${cfg.icon}`} />
+                          {isHi ? (b.status === 'pending' ? 'प्रतीक्षा में' : b.status === 'confirmed' ? 'पुष्टि' : b.status === 'completed' ? 'पूर्ण' : 'रद्द') : cfg.label}
+                        </div>
+                      </div>
+
+                      {/* Provider Info */}
+                      {(b.providerName || b.providerPhone) && (
+                        <div style={{ marginBottom: '1rem', padding: '0.75rem', borderRadius: '12px', background: 'var(--surface-container-high)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <i className="ph-fill ph-user-gear" style={{ color: 'var(--primary)', fontSize: '1rem' }} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ fontSize: '0.6875rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Your Expert</p>
+                            <p style={{ fontSize: '0.8125rem', fontWeight: 900 }}>{b.providerName || (isHi ? 'विशेषज्ञ' : 'Expert')}</p>
+                          </div>
+                          {b.providerPhone && (
+                             <a href={`tel:${b.providerPhone}`} style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+                               <i className="ph-fill ph-phone" />
+                             </a>
+                          )}
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.875rem', borderTop: '1px solid var(--outline-variant)' }}>
+                        <div>
+                          <p style={{ fontSize: '0.8125rem', fontWeight: 800, color: 'var(--on-surface)' }}>₹{b.amount || '---'}</p>
+                          <p style={{ fontSize: '0.625rem', color: 'var(--on-surface-variant)', fontWeight: 600 }}>{b.paymentMethod === 'pay_now' ? 'Paid Online' : 'Pay After Service'}</p>
+                        </div>
+                        
+                        {isCompleted && !b.hasReviewed ? (
+                          <button onClick={() => navigate(`/service/${b.categoryId}?review=${b.id}`)} style={{ 
+                            padding: '0.5rem 0.875rem', borderRadius: '0.75rem', background: 'var(--gradient-primary)', 
+                            color: 'white', border: 'none', fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer',
+                            boxShadow: '0 4px 12px rgba(255,140,0,0.2)'
+                          }}>
+                            {isHi ? 'रेट करें' : 'Rate Service'}
+                          </button>
+                        ) : (
+                          <p style={{ fontSize: '0.625rem', color: 'var(--on-surface-variant)', fontWeight: 700, letterSpacing: '0.02em' }}>ID: {b.id?.slice(-8).toUpperCase()}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
-                <div className="clay-card" style={{ padding: '2rem', textAlign: 'center', opacity: 0.6 }}>
-                    <i className="ph ph-calendar-blank" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}></i>
-                    <p style={{ fontFamily: "'Manrope'", fontSize: '0.8125rem', fontWeight: 700 }}>{t.noBookings}</p>
-                </div>
+              <div className="clay-card" style={{ padding: '2.5rem', textAlign: 'center', opacity: 0.6 }}>
+                <i className="ph ph-calendar-blank" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}></i>
+                <p style={{ fontFamily: "'Manrope'", fontSize: '0.8125rem', fontWeight: 700 }}>{t.noBookings}</p>
+              </div>
             )}
           </section>
         )}
 
-        {/* My Wishlist Preview */}
+        {/* Saved Addresses Manager */}
         {currentUser && (
-            <section className="animate-fade-up-plus delay-2" style={{ marginBottom: '1.75rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h2 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1rem', fontWeight: 800, color: 'var(--on-surface)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {t.wishlist}
-                    </h2>
-                    <button onClick={() => navigate('/favorites')} style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                        View All →
-                    </button>
-                </div>
-
-                {favs.length > 0 ? (
-                    <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem' }} className="hide-scrollbar">
-                        {favs.slice(0, 5).map((f, i) => {
-                             const cat = getCategoryById(f.category);
-                             return (
-                                <div key={f.id || i} onClick={() => navigate(`/business/${f.id}`)} className="clay-card" style={{ flexShrink: 0, width: '140px', padding: '0.75rem', cursor: 'pointer' }}>
-                                    <div style={{ width: '100%', height: '80px', borderRadius: '10px', overflow: 'hidden', marginBottom: '0.625rem' }}>
-                                        <img src={f.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    </div>
-                                    <p style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.8125rem', fontWeight: 800, color: 'var(--on-surface)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '0.125rem' }}>
-                                        {f.name}
-                                    </p>
-                                    <p style={{ fontFamily: "'Manrope'", fontSize: '0.625rem', fontWeight: 700, color: cat?.color || 'var(--primary)' }}>
-                                        {cat?.name}
-                                    </p>
-                                </div>
-                             )
-                        })}
+          <section className="animate-fade-up-plus delay-2" style={{ marginBottom: '1.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.85rem', fontWeight: 800, color: 'var(--on-surface)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {t.manageAddresses}
+              </h2>
+              <button 
+                onClick={() => setShowAddAddress(true)}
+                style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)', background: 'var(--primary-container)', border: 'none', padding: '0.375rem 0.75rem', borderRadius: '99px', cursor: 'pointer' }}
+              >
+                + {isHi ? "नया" : "Add"}
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {savedAddresses.length > 0 ? (
+                savedAddresses.map((addr) => (
+                  <div key={addr.id} className="clay-card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--surface-container-high)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <i className="ph-fill ph-map-pin" style={{ color: 'var(--primary)', fontSize: '1.125rem' }}></i>
                     </div>
-                ) : (
-                    <div className="clay-card" style={{ padding: '2rem', textAlign: 'center', opacity: 0.6 }}>
-                        <i className="ph ph-heart-break" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}></i>
-                        <p style={{ fontFamily: "'Manrope'", fontSize: '0.8125rem', fontWeight: 700 }}>{t.noFavs}</p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.8125rem', fontWeight: 800, color: 'var(--on-surface)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {addr.label}
+                      </p>
                     </div>
-                )}
-            </section>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => setEditingAddress(addr)} style={{ background: 'none', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer' }}>
+                        <i className="ph ph-pencil-simple" style={{ fontSize: '1.125rem' }}></i>
+                      </button>
+                      <button onClick={() => { if(confirm(isHi ? "क्या आप वाकई हटाना चाहते हैं?" : "Delete address?")) deleteAddress(addr.id) }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
+                        <i className="ph ph-trash" style={{ fontSize: '1.125rem' }}></i>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p style={{ fontFamily: "'Manrope'", fontSize: '0.75rem', color: 'var(--on-surface-variant)', textAlign: 'center', padding: '1rem', background: 'var(--surface-container-low)', borderRadius: '1rem', border: '1px dashed var(--outline-variant)' }}>
+                  {isHi ? "अभी तक कोई पता नहीं बचाया गया" : "No addresses saved yet"}
+                </p>
+              )}
+            </div>
+          </section>
         )}
-
-        {/* Our Network */}
         <section className="animate-fade-up-plus delay-3" style={{ marginBottom: '1.75rem' }}>
           <h2 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.75rem', fontWeight: 800, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem', paddingLeft: '0.25rem' }}>
             {t.network}
@@ -322,6 +605,30 @@ export default function Account() {
           )}
         </section>
 
+        {/* Legal Sections */}
+        <section className="animate-fade-up-plus delay-5" style={{ marginTop: '1.75rem' }}>
+          <h2 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.75rem', fontWeight: 800, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem', paddingLeft: '0.25rem' }}>
+            {t.legal}
+          </h2>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {[
+              { type: 'privacy', label: t.privacy, icon: 'ph-shield-check' },
+              { type: 'terms', label: t.terms, icon: 'ph-file-text' },
+              { type: 'refund', label: t.refund, icon: 'ph-receipt' }
+            ].map((p, i) => (
+              <button 
+                key={i} 
+                onClick={() => setActivePolicy(p.type)}
+                className="clay-card" 
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', padding: '0.75rem 0.5rem', border: 'none', cursor: 'pointer' }}
+              >
+                <i className={`ph-bold ${p.icon}`} style={{ color: 'var(--primary)', fontSize: '1rem' }}></i>
+                <span style={{ fontFamily: "'Manrope'", fontSize: '0.75rem', fontWeight: 800, color: 'var(--on-surface)' }}>{p.label}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
         {/* Footer */}
         <div style={{ textAlign: 'center', padding: '2.5rem 0 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{ background: 'var(--surface-container-high)', borderRadius: '999px', padding: '0.5rem 1.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', border: '1px solid var(--outline-variant)' }}>
@@ -338,6 +645,40 @@ export default function Account() {
         </div>
 
       </div>
+
+      {/* Policy Modal Overlay */}
+      {activePolicy && (
+        <PolicyModal type={activePolicy} onClose={() => setActivePolicy(null)} />
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <ProfileEditModal 
+          user={userData || currentUser} 
+          isHi={isHi} 
+          onClose={() => setShowEditProfile(false)} 
+          onSave={completeOnboarding} 
+        />
+      )}
+
+      {/* Add Address Modal */}
+      {showAddAddress && (
+        <AddressEditModal 
+          isHi={isHi} 
+          onClose={() => setShowAddAddress(false)} 
+          onSave={addAddress} 
+        />
+      )}
+
+      {/* Edit Address Modal */}
+      {editingAddress && (
+        <AddressEditModal 
+          address={editingAddress}
+          isHi={isHi} 
+          onClose={() => setEditingAddress(null)} 
+          onSave={(data) => updateAddress(editingAddress.id, data)} 
+        />
+      )}
     </div>
   );
 }

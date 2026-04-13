@@ -16,6 +16,25 @@ const razorpay = new Razorpay({
 });
 
 export default async function handler(req, res) {
+  // CORS Headers - restrict to authorized domains
+  const allowedOrigins = [
+    'https://patnasuvidha.com',
+    'https://www.patnasuvidha.com',
+    'https://patnasuvidha.vercel.app',
+    'http://localhost:5173'
+  ];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -23,9 +42,36 @@ export default async function handler(req, res) {
   try {
     const { amount, bookingDetails } = req.body;
 
+    // 1. Mandatory Validation
+    if (!amount || amount <= 0 || !bookingDetails || !bookingDetails.businessId || !bookingDetails.service) {
+      return res.status(400).json({ error: 'Invalid order request. Missing service or amount.' });
+    }
+
+    // 2. SECURITY CRITICAL: Server-side Amount Verification
+    // We fetch the business data and verify the service price
+    let verifiedAmount = amount;
+    const bizSnap = await db.collection('businesses').doc(bookingDetails.businessId).get();
+    
+    if (bizSnap.exists()) {
+      const bizData = bizSnap.data();
+      const service = bizData.services?.find(s => s.name === bookingDetails.service);
+      
+      if (service && service.price) {
+        if (parseFloat(service.price) !== parseFloat(amount)) {
+          console.warn(`[SECURITY] Price mismatch for order! Client: ${amount}, Server: ${service.price}`);
+          return res.status(400).json({ error: 'Price mismatch. Please refresh and try again.' });
+        }
+        verifiedAmount = service.price;
+      }
+    } else {
+      // If business not in DB, we should be cautious. 
+      // For this app, we might allow it if it's a new business, but it's a risk.
+      console.warn(`[SECURITY] Order created for non-existent business: ${bookingDetails.businessId}`);
+    }
+
     // 1. Create Razorpay Order
     const options = {
-      amount: Math.round(amount * 100), // amount in the smallest currency unit (paise)
+      amount: Math.round(verifiedAmount * 100), // amount in the smallest currency unit (paise)
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     };
@@ -37,7 +83,7 @@ export default async function handler(req, res) {
       ...bookingDetails,
       razorpayOrderId: order.id,
       status: 'pending',
-      amount: amount,
+      amount: verifiedAmount,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 

@@ -5,24 +5,11 @@ import './index.css'
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('SW registered:', registration.scope);
-        
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                window.dispatchEvent(new CustomEvent('sw-update-available'));
-              }
-            });
-          }
-        });
-      })
-      .catch((error) => {
-        console.log('SW registration failed:', error);
-      });
+    navigator.serviceWorker.register('/sw.js').then(registration => {
+      console.log('SW registered: ', registration);
+    }).catch(registrationError => {
+      console.log('SW registration failed: ', registrationError);
+    });
   });
 }
 
