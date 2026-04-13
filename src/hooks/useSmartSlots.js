@@ -2,8 +2,8 @@
  * useSmartSlots — Real-time Firestore-backed slot availability with Provider Logic
  * 
  * Logic:
- * 1. Fetches all ACTIVE providers for the category.
- * 2. Fetches all booked slots for the date.
+ * 1. Fetches all ACTIVE providers for the category (Real-time).
+ * 2. Fetches all booked slots for the date (Real-time).
  * 3. A slot is UNAVAILABLE if:
  *    - It's in the past.
  *    - Total active providers in category <= Total bookings in that slot.
@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const ALL_TIME_SLOTS = [
@@ -50,66 +50,61 @@ export function useSmartSlots(categoryId, selectedDateStr, currentUser) {
   const [bookedSlots, setBookedSlots] = useState({}); // Map: slotLabel -> providerIds[]
   const [activeProviders, setActiveProviders] = useState([]);
   const [userHistory, setUserHistory] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 1. Fetch ACTIVE providers for this category
+  // 1. Fetch ACTIVE providers for this category (Real-time)
   useEffect(() => {
     if (!categoryId || !db) return;
     
-    const fetchProviders = async () => {
-      try {
-        const q = query(
-          collection(db, 'businesses'),
-          where('category', '==', categoryId),
-          where('status', '==', 'active')
-        );
-        const snap = await getDocs(q);
-        const provs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        setActiveProviders(provs);
-      } catch (e) {
-        console.error('useSmartSlots: Error fetching providers:', e);
-      }
-    };
-    fetchProviders();
+    const q = query(
+      collection(db, 'businesses'),
+      where('category', '==', categoryId),
+      where('status', '==', 'active')
+    );
+
+    const unsub = onSnapshot(q, (snap) => {
+      const provs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setActiveProviders(provs);
+    }, (err) => {
+      console.error('useSmartSlots: Providers Listener Error:', err);
+    });
+
+    return () => unsub();
   }, [categoryId]);
 
-  // 2. Fetch all bookings for category + date
+  // 2. Fetch all bookings for category + date (Real-time)
   useEffect(() => {
     if (!categoryId || !selectedDateStr || !db) return;
     setIsLoading(true);
 
-    const fetchBookings = async () => {
-      try {
-        const q = query(
-          collection(db, 'bookings'),
-          where('categoryId', '==', categoryId),
-          where('dateFull', '==', selectedDateStr),
-          where('status', 'in', ['pending', 'confirmed', 'payment_initiated'])
-        );
-        const snap = await getDocs(q);
-        const slotMap = {}; // label -> [providerId]
+    const q = query(
+      collection(db, 'bookings'),
+      where('categoryId', '==', categoryId),
+      where('dateFull', '==', selectedDateStr),
+      where('status', 'in', ['pending', 'confirmed', 'payment_initiated'])
+    );
 
-        snap.forEach(doc => {
-          const data = doc.data();
-          if (data.time) {
-            if (!slotMap[data.time]) slotMap[data.time] = [];
-            if (data.providerId) slotMap[data.time].push(data.providerId);
-            else slotMap[data.time].push('unassigned'); // still counts against capacity
-          }
-        });
+    const unsub = onSnapshot(q, (snap) => {
+      const slotMap = {}; // label -> [providerId]
+      snap.forEach(doc => {
+        const data = doc.data();
+        if (data.time) {
+          if (!slotMap[data.time]) slotMap[data.time] = [];
+          if (data.providerId) slotMap[data.time].push(data.providerId);
+          else slotMap[data.time].push('unassigned');
+        }
+      });
+      setBookedSlots(slotMap);
+      setIsLoading(false);
+    }, (err) => {
+      console.error('useSmartSlots: Bookings Listener Error:', err);
+      setIsLoading(false);
+    });
 
-        setBookedSlots(slotMap);
-      } catch (e) {
-        setBookedSlots({});
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchBookings();
+    return () => unsub();
   }, [categoryId, selectedDateStr]);
 
-  // 3. Fetch user's history for this category
+  // 3. Fetch user's history for this category (One-time check is fine here)
   useEffect(() => {
     if (!currentUser || !categoryId || !db) return;
 
