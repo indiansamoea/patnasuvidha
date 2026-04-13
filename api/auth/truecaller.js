@@ -69,20 +69,26 @@ export default async function handler(req, res) {
 
   let { requestId, accessToken, profile, signature, signatureAlgorithm } = req.body;
 
-  // 1. Input Validation
-  if (!profile || !signature) {
-    return res.status(400).json({ error: "Missing profile or signature from Truecaller." });
-  }
-
-  // Ensure profile is an object for analysis, but we need the raw string for signature check
+  // Ensure profile is an object for analysis
   let profileObj = profile;
-  let profileStr = typeof profile === 'string' ? profile : JSON.stringify(profile);
-  
   if (typeof profile === 'string') {
     try { profileObj = JSON.parse(profile); } catch (e) {
       return res.status(400).json({ error: "Invalid profile format." });
     }
   }
+
+  // 1. Extract signature and algorithm if nested (SDK behavior)
+  signature = signature || profileObj?.signature;
+  signatureAlgorithm = signatureAlgorithm || profileObj?.signatureAlgorithm || 'SHA256';
+
+  // 1. Input Validation
+  if (!profile || !signature) {
+    return res.status(400).json({ error: "Missing profile or signature from Truecaller." });
+  }
+
+  // We need the raw string for signature check if profile was passed as a string
+  // If profile was an object, we use stringify to keep it consistent
+  let profileStr = typeof profile === 'string' ? profile : JSON.stringify(profile);
 
   try {
     // 2. Fetch Truecaller Public Keys

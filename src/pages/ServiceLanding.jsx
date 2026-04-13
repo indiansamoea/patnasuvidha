@@ -18,51 +18,11 @@ const DEFAULT_META = {
 };
 
 // ─────────────────────────────────────────────────────────
-// TIME SLOTS
-// ─────────────────────────────────────────────────────────
-const ALL_TIME_SLOTS = [
-  { id: 'morning1',   label: '9:00 AM',   period: 'Morning' },
-  { id: 'morning2',   label: '10:00 AM',  period: 'Morning' },
-  { id: 'morning3',   label: '11:00 AM',  period: 'Morning' },
-  { id: 'afternoon1', label: '12:00 PM',  period: 'Afternoon' },
-  { id: 'afternoon2', label: '2:00 PM',   period: 'Afternoon' },
-  { id: 'afternoon3', label: '3:00 PM',   period: 'Afternoon' },
-  { id: 'evening1',   label: '5:00 PM',   period: 'Evening' },
-  { id: 'evening2',   label: '6:00 PM',   period: 'Evening' },
-  { id: 'evening3',   label: '7:00 PM',   period: 'Evening' },
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// BACKEND SYNC HOOK (Simulated for Slot Availability)
-// ─────────────────────────────────────────────────────────────────────────────
-function useSlotAvailability(categoryId) {
-  const [bookedSlots, setBookedSlots] = useState({});
-  const [isLoadingAvailability, setIsLoadingAvailability] = useState(true);
-
-  useEffect(() => {
-    if (!categoryId) return;
-    setIsLoadingAvailability(true);
-    const t = setTimeout(() => {
-      const today = new Date().toISOString().split('T')[0];
-      setBookedSlots({ [today]: ['9:00 AM', '10:00 AM'] });
-      setIsLoadingAvailability(false);
-    }, 700);
-    return () => clearTimeout(t);
-  }, [categoryId]);
-
-  const isSlotBooked = useCallback(
-    (dateStr, slotLabel) => (bookedSlots[dateStr] || []).includes(slotLabel),
-    [bookedSlots]
-  );
-
-  return { isSlotBooked, isLoadingAvailability };
-}
-
-// ─────────────────────────────────────────────────────────
 // BOOKING STEP 1 SHEET — Date, Time & Address
 // ─────────────────────────────────────────────────────────
 function BookingStep1({ meta, category, isHi, onClose, onProceedToPayment }) {
   const { currentUser, savedAddresses, addAddress } = useAppContext();
+  const navigate = useNavigate();
   const dates = useMemo(() => Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
@@ -108,7 +68,7 @@ function BookingStep1({ meta, category, isHi, onClose, onProceedToPayment }) {
         }
       },
       () => setIsFetchingLocation(false),
-      { timeout: 10000 }
+      { timeout: 10000, enableHighAccuracy: true }
     );
   }, [isHi]);
 
@@ -128,9 +88,9 @@ function BookingStep1({ meta, category, isHi, onClose, onProceedToPayment }) {
     }
   }, [suggestedSlot]);
 
-  // Pre-fill address from user history
+  // Pre-fill address from user history if none selected
   useEffect(() => {
-    if (userHistory?.address && !selectedAddressId && savedAddresses.length === 0) {
+    if (userHistory?.address && !selectedAddressId && savedAddresses.length === 0 && !newAddress) {
       setNewAddress(userHistory.address);
     }
   }, [userHistory]);
@@ -146,9 +106,14 @@ function BookingStep1({ meta, category, isHi, onClose, onProceedToPayment }) {
     let finalAddress = currentAddress;
     if (!currentAddress && newAddress.trim()) {
       setIsSavingAddress(true);
-      const saved = await addAddress(newAddress.trim());
-      finalAddress = newAddress.trim();
-      setIsSavingAddress(false);
+      try {
+        await addAddress(newAddress.trim());
+        finalAddress = newAddress.trim();
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsSavingAddress(false);
+      }
     }
     const dateStr = `${selectedDateObj.day}, ${selectedDateObj.date} ${selectedDateObj.month}`;
     onProceedToPayment({ date: dateStr, dateFull: selectedDateObj.full, time: selectedSlot, address: finalAddress });
@@ -166,6 +131,8 @@ function BookingStep1({ meta, category, isHi, onClose, onProceedToPayment }) {
     { id: 'evening3',   label: '7:00 PM',   period: 'Evening' },
   ];
 
+  const categoryName = isHi ? (meta.nameHi || meta.name) : meta.name;
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
@@ -181,45 +148,31 @@ function BookingStep1({ meta, category, isHi, onClose, onProceedToPayment }) {
             </button>
           </div>
 
-          {/* Smart Slot Status Banner */}
+          {/* Smart Slot Status Banner OR Empty Category State */}
           <div style={{ 
             padding: '0.625rem 1rem', borderRadius: '12px', marginBottom: '1.25rem',
-            background: isLoadingSlots ? 'var(--surface-container)' : totalSlotsAvailable > 3 ? 'rgba(34,197,94,0.1)' : totalSlotsAvailable > 0 ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.1)',
-            border: isLoadingSlots ? 'none' : totalSlotsAvailable > 3 ? '1px solid rgba(34,197,94,0.2)' : totalSlotsAvailable > 0 ? '1px solid rgba(245,158,11,0.2)' : '1px solid rgba(239,68,68,0.2)',
+            background: isLoadingSlots ? 'var(--surface-container)' : activeProvidersCount === 0 ? 'rgba(255,145,89,0.1)' : totalSlotsAvailable > 3 ? 'rgba(34,197,94,0.1)' : totalSlotsAvailable > 0 ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.1)',
+            border: isLoadingSlots ? 'none' : activeProvidersCount === 0 ? '1px dashed var(--primary)' : totalSlotsAvailable > 3 ? '1px solid rgba(34,197,94,0.2)' : totalSlotsAvailable > 0 ? '1px solid rgba(245,158,11,0.2)' : '1px solid rgba(239,68,68,0.2)',
             display: 'flex', alignItems: 'center', gap: '0.5rem'
           }}>
             {isLoadingSlots ? (
               <><div className="spinner" style={{ width: '14px', height: '14px' }} /><span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--on-surface-variant)' }}>Checking availability...</span></>
             ) : (
               <>
-                <i className={`ph-fill ${totalSlotsAvailable > 3 ? 'ph-check-circle' : totalSlotsAvailable > 0 ? 'ph-warning' : 'ph-x-circle'}`} 
-                  style={{ color: totalSlotsAvailable > 3 ? '#22c55e' : totalSlotsAvailable > 0 ? '#f59e0b' : '#ef4444', fontSize: '1rem' }} />
+                <i className={`ph-fill ${activeProvidersCount === 0 ? 'ph-rocket-launch' : totalSlotsAvailable > 3 ? 'ph-check-circle' : totalSlotsAvailable > 0 ? 'ph-warning' : 'ph-x-circle'}`} 
+                  style={{ color: activeProvidersCount === 0 ? 'var(--primary)' : totalSlotsAvailable > 3 ? '#22c55e' : totalSlotsAvailable > 0 ? '#f59e0b' : '#ef4444', fontSize: '1rem' }} />
                 <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--on-surface)' }}>
-                  {totalSlotsAvailable > 0 
-                    ? `${totalSlotsAvailable} slots available across ${activeProvidersCount} active experts` 
-                    : 'All experts are busy for this date'}
+                  {activeProvidersCount > 0 
+                    ? (totalSlotsAvailable > 0 
+                        ? `${totalSlotsAvailable} slots available across ${activeProvidersCount} active experts` 
+                        : 'All experts are busy for this date')
+                    : (isHi ? `हम जल्द ही ${categoryName} के लिए आ रहे हैं!` : `Partnering with more experts for ${categoryName}...`)}
                 </span>
               </>
             )}
           </div>
 
-          {/* User Rebook Shortcut */}
-          {userHistory && (
-            <div style={{ padding: '0.875rem 1rem', borderRadius: '14px', background: 'var(--primary-container)', border: '1px solid var(--primary)20', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <i className="ph-fill ph-clock-counter-clockwise" style={{ color: 'var(--primary)', fontSize: '1.25rem', flexShrink: 0 }} />
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: '0.6875rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Rebook Expert</p>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--on-surface)', fontWeight: 600 }}>
-                  {userHistory.providerName || 'Previous Expert'} · Last: {userHistory.date}
-                </p>
-              </div>
-              <span style={{ fontSize: '0.6875rem', fontWeight: 800, padding: '0.25rem 0.625rem', borderRadius: '999px',
-                background: userHistory.status === 'completed' ? 'rgba(34,197,94,0.15)' : userHistory.status === 'cancelled' ? 'rgba(239,68,68,0.1)' : 'rgba(59,130,246,0.1)',
-                color: userHistory.status === 'completed' ? '#16a34a' : userHistory.status === 'cancelled' ? '#dc2626' : '#3b82f6',
-              }}>{userHistory.status}</span>
-            </div>
-          )}
-
+          {/* Date Selector */}
           <section style={{ marginBottom: '1.5rem' }}>
             <h3 style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem' }}>{isHi ? 'तारीख' : 'Date'}</h3>
             <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto' }} className="hide-scrollbar">
@@ -232,66 +185,90 @@ function BookingStep1({ meta, category, isHi, onClose, onProceedToPayment }) {
             </div>
           </section>
 
-          <section style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 800 }}>{isHi ? 'समय' : 'Time Slot'}</h3>
-              {suggestedSlot && <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'var(--primary)', background: 'var(--primary-container)', padding: '0.2rem 0.625rem', borderRadius: '999px' }}>Best: {suggestedSlot}</span>}
+          {/* Time Slots Section */}
+          <section className="animate-fade-up-plus delay-3" style={{ marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1rem', fontWeight: 800, color: 'var(--on-surface)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {activeProvidersCount > 0 ? (isHi ? 'टाइम चुनें' : 'Available Slots') : (isHi ? 'जल्द आ रहा है' : 'Service Coming Soon')}
+              </h3>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-              {ALL_TIME_SLOTS_DATA.map(slot => {
-                const booked = isSlotBooked(slot.label);
-                const past  = isSlotPast(slot.label);
-                const unavail = booked || past;
-                const isSuggested = slot.label === suggestedSlot;
-                const isSelected = selectedSlot === slot.label;
 
-                return (
-                  <button key={slot.id} disabled={unavail} onClick={() => setSelectedSlot(slot.label)}
-                    style={{
-                      padding: '0.75rem 0.25rem', borderRadius: '10px', position: 'relative',
-                      background: isSelected ? 'var(--primary-container)' : isSuggested ? 'rgba(255,140,0,0.08)' : 'var(--surface-container)',
-                      border: isSelected ? '2px solid var(--primary)' : isSuggested ? '1px dashed var(--primary)' : '1px solid transparent',
-                      opacity: unavail ? 0.35 : 1,
-                      cursor: unavail ? 'not-allowed' : 'pointer',
-                      fontSize: '0.8125rem', fontWeight: 700,
-                      textDecoration: past ? 'line-through' : 'none',
-                      color: booked ? 'var(--on-surface-variant)' : 'inherit'
-                    }}>
-                    {slot.label}
-                    {isSlotPreferred(slot.label) && <div style={{ position: 'absolute', top: '-6px', right: '-4px', background: 'var(--primary)', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', fontWeight: 900, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>EXPERT</div>}
-                    {booked && !isSlotPreferred(slot.label) && <span style={{ position: 'absolute', top: '2px', right: '4px', fontSize: '0.5rem', fontWeight: 900, color: '#f59e0b' }}>●</span>}
-                  </button>
-                );
-              })}
-            </div>
-            {selectedSlot && isSlotUnavailable(selectedSlot) && (
-              <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.5rem', fontWeight: 700 }}>This slot is no longer available. Please pick another.</p>
-            )}
-          </section>
-
-          <section style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem' }}>{isHi ? 'पता' : 'Address'}</h3>
-            {savedAddresses.map(addr => (
-              <button key={addr.id} onClick={() => { setSelectedAddressId(addr.id); setShowAddressForm(false); }} style={{ width: '100%', padding: '1rem', borderRadius: '12px', marginBottom: '0.5rem', textAlign: 'left', background: selectedAddressId === addr.id ? 'var(--primary-container)' : 'var(--surface-container)', border: 'none' }}>
-                {addr.label}
-              </button>
-            ))}
-            <button onClick={() => { setShowAddressForm(true); setSelectedAddressId(null); }} style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: '1px dashed var(--primary)', background: 'transparent', color: 'var(--primary)', fontWeight: 800 }}>
-              + {isHi ? 'नया पता' : 'New Address'}
-            </button>
-            {showAddressForm && (
-              <div style={{ marginTop: '0.75rem', position: 'relative' }}>
-                <input className="input-field" value={newAddress} onChange={e => setNewAddress(e.target.value)} placeholder="Type address..." style={{ paddingRight: '2.5rem' }} />
-                <button onClick={handleRetrieveLocation} style={{ position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--primary)' }}>
-                  <i className="ph-fill ph-target" />
+            {activeProvidersCount === 0 ? (
+              <div className="clay-card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center', background: 'var(--surface-container-low)', border: '1px dashed var(--outline-variant)' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255,145,89,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+                  <i className="ph-fill ph-rocket-launch" style={{ color: 'var(--primary)', fontSize: '2rem' }} />
+                </div>
+                <h4 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.125rem', fontWeight: 900, marginBottom: '0.5rem' }}>
+                  {isHi ? 'हम आपके क्षेत्र में आ रहे हैं!' : 'Coming to your area!'}
+                </h4>
+                <p style={{ fontFamily: "'Manrope'", fontSize: '0.8125rem', color: 'var(--on-surface-variant)', lineHeight: 1.6 }}>
+                  {isHi ? `हम ${categoryName} के लिए बेहतरीन विशेषज्ञों को शामिल कर रहे हैं। जल्द ही यहाँ सर्विस शुरू होगी!` : `We are currently vetting and onboarding the best local experts for ${categoryName}. Check back soon!`}
+                </p>
+                <button 
+                  onClick={() => navigate('/services')}
+                  style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 800 }}
+                >
+                  {isHi ? 'अन्य सेवाएं देखें' : 'Explore Other Services'}
                 </button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                {ALL_TIME_SLOTS_DATA.map(slot => {
+                  const booked = isSlotBooked(slot.label);
+                  const past  = isSlotPast(slot.label);
+                  const unavail = booked || past;
+                  const isSuggested = slot.label === suggestedSlot;
+                  const isSelected = selectedSlot === slot.label;
+
+                  return (
+                    <button key={slot.id} disabled={unavail} onClick={() => setSelectedSlot(slot.label)}
+                      style={{
+                        padding: '0.75rem 0.25rem', borderRadius: '10px', position: 'relative',
+                        background: isSelected ? 'var(--primary-container)' : isSuggested ? 'rgba(255,140,0,0.08)' : 'var(--surface-container)',
+                        border: isSelected ? '2px solid var(--primary)' : isSuggested ? '1px dashed var(--primary)' : '1px solid transparent',
+                        opacity: unavail ? 0.35 : 1,
+                        cursor: unavail ? 'not-allowed' : 'pointer',
+                        fontSize: '0.8125rem', fontWeight: 700,
+                        textDecoration: past ? 'line-through' : 'none',
+                        color: booked ? 'var(--on-surface-variant)' : 'inherit'
+                      }}>
+                      {slot.label}
+                      {isSlotPreferred(slot.label) && <div style={{ position: 'absolute', top: '-6px', right: '-4px', background: 'var(--primary)', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', fontWeight: 900, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>EXPERT</div>}
+                      {booked && !isSlotPreferred(slot.label) && <span style={{ position: 'absolute', top: '2px', right: '4px', fontSize: '0.5rem', fontWeight: 900, color: '#f59e0b' }}>●</span>}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </section>
 
-          <button onClick={handleSaveAndProceed} disabled={!canProceed || isSavingAddress} style={{ width: '100%', padding: '1rem', borderRadius: '16px', background: canProceed ? 'var(--gradient-primary)' : 'var(--surface-container-high)', color: canProceed ? '#fff' : 'var(--on-surface-variant)', fontWeight: 800, border: 'none', cursor: canProceed ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}>
-            {isSavingAddress ? 'Saving...' : (isHi ? 'पुष्टि करें' : 'Confirm & Proceed')}
-          </button>
+          {activeProvidersCount > 0 && (
+            <>
+              <section style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem' }}>{isHi ? 'पता' : 'Address'}</h3>
+                {savedAddresses.map(addr => (
+                  <button key={addr.id} onClick={() => { setSelectedAddressId(addr.id); setShowAddressForm(false); }} style={{ width: '100%', padding: '1rem', borderRadius: '12px', marginBottom: '0.5rem', textAlign: 'left', background: selectedAddressId === addr.id ? 'var(--primary-container)' : 'var(--surface-container)', border: 'none' }}>
+                    {addr.label}
+                  </button>
+                ))}
+                <button onClick={() => { setShowAddressForm(true); setSelectedAddressId(null); }} style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: '1px dashed var(--primary)', background: 'transparent', color: 'var(--primary)', fontWeight: 800 }}>
+                  + {isHi ? 'नया पता' : 'New Address'}
+                </button>
+                {showAddressForm && (
+                  <div style={{ marginTop: '0.75rem', position: 'relative' }}>
+                    <input className="input-field" value={newAddress} onChange={e => setNewAddress(e.target.value)} placeholder="Type address..." style={{ paddingRight: '2.5rem' }} />
+                    <button onClick={handleRetrieveLocation} disabled={isFetchingLocation} style={{ position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--primary)' }}>
+                      {isFetchingLocation ? <div className="spinner" style={{ width: '14px', height: '14px' }} /> : <i className="ph-fill ph-target" />}
+                    </button>
+                  </div>
+                )}
+              </section>
+
+              <button onClick={handleSaveAndProceed} disabled={!canProceed || isSavingAddress} style={{ width: '100%', padding: '1rem', borderRadius: '16px', background: canProceed ? 'var(--gradient-primary)' : 'var(--surface-container-high)', color: canProceed ? '#fff' : 'var(--on-surface-variant)', fontWeight: 800, border: 'none', cursor: canProceed ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}>
+                {isSavingAddress ? 'Saving...' : (isHi ? 'पुष्टि करें' : 'Confirm & Proceed')}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

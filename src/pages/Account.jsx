@@ -1,6 +1,7 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 import { getCategoryById } from '../utils/categories';
 import { toast } from 'react-hot-toast';
 
@@ -25,6 +26,15 @@ const LEGAL_CONTENT = {
     title: "Refund Policy",
     content: `1. Cancellation: Full refunds are provided for online payments if the booking is cancelled at least 2 hours before the scheduled time.\n2. Failed Services: If a provider fails to show up, a full refund will be initiated to your original payment method within 5-7 working days.\n3. Processing Time: Refunds may take 5-10 business days to reflect in your bank account depending on your bank's policy.\n4. Disputed Services: For unsatisfactory services, please contact support within 24 hours for mediation.\n5. Non-Refundable: Booking fees (if applicable) are non-refundable once the service has been initiated.`
   }
+};
+
+const STATUS_CONFIG = {
+  pending: { label: 'Pending', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: 'ph-clock-countdown' },
+  confirmed: { label: 'Confirmed', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', icon: 'ph-calendar-check' },
+  completed: { label: 'Completed', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', icon: 'ph-check-circle' },
+  cancelled: { label: 'Cancelled', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', icon: 'ph-x-circle' },
+  paid: { label: 'Paid', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', icon: 'ph-credit-card' },
+  payment_initiated: { label: 'Payment Pending', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: 'ph-credit-card' }
 };
 
 function PolicyModal({ type, onClose }) {
@@ -218,6 +228,7 @@ export default function Account() {
     lang, currentUser, logout, bookings, 
     userData, completeOnboarding, savedAddresses, addAddress, updateAddress, deleteAddress
   } = useAppContext();
+  const { requestPermission } = usePushNotifications();
   const navigate = useNavigate();
   const [showFaq, setShowFaq] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
@@ -225,6 +236,7 @@ export default function Account() {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
+  const [isNotifLoading, setIsNotifLoading] = useState(false);
 
   const isHi = lang === 'hi';
   
@@ -239,6 +251,17 @@ export default function Account() {
       return dateB - dateA;
     });
   }, [bookings, currentUser]);
+
+  const handleNotificationOptIn = async () => {
+    setIsNotifLoading(true);
+    try {
+      await requestPermission();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsNotifLoading(false);
+    }
+  };
 
   const handleFeedback = () => {
     const text = encodeURIComponent("Hello Patna Suvidha team! I have some feedback:\n\n");
@@ -381,7 +404,40 @@ export default function Account() {
           )}
         </div>
 
-
+        {/* Preferences / Notifications */}
+        {currentUser && (
+          <section className="animate-fade-up-plus delay-1" style={{ marginBottom: '1.75rem' }}>
+            <h2 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.75rem', fontWeight: 800, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem', paddingLeft: '0.25rem' }}>
+              {isHi ? 'प्राथमिकताएं' : 'Preferences'}
+            </h2>
+            <div className="clay-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,145,89,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="ph-fill ph-bell-ringing" style={{ color: 'var(--primary)', fontSize: '1.125rem' }}></i>
+                </div>
+                <div>
+                  <p style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.875rem', fontWeight: 800, color: 'var(--on-surface)' }}>{isHi ? 'पुश नोटिफिकेशन' : 'Push Notifications'}</p>
+                  <p style={{ fontFamily: "'Manrope'", fontSize: '0.6875rem', fontWeight: 600, color: 'var(--on-surface-variant)' }}>
+                    {Notification.permission === 'granted' ? (isHi ? 'चालू है' : 'Enabled') : (isHi ? 'बंद है' : 'Disabled')}
+                  </p>
+                </div>
+              </div>
+              {Notification.permission !== 'granted' && (
+                <button 
+                  onClick={handleNotificationOptIn}
+                  disabled={isNotifLoading}
+                  style={{ 
+                    padding: '0.5rem 1rem', borderRadius: '0.75rem', 
+                    background: 'var(--primary)', color: 'white', 
+                    fontSize: '0.75rem', fontWeight: 800, border: 'none', cursor: 'pointer' 
+                  }}
+                >
+                  {isNotifLoading ? '...' : (isHi ? 'चालू करें' : 'Enable')}
+                </button>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* My Bookings Section */}
         {currentUser && (
@@ -606,15 +662,15 @@ export default function Account() {
         </section>
 
         {/* Legal Sections */}
-        <section className="animate-fade-up-plus delay-5" style={{ marginTop: '1.75rem' }}>
+        <section className="animate-fade-up-plus delay-6" style={{ marginTop: '1.75rem' }}>
           <h2 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.75rem', fontWeight: 800, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem', paddingLeft: '0.25rem' }}>
-            {t.legal}
+            {t.legal || 'Legal & Policies'}
           </h2>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {[
-              { type: 'privacy', label: t.privacy, icon: 'ph-shield-check' },
-              { type: 'terms', label: t.terms, icon: 'ph-file-text' },
-              { type: 'refund', label: t.refund, icon: 'ph-receipt' }
+              { type: 'privacy', label: t.privacy || 'Privacy', icon: 'ph-shield-check' },
+              { type: 'terms', label: t.terms || 'Terms', icon: 'ph-file-text' },
+              { type: 'refund', label: t.refund || 'Refunds', icon: 'ph-receipt' }
             ].map((p, i) => (
               <button 
                 key={i} 

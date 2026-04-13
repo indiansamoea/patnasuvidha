@@ -139,13 +139,21 @@ export default function Login() {
     setLoading(true);
     setError(null);
     try {
-      // Calling the new free Vercel API route instead of Firebase Functions
+      // Flatten the payload if signature/profile are already present
+      const finalPayload = {
+        requestId: tcPayload.requestId || 'js-sdk-' + Date.now(),
+        accessToken: tcPayload.accessToken,
+        profile: tcPayload.profile,
+        signature: tcPayload.signature || tcPayload.profile?.signature,
+        signatureAlgorithm: tcPayload.signatureAlgorithm || tcPayload.profile?.signatureAlgorithm || 'SHA256'
+      };
+
       const response = await fetch('/api/auth/truecaller', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(tcPayload),
+        body: JSON.stringify(finalPayload),
       });
 
       if (!response.ok) {
