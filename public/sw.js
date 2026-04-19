@@ -1,12 +1,14 @@
-const CACHE_NAME = 'patnasuvidha-v1';
+const CACHE_NAME = 'patnasuvidha-v2-premium';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon-192x192.png',
   '/icon-512x512.png',
-  '/screenshot-wide.png',
-  '/screenshot-narrow.png'
+  'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Outfit:wght@100..900&display=swap',
+  'https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css',
+  'https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css',
+  'https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css'
 ];
 
 // Install Event: Cache essential assets

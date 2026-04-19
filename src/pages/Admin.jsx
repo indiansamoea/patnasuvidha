@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 import { CATEGORIES } from '../utils/categories';
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  pending:           { label: 'Pending',           color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',  icon: 'ph-clock' },
-  confirmed:         { label: 'Confirmed',          color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', icon: 'ph-check-circle' },
-  completed:         { label: 'Completed',          color: '#22c55e', bg: 'rgba(34,197,94,0.12)',  icon: 'ph-seal-check' },
-  cancelled:         { label: 'Cancelled',          color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  icon: 'ph-x-circle' },
+  pending:           { label: 'Pending',           color: 'var(--primary)', bg: 'hsla(var(--p-h), 100%, 50%, 0.1)',  icon: 'ph-clock' },
+  confirmed:         { label: 'Confirmed',          color: 'var(--secondary)', bg: 'hsla(142, 76%, 36%, 0.1)', icon: 'ph-check-circle' },
+  completed:         { label: 'Completed',          color: 'var(--secondary)', bg: 'hsla(142, 76%, 36%, 0.2)',  icon: 'ph-seal-check' },
+  cancelled:         { label: 'Cancelled',          color: 'var(--error)', bg: 'hsla(0, 72%, 51%, 0.1)',  icon: 'ph-x-circle' },
   payment_initiated: { label: 'Payment Pending',    color: '#a855f7', bg: 'rgba(168,85,247,0.12)', icon: 'ph-credit-card' },
 };
 
@@ -539,12 +540,21 @@ export default function Admin() {
     settings, updateSettings, addNotification, bookingsEnabled,
   } = useAppContext();
 
+  // Statistics and Analytics Engine
+  const stats = useMemo(() => {
+    const total = allBookings?.length || 0;
+    const pending = allBookings?.filter(b => ['pending', 'confirmed', 'payment_initiated'].includes(b.status)).length || 0;
+    const completed = allBookings?.filter(b => b.status === 'completed').length || 0;
+    const revenue = allBookings?.filter(b => b.status === 'completed').reduce((acc, b) => acc + (Number(b.amount) || 0), 0) || 0;
+    return { total, pending, completed, revenue, providers: providers?.length || 0 };
+  }, [allBookings, providers]);
+
   const [tab, setTab] = useState('bookings');
   const [bookingFilter, setBookingFilter] = useState('all');
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [offerModal, setOfferModal] = useState(null); // null | 'new' | offer-object
-  const [businessModal, setBusinessModal] = useState(null); // null | 'new' | business-object
-  const [categoryModal, setCategoryModal] = useState(null); // null | 'new' | category-object
+  const [offerModal, setOfferModal] = useState(null); 
+  const [businessModal, setBusinessModal] = useState(null); 
+  const [categoryModal, setCategoryModal] = useState(null); 
 
   const [telegramForm, setTelegramForm] = useState({
     telegramBotToken: settings.telegramBotToken || '',
@@ -894,354 +904,268 @@ export default function Admin() {
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div style={{ background: 'transparent', minHeight: '100vh', color: 'var(--on-surface)', fontFamily: 'var(--font-body)', paddingBottom: '3rem' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1.5rem 1.25rem 6rem' }}>
-
-        {/* Header */}
-        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <i className="ph-fill ph-shield-check" style={{ fontSize: '1.375rem', color: '#fff' }} />
+    <div style={{ minHeight: '100vh', background: 'var(--surface)', display: 'flex', flexDirection: 'column' }}>
+      {/* Premium Admin Header */}
+      <header className="glass-nav" style={{ position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid var(--outline-variant)', padding: '0.75rem 1.5rem' }}>
+        <div style={{ maxWidth: '1440px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-md)' }}>
+              <i className="ph-fill ph-shield-check" style={{ color: '#fff', fontSize: '1.5rem' }} />
             </div>
             <div>
-              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 900, color: 'var(--primary)', letterSpacing: '-0.02em' }}>Admin Console</h1>
-              <p style={{ fontSize: '0.625rem', color: 'var(--on-surface-variant)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '0.125rem' }}>Patna Suvidha</p>
+              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.125rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Admin Terminal</h1>
+              <p style={{ fontSize: '0.625rem', fontWeight: 800, color: 'var(--on-surface-variant)' }}>PATNA SUVIDHA • PRODUCTION V2</p>
             </div>
           </div>
-          <button
-            id="admin-home-btn"
-            onClick={() => navigate('/')}
-            style={{ padding: '0.5rem 1rem', background: 'var(--surface-container-high)', border: '1px solid var(--outline-variant)', borderRadius: '12px', color: 'var(--on-surface)', fontSize: '0.8125rem', fontWeight: 800, cursor: 'pointer' }}
-          >
-            ← Home
-          </button>
-        </header>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+             <StatusBadge status={bookingsEnabled ? 'confirmed' : 'cancelled'} />
+             <div style={{ height: '32px', width: '1px', background: 'var(--outline-variant)' }} />
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+               <div style={{ textAlign: 'right' }}>
+                 <p style={{ fontSize: '0.75rem', fontWeight: 800 }}>{currentUser.displayName || 'Admin'}</p>
+                 <button onClick={() => navigate('/')} style={{ border: 'none', background: 'none', color: 'var(--primary)', fontSize: '0.625rem', fontWeight: 900, cursor: 'pointer', padding: 0 }}>VIEW SITE</button>
+               </div>
+               <img src={currentUser.photoURL || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin'} style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid var(--primary)' }} alt="Admin" />
+             </div>
+          </div>
+        </div>
+      </header>
 
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
-          {stats.map((s, i) => (
-            <div key={i} className="clay-card" style={{ padding: '1.25rem' }}>
-              <i className={`ph-fill ${s.icon}`} style={{ fontSize: '1.5rem', color: s.color, display: 'block', marginBottom: '0.5rem' }} />
-              <p style={{ fontSize: '0.625rem', color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800 }}>{s.label}</p>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.875rem', fontWeight: 900, color: 'var(--on-surface)', lineHeight: 1.1 }}>{s.value}</p>
-            </div>
+      <main style={{ flex: 1, padding: '2rem 1.5rem', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
+        {/* Analytics Header */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
+          {[
+            { label: 'Active Bookings', value: stats.pending, icon: 'ph-clock-counter-clockwise', color: 'var(--primary)' },
+            { label: 'Completed Jobs', value: stats.completed, icon: 'ph-seal-check', color: 'var(--secondary)' },
+            { label: 'Total Revenue', value: stats.revenue ? `₹${stats.revenue.toLocaleString('en-IN')}` : '₹0', icon: 'ph-currency-inr', color: 'var(--secondary)' },
+            { label: 'Total Providers', value: stats.providers, icon: 'ph-users-three', color: '#a855f7' }
+          ].map((s, i) => (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} key={i} className="clay-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: `${s.color}15`, border: `1px solid ${s.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 <i className={`ph-fill ${s.icon}`} style={{ color: s.color, fontSize: '1.5rem' }} />
+              </div>
+              <div>
+                <p style={{ fontSize: '0.6875rem', fontWeight: 800, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>{s.label}</p>
+                <p style={{ fontSize: '1.375rem', fontWeight: 900, fontFamily: 'var(--font-display)' }}>{s.value}</p>
+              </div>
+            </motion.div>
           ))}
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', marginBottom: '1.25rem', paddingBottom: '0.25rem' }} className="hide-scrollbar">
-          <TabBtn id="tab-bookings" label="Bookings" icon="ph-calendar-check" active={tab === 'bookings'} onClick={() => setTab('bookings')} badge={pendingCount} />
+        {/* Tab Navigation */}
+        <div className="hide-scrollbar" style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', marginBottom: '2rem', paddingBottom: '0.5rem' }}>
+          <TabBtn id="tab-bookings" label="Bookings" icon="ph-calendar-check" active={tab === 'bookings'} onClick={() => setTab('bookings')} badge={stats.pending} />
           <TabBtn id="tab-services" label="Service Master" icon="ph-gear-six" active={tab === 'services'} onClick={() => setTab('services')} />
           <TabBtn id="tab-providers" label="Providers" icon="ph-users-three" active={tab === 'providers'} onClick={() => setTab('providers')} />
           <TabBtn id="tab-offers" label="Offers" icon="ph-megaphone" active={tab === 'offers'} onClick={() => setTab('offers')} />
-          <TabBtn id="tab-settings" label="Settings" icon="ph-gear" active={tab === 'settings'} onClick={() => setTab('settings')} />
+          <TabBtn id="tab-notifs" label="Broadcast" icon="ph-broadcast" active={tab === 'notifs'} onClick={() => setTab('notifs')} />
+          <TabBtn id="tab-settings" label="System" icon="ph-gear-six" active={tab === 'settings'} onClick={() => setTab('settings')} />
         </div>
 
-        {/* ── TAB: BOOKINGS ─────────────────────────────────────────────────── */}
-        {tab === 'bookings' && (
-          <div>
-            {/* Status filter */}
-            <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', marginBottom: '1rem' }} className="hide-scrollbar">
-              {[['all', 'All', '#a8abb2'], ...Object.entries(STATUS_CONFIG).map(([k, v]) => [k, v.label, v.color])].map(([key, label, color]) => (
-                <button
-                  key={key}
-                  id={`filter-${key}`}
-                  onClick={() => setBookingFilter(key)}
-                  style={{
-                    flexShrink: 0, padding: '0.375rem 0.875rem', borderRadius: '999px',
-                    fontFamily: 'var(--font-body)', fontSize: '0.75rem', fontWeight: 700,
-                    background: bookingFilter === key ? `${color}20` : 'rgba(255,255,255,0.04)',
-                    color: bookingFilter === key ? color : '#666',
-                    border: `1px solid ${bookingFilter === key ? color + '60' : 'rgba(255,255,255,0.08)'}`,
-                    cursor: 'pointer', transition: 'all 0.15s',
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+        {/* Tab Content Area */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+            style={{ minHeight: '600px' }}
+          >
+            {tab === 'bookings' && (
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                   <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }} className="hide-scrollbar">
+                      {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map(f => (
+                        <button key={f} onClick={() => setBookingFilter(f)} style={{ padding: '0.5rem 1rem', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', background: bookingFilter === f ? 'var(--primary)' : 'var(--surface-container-high)', color: bookingFilter === f ? '#fff' : 'var(--on-surface-variant)', border: 'none', cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>{f}</button>
+                      ))}
+                   </div>
+                </div>
 
-            {filteredBookings.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', opacity: 0.4 }}>
-                <i className="ph-fill ph-calendar-x" style={{ fontSize: '2.5rem', display: 'block', marginBottom: '0.75rem' }} />
-                <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>No bookings yet</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                {filteredBookings.map(b => {
-                  const createdDate = b.createdAt?.toDate?.()
-                    ? b.createdAt.toDate().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-                    : 'Just now';
-                  return (
-                    <button
-                      key={b.id}
-                      id={`booking-row-${b.id}`}
-                      onClick={() => setSelectedBooking(b)}
-                      className="clay-card"
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '1rem',
-                        padding: '1.125rem', borderRadius: '1.25rem',
-                        cursor: 'pointer', textAlign: 'left', transition: 'all var(--transition-base)',
-                        background: 'var(--surface-container)',
-                      }}
-                    >
-                      <div style={{
-                        width: '48px', height: '48px', borderRadius: '14px', flexShrink: 0,
-                        background: 'var(--primary-container)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <i className="ph-fill ph-wrench" style={{ color: 'var(--primary)', fontSize: '1.5rem' }} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                          <p style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800, color: 'var(--on-surface)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {b.service || b.category}
-                          </p>
-                          <StatusBadge status={b.status} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                  {(allBookings || [])
+                    .filter(b => bookingFilter === 'all' || b.status === bookingFilter)
+                    .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+                    .map((b, i) => (
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} key={b.id} className="clay-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setSelectedBooking(b)}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                          <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'var(--surface-container-highest)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                             <i className={`ph-fill ${STATUS_CONFIG[b.status]?.icon || 'ph-question'}`} style={{ color: STATUS_CONFIG[b.status]?.color || 'var(--primary)', fontSize: '1.25rem' }} />
+                          </div>
+                          <div>
+                            <p style={{ fontWeight: 900, fontSize: '1rem' }}>{b.service}</p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--on-surface-variant)', fontWeight: 700 }}>{b.customerName || 'Customer'} • {b.date} • {b.time}</p>
+                          </div>
                         </div>
-                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--on-surface-variant)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {b.date} · {b.time}
-                        </p>
-                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'var(--on-surface-variant)', opacity: 0.6, marginTop: '0.125rem' }}>
-                          {b.customerName || 'Unknown'} · {createdDate}
-                        </p>
-                      </div>
-                      <i className="ph-bold ph-caret-right" style={{ color: 'var(--outline-variant)', flexShrink: 0 }} />
-                    </button>
-                  );
-                })}
-              </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <StatusBadge status={b.status} />
+                          <p style={{ fontSize: '0.875rem', fontWeight: 900, marginTop: '0.25rem', color: 'var(--primary)' }}>₹{b.amount || '0'}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  {allBookings?.length === 0 && (
+                    <div className="clay-card" style={{ padding: '4rem', textAlign: 'center' }}>
+                       <i className="ph-fill ph-ghost" style={{ fontSize: '3rem', opacity: 0.2, marginBottom: '1rem', display: 'block' }} />
+                       <p style={{ fontWeight: 800, color: 'var(--on-surface-variant)' }}>No bookings found.</p>
+                    </div>
+                  )}
+                </div>
+              </section>
             )}
-          </div>
-        )}
 
-        {/* ── TAB: SERVICES (Pricing Control) ────────────────────── */}
-        {tab === 'services' && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800 }}>Categories & Pricing</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button 
-                onClick={handleSeedCategories}
-                disabled={seeding}
-                style={{ padding: '0.5rem 1rem', background: 'var(--surface-container-high)', color: 'var(--primary)', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid var(--primary)', cursor: 'pointer' }}
-              >
-                {seeding ? 'Seeding...' : 'Seed Default Categories'}
-              </button>
-              <button 
-                onClick={() => setCategoryModal('new')}
-                style={{ padding: '0.5rem 1rem', background: 'var(--gradient-primary)', color: 'white', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 800, border: 'none', cursor: 'pointer' }}
-              >
-                + New Category
-              </button>
-            </div>
-            </div>
-
-            {categories.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', background: 'var(--surface-container)', borderRadius: '16px', opacity: 0.6 }}>
-                <i className="ph-fill ph-gear-six" style={{ fontSize: '2.5rem', display: 'block', marginBottom: '1rem' }} />
-                <p>No categories found. Add your first service category!</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {categories.map(c => (
-                  <div key={c.id} className="clay-card" style={{ padding: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
-                       <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                         <i className={`ph-fill ${c.icon || 'ph-gear'}`} style={{ color: 'var(--primary)', fontSize: '1.25rem' }} />
+            {tab === 'services' && (
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 900 }}>Category Master</h3>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button onClick={handleSeedCategories} disabled={seeding} className="btn-secondary" style={{ padding: '0.625rem 1rem', fontSize: '0.75rem' }}>
+                      {seeding ? 'Seeding...' : 'Seed Data'}
+                    </button>
+                    <button onClick={() => setCategoryModal('new')} className="btn-primary" style={{ padding: '0.625rem 1rem', fontSize: '0.75rem' }}>
+                      + New Category
+                    </button>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                  {categories.map((c, i) => (
+                    <motion.div key={c.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }} className="clay-card" style={{ padding: '1.125rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                       <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <i className={`ph-fill ${c.icon || 'ph-gear'}`} style={{ fontSize: '1.5rem', color: 'var(--primary)' }} />
                        </div>
                        <div style={{ flex: 1 }}>
-                         <p style={{ fontWeight: 800 }}>{c.name}</p>
-                         <p style={{ fontSize: '0.625rem', color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>{c.services?.length || 0} Sub-services</p>
+                         <p style={{ fontWeight: 900, fontSize: '1rem' }}>{c.name}</p>
+                         <p style={{ fontSize: '0.6875rem', color: 'var(--on-surface-variant)', fontWeight: 700, textTransform: 'uppercase' }}>{c.services?.length || 0} Sub-services</p>
                        </div>
-                       <button onClick={() => setCategoryModal(c)} style={{ border: 'none', background: 'transparent', color: 'var(--primary)', cursor: 'pointer' }}>
-                         <i className="ph-fill ph-pencil-simple" style={{ fontSize: '1.25rem' }} />
+                       <button onClick={() => setCategoryModal(c)} className="btn-icon">
+                          <i className="ph-fill ph-pencil-simple" />
                        </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── TAB: PROVIDERS (Internal Workers) ─────────────────── */}
-        {tab === 'providers' && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800 }}>Internal Workers</h3>
-              <button 
-                onClick={() => setBusinessModal('new')}
-                style={{ padding: '0.5rem 1rem', background: 'var(--gradient-primary)', color: 'white', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 800, border: 'none', cursor: 'pointer' }}
-              >
-                + Add Worker
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-              {providers.map(p => (
-                <div key={p.id} className="clay-card" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <i className="ph-fill ph-user" style={{ color: 'var(--primary)', fontSize: '1.25rem' }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontWeight: 800 }}>{p.name}</p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--on-surface-variant)' }}>{p.category} · {p.phone}</p>
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button onClick={() => setBusinessModal(p)} style={{ border: 'none', background: 'transparent', color: 'var(--primary)', cursor: 'pointer' }}>
-                      <i className="ph-fill ph-pencil" />
-                    </button>
-                    <button onClick={() => deleteBusiness(p.id)} style={{ border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer' }}>
-                      <i className="ph-fill ph-trash" />
-                    </button>
-                  </div>
+                    </motion.div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </section>
+            )}
 
-        {tab === 'offers' && (
-          <div>
-            <button
-              id="add-offer-btn"
-              onClick={() => setOfferModal('new')}
-              style={{
-                width: '100%', padding: '0.875rem', borderRadius: '16px', marginBottom: '1rem',
-                background: 'var(--gradient-primary)', color: 'var(--on-primary)',
-                fontFamily: 'var(--font-display)', fontSize: '0.9375rem', fontWeight: 800,
-                border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-              }}
-            >
-              <i className="ph-bold ph-plus-circle" />
-              New Service Offer
-            </button>
-
-            {serviceOffers.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', opacity: 0.4 }}>
-                <i className="ph-fill ph-megaphone" style={{ fontSize: '2.5rem', display: 'block', marginBottom: '0.75rem' }} />
-                <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>No offers yet</p>
-                <p style={{ fontSize: '0.8125rem', color: '#666', marginTop: '0.375rem' }}>Create offers that appear on the Home page</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                {serviceOffers.map(offer => {
-                  const g = Array.isArray(offer.gradient) ? offer.gradient : ['#ff8c00', '#ff4500'];
-                  return (
-                    <div
-                      key={offer.id}
-                      className="clay-card"
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '1rem',
-                        padding: '1rem 1.25rem', borderRadius: '1.25rem',
-                        background: 'var(--surface-container)',
-                      }}
-                    >
-                      <div style={{
-                        width: '48px', height: '48px', borderRadius: '14px', flexShrink: 0,
-                        background: `linear-gradient(135deg, ${g[0]}, ${g[1]})`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                      }}>
-                        <i className={`ph-fill ${offer.icon || 'ph-tag'}`} style={{ color: '#fff', fontSize: '1.5rem' }} />
+            {tab === 'providers' && (
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 900 }}>Service Providers</h3>
+                  <button onClick={() => setBusinessModal('new')} className="btn-primary" style={{ padding: '0.625rem 1rem', fontSize: '0.75rem' }}>+ Add Provider</button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                  {providers.map((p, i) => (
+                    <motion.div key={p.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }} className="clay-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--secondary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <i className="ph-fill ph-user-circle-gear" style={{ fontSize: '1.5rem', color: 'var(--secondary)' }} />
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800, color: 'var(--on-surface)' }}>{offer.title}</p>
-                        {offer.subtitle && <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'var(--on-surface-variant)', fontWeight: 600 }}>{offer.subtitle}</p>}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.375rem' }}>
-                          <span style={{
-                            fontSize: '0.625rem', fontWeight: 900, padding: '0.125rem 0.5rem', borderRadius: '6px',
-                            background: offer.active ? 'var(--secondary-container)' : 'rgba(239,68,68,0.1)',
-                            color: offer.active ? 'var(--secondary)' : '#ef4444',
-                            letterSpacing: '0.05em',
-                          }}>
-                            {offer.active ? 'LIVE' : 'HIDDEN'}
-                          </span>
-                          <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.625rem', fontWeight: 800, color: 'var(--on-surface-variant)', background: 'var(--surface-container-high)', padding: '0.125rem 0.5rem', borderRadius: '6px' }}>{offer.category}</span>
-                        </div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontWeight: 900, fontSize: '1rem' }}>{p.name}</p>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--on-surface-variant)', fontWeight: 700 }}>{p.category} • {p.phone}</p>
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                          id={`edit-offer-${offer.id}`}
-                          onClick={() => setOfferModal(offer)}
-                          style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'var(--surface-container-high)', border: '1px solid var(--outline-variant)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        >
-                          <i className="ph-fill ph-pencil" style={{ color: 'var(--primary)', fontSize: '1.125rem' }} />
-                        </button>
-                        <button
-                          id={`delete-offer-${offer.id}`}
-                          onClick={() => deleteServiceOffer(offer.id)}
-                          style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        >
-                          <i className="ph-fill ph-trash" style={{ color: '#ef4444', fontSize: '1.125rem' }} />
-                        </button>
+                        <button onClick={() => setBusinessModal(p)} className="btn-icon"><i className="ph-fill ph-pencil" /></button>
+                        <button onClick={() => deleteBusiness(p.id)} className="btn-icon" style={{ background: 'var(--error-container)', color: 'var(--error)' }}><i className="ph-fill ph-trash" /></button>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── TAB: SETTINGS ─────────────────────────────────────────────────── */}
-        {tab === 'settings' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-            {/* Global Availability */}
-            <div className="clay-card" style={{ padding: '1.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                <div>
-                  <p style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800, color: 'var(--on-surface)' }}>System Availability</p>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'var(--on-surface-variant)', fontWeight: 600 }}>Master switch for all bookings</p>
+                    </motion.div>
+                  ))}
                 </div>
-                <button
-                  onClick={handleToggleAvailability}
-                  style={{
-                    width: '52px', height: '30px', borderRadius: '999px',
-                    background: bookingsEnabled ? 'var(--primary)' : 'var(--surface-container-high)',
-                    border: '1px solid var(--glass-border)', cursor: 'pointer', position: 'relative', transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-                  }}
-                >
-                  <div style={{
-                    position: 'absolute', top: '2px',
-                    left: bookingsEnabled ? '24px' : '2px',
-                    width: '24px', height: '24px', borderRadius: '50%',
-                    background: '#fff', transition: 'left 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                  }} />
-                </button>
-              </div>
+              </section>
+            )}
 
-              {/* Category Availability */}
-              <div style={{ background: 'var(--surface-container-high)', borderRadius: '16px', padding: '1rem' }}>
-                <p style={{ fontSize: '0.625rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--on-surface-variant)', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>Category Controls</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {CATEGORIES.filter(c => c.id !== 'all').map(cat => {
-                    const isPaused = (settings.pausedCategories || []).includes(cat.id);
+            {tab === 'offers' && (
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 900 }}>Campaigns & Offers</h3>
+                  <button onClick={() => setOfferModal('new')} className="btn-primary" style={{ padding: '0.625rem 1rem', fontSize: '0.75rem' }}>+ New Offer</button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
+                  {serviceOffers.map((offer, i) => {
+                    const g = Array.isArray(offer.gradient) ? offer.gradient : ['#ff8c00', '#ff4500'];
                     return (
-                      <div key={cat.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: isPaused ? 'var(--on-surface-variant)' : 'var(--on-surface)' }}>{cat.name}</span>
-                        <button
-                          onClick={() => updateCategoryAvailability(cat.id, isPaused)}
-                          style={{
-                            padding: '0.25rem 0.625rem', borderRadius: '8px',
-                            background: isPaused ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)',
-                            color: isPaused ? '#ef4444' : '#22c55e',
-                            border: `1px solid ${isPaused ? '#ef444440' : '#22c55e40'}`,
-                            fontSize: '0.6875rem', fontWeight: 800, cursor: 'pointer'
-                          }}
-                        >
-                          {isPaused ? 'RESUME' : 'PAUSE'}
-                        </button>
-                      </div>
+                      <motion.div key={offer.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="clay-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                        <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: `linear-gradient(135deg, ${g[0]}, ${g[1]})`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 16px rgba(0,0,0,0.15)', flexShrink: 0 }}>
+                          <i className={`ph-fill ${offer.icon || 'ph-tag'}`} style={{ color: '#fff', fontSize: '1.75rem' }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontWeight: 900, fontSize: '1.125rem' }}>{offer.title}</p>
+                          <p style={{ fontSize: '0.8125rem', color: 'var(--on-surface-variant)', fontWeight: 600 }}>{offer.subtitle}</p>
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                             <span style={{ fontSize: '0.625rem', fontWeight: 900, background: offer.active ? 'var(--secondary-container)' : 'var(--error-container)', color: offer.active ? 'var(--secondary)' : 'var(--error)', padding: '0.25rem 0.5rem', borderRadius: '6px' }}>{offer.active ? 'LIVE' : 'HIDDEN'}</span>
+                             <span style={{ fontSize: '0.625rem', fontWeight: 900, background: 'var(--surface-container-high)', padding: '0.25rem 0.5rem', borderRadius: '6px' }}>{offer.category}</span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          <button onClick={() => setOfferModal(offer)} className="btn-icon"><i className="ph-fill ph-pencil" /></button>
+                          <button onClick={() => deleteServiceOffer(offer.id)} className="btn-icon" style={{ background: 'var(--error-container)', color: 'var(--error)' }}><i className="ph-fill ph-trash" /></button>
+                        </div>
+                      </motion.div>
                     );
                   })}
                 </div>
-              </div>
-            </div>
+              </section>
+            )}
+
+            {tab === 'settings' && (
+              <section style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 900 }}>System Control</h3>
+                </div>
+
+                {/* Global Availability */}
+                <div className="clay-card" style={{ padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                    <div>
+                      <p style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800, color: 'var(--on-surface)' }}>System Status</p>
+                      <p style={{ fontFamily: 'var(--font-body)', fontSize: '0.75rem', color: 'var(--on-surface-variant)', fontWeight: 600 }}>Master switch for all bookings</p>
+                    </div>
+                    <button
+                      onClick={handleToggleAvailability}
+                      style={{
+                        width: '52px', height: '30px', borderRadius: '999px',
+                        background: bookingsEnabled ? 'var(--primary)' : 'var(--surface-container-high)',
+                        border: '1px solid var(--glass-border)', cursor: 'pointer', position: 'relative', transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+                      }}
+                    >
+                      <div style={{
+                        position: 'absolute', top: '2px',
+                        left: bookingsEnabled ? '24px' : '2px',
+                        width: '24px', height: '24px', borderRadius: '50%',
+                        background: '#fff', transition: 'left 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                      }} />
+                    </button>
+                  </div>
+
+                  {/* Category Availability List */}
+                  <div style={{ background: 'var(--surface-container-high)', borderRadius: '16px', padding: '1rem' }}>
+                    <p style={{ fontSize: '0.625rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--on-surface-variant)', letterSpacing: '0.08em', marginBottom: '1rem' }}>Operational Controls</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {CATEGORIES.filter(c => c.id !== 'all').map(cat => {
+                        const isPaused = (settings.pausedCategories || []).includes(cat.id);
+                        return (
+                          <div key={cat.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                               <i className={`ph-fill ${cat.icon || 'ph-gear'}`} style={{ color: isPaused ? 'var(--on-surface-variant)' : 'var(--primary)', opacity: isPaused ? 0.3 : 1 }} />
+                               <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: isPaused ? 'var(--on-surface-variant)' : 'var(--on-surface)' }}>{cat.name}</span>
+                            </div>
+                            <button
+                              onClick={() => updateCategoryAvailability(cat.id, isPaused)}
+                              style={{
+                                padding: '0.375rem 0.75rem', borderRadius: '10px',
+                                background: isPaused ? 'hsla(0, 72%, 51%, 0.1)' : 'hsla(142, 76%, 36%, 0.1)',
+                                color: isPaused ? 'var(--error)' : 'var(--secondary)',
+                                border: `1px solid ${isPaused ? 'var(--error)' : 'var(--secondary)'}30`,
+                                fontSize: '0.6875rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s'
+                              }}
+                            >
+                              {isPaused ? 'RESUME' : 'PAUSE'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
 
             {/* Push Notifications */}
             <div className="clay-card" style={{ padding: '1.5rem' }}>
@@ -1640,6 +1564,274 @@ function CategoryFormModal({ category, onClose, onSave }) {
           <button onClick={handleSave} disabled={isSaving} style={{ flex: 1, padding: '0.875rem', borderRadius: '12px', border: 'none', background: 'var(--gradient-primary)', color: 'white', fontWeight: 800, cursor: 'pointer' }}>
             {isSaving ? 'Saving...' : 'Save Category'}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── BOOKING DETAIL MODAL ──────────────────────────────────────────────────
+function BookingDetailModal({ booking, providers, onClose, onStatusChange }) {
+  const [updating, setUpdating] = useState(false);
+  const currentStatus = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
+
+  const handleUpdate = async (newStatus) => {
+    setUpdating(true);
+    try {
+      await onStatusChange(booking.id, newStatus);
+      toast.success(`Booking ${newStatus}!`);
+      onClose();
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
+      <motion.div initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} className="clay-card" style={{ width: '100%', maxWidth: '500px', padding: '2rem', position: 'relative' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', border: 'none', background: 'var(--surface-container-high)', width: '36px', height: '36px', borderRadius: '50%', cursor: 'pointer' }}>
+           <i className="ph-bold ph-x" style={{ color: 'var(--on-surface-variant)' }} />
+        </button>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+          <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: `${currentStatus.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <i className={`ph-fill ${currentStatus.icon}`} style={{ color: currentStatus.color, fontSize: '2rem' }} />
+          </div>
+          <div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 900 }}>{booking.service}</h2>
+            <StatusBadge status={booking.status} />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '2rem' }}>
+          <div>
+            <p style={{ fontSize: '0.625rem', fontWeight: 900, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Customer</p>
+            <p style={{ fontWeight: 800 }}>{booking.customerName || 'Walk-in'}</p>
+            <p style={{ fontSize: '0.8125rem', opacity: 0.6 }}>{booking.phone}</p>
+          </div>
+          <div>
+            <p style={{ fontSize: '0.625rem', fontWeight: 900, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Appointment</p>
+            <p style={{ fontWeight: 800 }}>{booking.date}</p>
+            <p style={{ fontSize: '0.8125rem', opacity: 0.6 }}>{booking.time}</p>
+          </div>
+        </div>
+
+        {booking.address && (
+          <div style={{ padding: '1.25rem', background: 'var(--surface-container-high)', borderRadius: '16px', marginBottom: '2rem' }}>
+            <p style={{ fontSize: '0.625rem', fontWeight: 900, color: 'var(--on-surface-variant)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Location</p>
+            <p style={{ fontSize: '0.875rem', fontWeight: 700, lineHeight: 1.5 }}>{booking.address}</p>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+           {booking.status === 'pending' && (
+             <button onClick={() => handleUpdate('confirmed')} disabled={updating} className="btn-primary" style={{ padding: '1rem' }}>Confirm Booking</button>
+           )}
+           {(booking.status === 'confirmed' || booking.status === 'payment_initiated') && (
+             <button onClick={() => handleUpdate('completed')} disabled={updating} className="btn-primary" style={{ padding: '1rem', background: 'var(--secondary-container)', color: 'var(--secondary)' }}>Mark as Completed</button>
+           )}
+           {booking.status !== 'cancelled' && booking.status !== 'completed' && (
+             <button onClick={() => handleUpdate('cancelled')} disabled={updating} style={{ background: 'transparent', color: 'var(--error)', border: 'none', fontWeight: 800, cursor: 'pointer', padding: '0.5rem' }}>Cancel Service</button>
+           )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── OFFER FORM MODAL ──────────────────────────────────────────────────────
+function OfferFormModal({ offer, onClose, onSave }) {
+  const [form, setForm] = useState(offer || { title: '', subtitle: '', icon: 'ph-star', category: 'General', active: true, gradient: GRADIENT_PRESETS[0] });
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
+      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="clay-card" style={{ width: '100%', maxWidth: '450px', padding: '2rem' }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: '1.5rem' }}>{offer ? 'Edit Campaign' : 'New Campaign'}</h2>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+           <input className="input-field" placeholder="Title (e.g. 20% OFF)" value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
+           <input className="input-field" placeholder="Subtitle" value={form.subtitle} onChange={e => setForm({...form, subtitle: e.target.value})} />
+           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+             <input className="input-field" placeholder="Icon (ph-star)" value={form.icon} onChange={e => setForm({...form, icon: e.target.value})} />
+             <input className="input-field" placeholder="Category" value={form.category} onChange={e => setForm({...form, category: e.target.value})} />
+           </div>
+           
+           <div>
+             <label style={{ fontSize: '0.625rem', fontWeight: 900, marginBottom: '0.75rem', display: 'block' }}>STYLE PRESET</label>
+             <div style={{ display: 'flex', gap: '0.5rem' }}>
+               {GRADIENT_PRESETS.map((g, i) => (
+                 <button key={i} onClick={() => setForm({...form, gradient: g})} style={{ width: '32px', height: '32px', borderRadius: '8px', background: `linear-gradient(135deg, ${g[0]}, ${g[1]})`, border: form.gradient === g ? '2px solid #fff' : 'none', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+               ))}
+             </div>
+           </div>
+
+           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+             <button onClick={onClose} style={{ flex: 1, padding: '0.875rem', borderRadius: '12px', border: '1px solid var(--outline-variant)', background: 'transparent', cursor: 'pointer' }}>Cancel</button>
+             <button onClick={async () => { setSaving(true); await onSave(form); setSaving(false); onClose(); }} className="btn-primary" style={{ flex: 1 }}>{saving ? 'Saving...' : 'Save'}</button>
+           </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── BUSINESS/PROVIDER FORM MODAL ──────────────────────────────────────────
+function BusinessFormModal({ business, onClose, onSave }) {
+  const [form, setForm] = useState(business || { name: '', phone: '', category: 'Plumber', active: true });
+  const [saving, setSaving] = useState(false);
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
+      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="clay-card" style={{ width: '100%', maxWidth: '400px', padding: '2rem' }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: '1.5rem' }}>{business ? 'Edit Provider' : 'Add Provider'}</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+           <input className="input-field" placeholder="Full Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
+           <input className="input-field" placeholder="Phone Number" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
+           <input className="input-field" placeholder="Primary Category" value={form.category} onChange={e => setForm({...form, category: e.target.value})} />
+           
+           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+             <button onClick={onClose} style={{ flex: 1, padding: '0.875rem', borderRadius: '12px', border: '1px solid var(--outline-variant)', background: 'transparent', cursor: 'pointer' }}>Cancel</button>
+             <button onClick={async () => { setSaving(true); await onSave(form); setSaving(false); onClose(); }} className="btn-primary" style={{ flex: 1 }}>{saving ? 'Saving...' : 'Save'}</button>
+           </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── SHARED UTILITIES ──────────────────────────────────────────────────────
+function TabBtn({ label, icon, active, onClick, badge }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        flexShrink: 0, padding: '0.75rem 1.25rem', borderRadius: '14px',
+        display: 'flex', alignItems: 'center', gap: '0.625rem',
+        background: active ? 'var(--primary-container)' : 'var(--surface-container-high)',
+        color: active ? 'var(--primary)' : 'var(--on-surface-variant)',
+        border: active ? '1px solid var(--primary)' : '1px solid transparent',
+        fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.875rem',
+        cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.34,1.56,0.64,1)',
+      }}
+    >
+      <i className={`ph-fill ${icon}`} />
+      <span>{label}</span>
+      {badge > 0 && (
+        <span style={{ fontSize: '0.625rem', background: 'var(--primary)', color: '#fff', minWidth: '18px', height: '18px', padding: '0 4px', borderRadius: '99px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function StatusBadge({ status }) {
+  const conf = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+      padding: '0.25rem 0.625rem', borderRadius: '999px',
+      background: conf.bg, color: conf.color,
+      fontSize: '0.625rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em'
+    }}>
+      <i className={`ph-fill ${conf.icon}`} style={{ fontSize: '0.75rem' }} />
+      {conf.label}
+    </span>
+  );
+}
+
+function CategoryFormModal({ category, onClose, onSave }) {
+  const [form, setForm] = useState(category || {
+    id: '', name: '', nameHi: '', icon: 'ph-gear',
+    hero: 'https://images.unsplash.com/photo-1556742400-b5b7a512a36e?auto=format&fit=crop&w=1200&q=80',
+    title: '', titleHi: '', desc: '', descHi: '',
+    services: [], // Array of { name, price }
+    features: [], // Array of { icon, title }
+    faqs: [],     // Array of { q, a }
+    reviews: [],  // Array of { user, rating, text, photo }
+    stats: { rating: '4.9', bookings: '1k+', experience: '5+ Years' },
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [newServiceName, setNewServiceName] = useState('');
+  const [newServicePrice, setNewServicePrice] = useState('');
+
+  // Helpers for Rich Sections
+  const [newFeature, setNewFeature] = useState({ icon: 'ph-check-circle', title: '' });
+  const [newFaq, setNewFaq] = useState({ q: '', a: '' });
+  const [newReview, setNewReview] = useState({ user: '', rating: 5, text: '' });
+
+  const addListItem = (key, item, setter) => {
+    if (!item.title && !item.q && !item.user) return;
+    setForm(p => ({ ...p, [key]: [...(p[key] || []), item] }));
+    setter(key === 'features' ? { icon: 'ph-check-circle', title: '' } : key === 'faqs' ? { q: '', a: '' } : { user: '', rating: 5, text: '' });
+  };
+
+  const removeListItem = (key, idx) => {
+    setForm(p => ({ ...p, [key]: p[key].filter((_, i) => i !== idx) }));
+  };
+
+  const handleSave = async () => {
+    if (!form.id || !form.name) return toast.error("ID and Name are required");
+    setIsSaving(true);
+    try {
+      await onSave(form);
+      setIsSaving(false);
+      onClose();
+    } catch (e) {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.25rem' }}>
+      <div className="clay-card animate-slide-up" style={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', padding: '1.5rem', background: 'var(--surface)' }}>
+        <h2 style={{ marginBottom: '1.5rem', fontFamily: 'var(--font-display)' }}>{category ? 'Edit Category' : 'New Category'}</h2>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: 800, display: 'block', marginBottom: '0.25rem' }}>CATEGORY ID (Slug)</label>
+            <input className="input-field" value={form.id} onChange={e => setForm(p=>({...p, id: e.target.value.toLowerCase().replace(/\s+/g, '-')}))} disabled={!!category} placeholder="e.g. car-wash" />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: 800, display: 'block', marginBottom: '0.25rem' }}>DISPLAY NAME (EN)</label>
+            <input className="input-field" value={form.name} onChange={e => setForm(p=>({...p, name: e.target.value}))} placeholder="e.g. Car Wash" />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: 800, display: 'block', marginBottom: '0.25rem' }}>NAME (HI)</label>
+            <input className="input-field" value={form.nameHi} onChange={e => setForm(p=>({...p, nameHi: e.target.value}))} />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.75rem', fontWeight: 800, display: 'block', marginBottom: '0.25rem' }}>ICON (Phosphor name)</label>
+            <input className="input-field" value={form.icon} onChange={e => setForm(p=>({...p, icon: e.target.value}))} />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--surface-container)', borderRadius: '12px' }}>
+          <h4 style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem' }}>Hero & Marketing</h4>
+          <input className="input-field" style={{marginBottom: '0.75rem'}} placeholder="Hero Image URL" value={form.hero} onChange={e => setForm(p=>({...p, hero: e.target.value}))} />
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <input className="input-field" value={form.title} onChange={e => setForm(p=>({...p, title: e.target.value}))} placeholder="Title (EN)" />
+            <input className="input-field" value={form.titleHi} onChange={e => setForm(p=>({...p, titleHi: e.target.value}))} placeholder="Title (HI)" />
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--surface-container)', borderRadius: '12px' }}>
+          <h4 style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem' }}>Platform Stats</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+            <div><label style={{fontSize:'0.625rem',fontWeight:800}}>RATING</label><input className="input-field" value={form.stats?.rating} onChange={e => setForm(p=>({...p, stats: {...p.stats, rating: e.target.value}}))} /></div>
+            <div><label style={{fontSize:'0.625rem',fontWeight:800}}>BOOKINGS</label><input className="input-field" value={form.stats?.bookings} onChange={e => setForm(p=>({...p, stats: {...p.stats, bookings: e.target.value}}))} /></div>
+            <div><label style={{fontSize:'0.625rem',fontWeight:800}}>EXP</label><input className="input-field" value={form.stats?.experience} onChange={e => setForm(p=>({...p, stats: {...p.stats, experience: e.target.value}}))} /></div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
+          <button onClick={onClose} style={{ flex: 1, padding: '1rem', borderRadius: '14px', border: '1px solid var(--outline-variant)', background: 'transparent' }}>Cancel</button>
+          <button onClick={handleSave} disabled={isSaving} className="btn-primary" style={{ flex: 1 }}>{isSaving ? 'Saving...' : 'Save Category'}</button>
         </div>
       </div>
     </div>
