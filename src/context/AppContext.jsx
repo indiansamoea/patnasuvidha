@@ -560,6 +560,8 @@ export function AppProvider({ children }) {
     addBusiness, updateBusiness, deleteBusiness,
     currentUser, currentUserRole, userData, logout, isAdmin, completeOnboarding,
     turnstileToken, setTurnstileToken,
+    pausedCategories: settings.pausedCategories || [],
+    settings,
   };
 
   return (
