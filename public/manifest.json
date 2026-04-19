@@ -1,19 +1,18 @@
 {
   "name": "Patna Suvidha - पटना की सेवा",
   "short_name": "Patna Suvidha",
-  "description": "पटना की अपनी सेवा | Book plumbers, electricians, doctors, salons & 50+ services in Patna. Hyperlocal service booking platform.",
+  "description": "पटना की अपनी सेवा | Book plumbers, electricians, doctors, salons & 50+ services in Patna.",
   "start_url": "/?utm_source=homescreen",
   "id": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": ["standalone", "window-controls-overlay"],
   "orientation": "portrait",
-  "theme_color": "#ff9933",
+  "theme_color": "#ff9159",
   "background_color": "#0a0e13",
   "categories": ["business", "lifestyle", "productivity"],
   "lang": "hi-IN",
   "dir": "ltr",
   "scope": "/",
-  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icon-192x192.png",
@@ -34,35 +33,26 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "screenshot-wide.png",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Patna Suvidha - Book services in Patna"
-    },
-    {
-      "src": "screenshot-narrow.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Patna Suvidha - Mobile view"
-    }
-  ],
   "shortcuts": [
     {
-      "name": "Explore Services",
-      "short_name": "Explore",
-      "description": "Browse all services in Patna",
-      "url": "/explore?utm_source=shortcut",
+      "name": "Book Services",
+      "short_name": "Book",
+      "description": "Browse premium services in Patna",
+      "url": "/services?utm_source=shortcut",
       "icons": [{ "src": "icon-192x192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Add Your Business",
-      "short_name": "Add Business",
-      "description": "List your business on Patna Suvidha",
-      "url": "/add-business?utm_source=shortcut",
+      "name": "My Bookings",
+      "short_name": "Bookings",
+      "description": "Manage your service bookings",
+      "url": "/bookings?utm_source=shortcut",
+      "icons": [{ "src": "icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Latest Updates",
+      "short_name": "Updates",
+      "description": "Check new offers and alerts",
+      "url": "/updates?utm_source=shortcut",
       "icons": [{ "src": "icon-192x192.png", "sizes": "192x192" }]
     }
   ],

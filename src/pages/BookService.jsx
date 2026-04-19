@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } }
+};
+
+const sectionVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { type: 'spring', damping: 25, stiffness: 200 } }
+};
 
 export default function BookService() {
   const { id } = useParams();
@@ -15,14 +26,14 @@ export default function BookService() {
 
   const [selectedDate, setSelectedDate] = useState(0);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [name, setName] = useState(currentUser?.name || '');
+  const [phone, setPhone] = useState(currentUser?.phone || '');
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
 
   if (!biz) return (
-    <div style={{ background: '#0a0e13', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ color: '#72767c' }}>Service not found</p>
+    <div style={{ background: 'var(--surface)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ color: 'var(--on-surface-variant)', fontWeight: 800 }}>Service not found</p>
     </div>
   );
 
@@ -34,26 +45,25 @@ export default function BookService() {
   });
 
   const timeSlots = [
-    { id: 'morning1', label: '9:00 AM' }, { id: 'morning2', label: '10:00 AM' }, { id: 'morning3', label: '11:00 AM' },
-    { id: 'afternoon1', label: '12:00 PM' }, { id: 'afternoon2', label: '2:00 PM' }, { id: 'afternoon3', label: '3:00 PM' },
-    { id: 'evening1', label: '5:00 PM' }, { id: 'evening2', label: '6:00 PM' }, { id: 'evening3', label: '7:00 PM' },
+    { id: 'm1', label: '09:00 AM' }, { id: 'm2', label: '10:00 AM' }, { id: 'm3', label: '11:00 AM' },
+    { id: 'a1', label: '12:00 PM' }, { id: 'a2', label: '02:00 PM' }, { id: 'a3', label: '03:00 PM' },
+    { id: 'e1', label: '05:00 PM' }, { id: 'e2', label: '06:00 PM' }, { id: 'e3', label: '07:00 PM' },
   ];
 
   const handleBookViaWhatsApp = () => {
     if (!name || !phone || !selectedTime) return;
 
-    // Save booking record
+    const dateStr = `${dates[selectedDate]?.day}, ${dates[selectedDate]?.date} ${dates[selectedDate]?.month}`;
+    
     addBooking({
       userId: currentUser?.uid || null,
       businessId: biz.id, businessName: biz.name,
       service: service?.name, price: service?.price,
-      date: `${dates[selectedDate]?.day}, ${dates[selectedDate]?.date} ${dates[selectedDate]?.month}`,
-      time: selectedTime, customerName: name, customerPhone: phone,
+      date: dateStr, time: selectedTime, 
+      customerName: name, customerPhone: phone,
       customerAddress: address, notes,
     });
 
-    // Build WhatsApp message
-    const dateStr = `${dates[selectedDate]?.day}, ${dates[selectedDate]?.date} ${dates[selectedDate]?.month}`;
     const msg = `🙏 नमस्ते! मैं *Patna Suvidha* से बुकिंग कर रहा/रही हूँ।
 
 📋 *बुकिंग डिटेल्स:*
@@ -63,156 +73,157 @@ export default function BookService() {
 📅 *तारीख:* ${dateStr}
 🕐 *समय:* ${selectedTime}
 
-👤 *ग्राहक का नाम:* ${name}
+👤 *ग्राहक:* ${name}
 📱 *फ़ोन:* ${phone}${address ? `\n📍 *पता:* ${address}` : ''}${notes ? `\n📝 *नोट:* ${notes}` : ''}
 ━━━━━━━━━━━━━━
-_यह बुकिंग Patna Suvidha (patnasuvidha.com) से की गई है_`;
+_Booked via patnasuvidha.com_`;
 
-    const waNumber = biz.whatsapp || biz.phone;
+    const waNumber = biz.whatsapp || biz.phone || '910101936969';
     const waUrl = `https://wa.me/91${waNumber}?text=${encodeURIComponent(msg)}`;
     window.open(waUrl, '_blank');
 
-    // Navigate to success
     navigate(`/booking-success?biz=${encodeURIComponent(biz.name)}&service=${encodeURIComponent(service?.name || '')}&date=${encodeURIComponent(dateStr)}&time=${encodeURIComponent(selectedTime)}`);
   };
 
   return (
-    <div style={{ background: '#0a0e13', minHeight: '100vh', paddingBottom: '6rem' }}>
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(10,14,19,0.9)', backdropFilter: 'blur(25px)', borderBottom: '1px solid rgba(68,72,78,0.15)', padding: '0.875rem 1.25rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', maxWidth: '480px', margin: '0 auto' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: '0.375rem', cursor: 'pointer' }}>
-            <i className="ph-bold ph-arrow-left" style={{ color: '#f4f6fe', fontSize: '1.25rem' }}></i>
-          </button>
-          <h2 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.125rem', fontWeight: 700, color: '#f4f6fe' }}>
-            {lang === 'hi' ? 'सेवा बुक करीं' : 'Book Service'}
+    <div style={{ background: 'var(--surface)', minHeight: '100vh', paddingBottom: '100px' }}>
+      {/* Bespoke Header */}
+      <header className="liquid-glass" style={{ position: 'sticky', top: 0, zIndex: 100, padding: '1rem 1.25rem', borderBottom: '1px solid var(--glass-border)', background: 'var(--glass-bg)', backdropFilter: 'blur(30px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '480px', margin: '0 auto' }}>
+          <motion.button whileTap={{ scale: 0.9 }} onClick={() => navigate(-1)} style={{ background: 'var(--surface-container-high)', border: 'none', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <i className="ph-bold ph-arrow-left" style={{ color: 'var(--on-surface)', fontSize: '1.25rem' }}></i>
+          </motion.button>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 900, color: 'var(--on-surface)', letterSpacing: '-0.02em' }}>
+            {lang === 'hi' ? 'बुकिंग टिकट' : 'Secure Booking'}
           </h2>
         </div>
       </header>
 
-      <div style={{ maxWidth: '480px', margin: '0 auto', padding: '1rem 1.25rem' }}>
-        {/* Service Card */}
-        <div style={{ background: '#151a20', borderRadius: '1rem', padding: '1rem', marginBottom: '1.25rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <div style={{ width: '56px', height: '56px', borderRadius: '0.75rem', overflow: 'hidden', flexShrink: 0 }}>
-            <img src={biz.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      <motion.div initial="hidden" animate="visible" variants={containerVariants} style={{ maxWidth: '480px', margin: '0 auto', padding: '1.5rem 1.25rem' }}>
+        
+        {/* Service Ticket Section */}
+        <motion.div variants={sectionVariants} className="clay-card" style={{ padding: '1.5rem', marginBottom: '1.75rem', background: 'var(--gradient-primary-soft)', border: '1px solid hsla(var(--p-h), 100%, 50%, 0.1)', position: 'relative', overflow: 'hidden' }}>
+          <div className="glass-reflection" />
+          <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '16px', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.2)', boxShadow: 'var(--shadow-lg)' }}>
+              <img src={biz.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=150&q=80'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div>
+              <p style={{ fontSize: '0.75rem', fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.125rem' }}>{biz.name}</p>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.125rem', fontWeight: 950, color: '#fff', marginBottom: '0.25rem' }}>{service?.name || 'Service Package'}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                 <span style={{ fontSize: '1rem', fontWeight: 950, color: '#fff' }}>₹{service?.price?.toLocaleString() || 'N/A'}</span>
+                 <span style={{ fontSize: '0.625rem', padding: '0.2rem 0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 800 }}>TRANSPARENT</span>
+              </div>
+            </div>
           </div>
-          <div>
-            <p style={{ fontFamily: "'Manrope'", fontSize: '0.75rem', color: '#72767c' }}>{biz.name}</p>
-            <p style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '0.9375rem', fontWeight: 700, color: '#f4f6fe' }}>{service?.name || 'General Service'}</p>
-            <p style={{ fontFamily: "'Manrope'", fontSize: '0.875rem', fontWeight: 700, color: '#ff9159' }}>₹{service?.price?.toLocaleString() || 'N/A'}</p>
-          </div>
-        </div>
+        </motion.div>
 
         {/* Date Selection */}
-        <div style={{ marginBottom: '1.25rem' }}>
-          <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1rem', fontWeight: 700, color: '#f4f6fe', marginBottom: '0.75rem' }}>
-            <i className="ph-bold ph-calendar" style={{ color: '#ff9159', marginRight: '0.5rem' }}></i>
-            {lang === 'hi' ? 'तारीख चुनीं' : 'Select Date'}
-          </h3>
-          <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto' }} className="hide-scrollbar">
+        <motion.div variants={sectionVariants} style={{ marginBottom: '1.75rem' }}>
+          <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 900, color: 'var(--on-surface)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <i className="ph-fill ph-calendar-plus" style={{ color: 'var(--primary)', fontSize: '1.25rem' }} />
+            {lang === 'hi' ? 'तारीख चुनीं' : 'Deployment Date'}
+          </h4>
+          <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem' }} className="hide-scrollbar">
             {dates.map((d, i) => (
-              <button key={i} onClick={() => setSelectedDate(i)} style={{
-                flexShrink: 0, width: '60px', padding: '0.625rem 0', borderRadius: '0.875rem', textAlign: 'center',
-                background: selectedDate === i ? 'linear-gradient(135deg, #ff9159, #ff7a2f)' : '#151a20',
-                border: 'none', cursor: 'pointer',
+              <motion.button key={i} whileTap={{ scale: 0.95 }} onClick={() => setSelectedDate(i)} style={{
+                flexShrink: 0, width: '72px', padding: '1rem 0', borderRadius: '1.25rem', textAlign: 'center',
+                background: selectedDate === i ? 'var(--gradient-primary)' : 'var(--surface-container-low)',
+                border: selectedDate === i ? 'none' : '1px solid var(--outline-variant)',
+                boxShadow: selectedDate === i ? 'var(--shadow-glow-small)' : 'none',
+                cursor: 'pointer', transition: 'all 0.2s'
               }}>
-                <p style={{ fontFamily: "'Manrope'", fontSize: '0.625rem', fontWeight: 600, color: selectedDate === i ? '#401500' : '#72767c', marginBottom: '0.125rem' }}>{d.day}</p>
-                <p style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.25rem', fontWeight: 800, color: selectedDate === i ? '#401500' : '#f4f6fe' }}>{d.date}</p>
-                <p style={{ fontFamily: "'Manrope'", fontSize: '0.5625rem', fontWeight: 600, color: selectedDate === i ? '#401500' : '#72767c' }}>{d.month}</p>
-              </button>
+                <p style={{ fontSize: '0.6875rem', fontWeight: 800, color: selectedDate === i ? '#fff' : 'var(--on-surface-variant)', marginBottom: '0.25rem' }}>{d.day}</p>
+                <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 950, color: selectedDate === i ? '#fff' : 'var(--on-surface)' }}>{d.date}</p>
+                <p style={{ fontSize: '0.625rem', fontWeight: 800, color: selectedDate === i ? '#fff' : 'var(--on-surface-variant)', opacity: 0.7 }}>{d.month}</p>
+              </motion.button>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Time Selection */}
-        <div style={{ marginBottom: '1.25rem' }}>
-          <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1rem', fontWeight: 700, color: '#f4f6fe', marginBottom: '0.75rem' }}>
-            <i className="ph-bold ph-clock" style={{ color: '#ff9159', marginRight: '0.5rem' }}></i>
-            {lang === 'hi' ? 'समय चुनीं' : 'Select Time'}
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+        <motion.div variants={sectionVariants} style={{ marginBottom: '1.75rem' }}>
+          <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 900, color: 'var(--on-surface)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <i className="ph-fill ph-clock-countdown" style={{ color: 'var(--primary)', fontSize: '1.25rem' }} />
+            {lang === 'hi' ? 'समय चुन लीं' : 'Preferred Slot'}
+          </h4>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.625rem' }}>
             {timeSlots.map(slot => (
-              <button key={slot.id} onClick={() => setSelectedTime(slot.label)} style={{
-                padding: '0.625rem', borderRadius: '0.75rem', textAlign: 'center',
-                background: selectedTime === slot.label ? 'linear-gradient(135deg, #ff9159, #ff7a2f)' : '#151a20',
-                border: 'none', cursor: 'pointer',
-                fontFamily: "'Manrope'", fontSize: '0.8125rem', fontWeight: 600,
-                color: selectedTime === slot.label ? '#401500' : '#a8abb2',
-              }}>{slot.label}</button>
+              <motion.button key={slot.id} whileTap={{ scale: 0.95 }} onClick={() => setSelectedTime(slot.label)} style={{
+                padding: '0.875rem 0.5rem', borderRadius: '1rem', textAlign: 'center',
+                background: selectedTime === slot.label ? 'var(--gradient-primary)' : 'var(--surface-container-low)',
+                border: selectedTime === slot.label ? 'none' : '1px solid var(--outline-variant)',
+                boxShadow: selectedTime === slot.label ? 'var(--shadow-glow-small)' : 'none',
+                fontFamily: 'var(--font-body)', fontSize: '0.875rem', fontWeight: 800,
+                color: selectedTime === slot.label ? '#fff' : 'var(--on-surface)', cursor: 'pointer', transition: 'all 0.2s'
+              }}>{slot.label}</motion.button>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Your Details */}
-        <div style={{ marginBottom: '1.25rem' }}>
-          <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1rem', fontWeight: 700, color: '#f4f6fe', marginBottom: '0.75rem' }}>
-            <i className="ph-bold ph-user" style={{ color: '#ff9159', marginRight: '0.5rem' }}></i>
-            {lang === 'hi' ? 'अपना डिटेल्स भरीं' : 'Your Details'}
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-            {[
-              { val: name, set: setName, ph: lang === 'hi' ? 'अपना नाम *' : 'Your Name *', type: 'text' },
-              { val: phone, set: setPhone, ph: lang === 'hi' ? 'फ़ोन नंबर *' : 'Phone Number *', type: 'tel' },
-              { val: address, set: setAddress, ph: lang === 'hi' ? 'पटना में अपना पता' : 'Your Address in Patna', type: 'text' },
-            ].map((f, i) => (
-              <input key={i} type={f.type} value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph}
-                style={{ background: '#151a20', borderRadius: '0.75rem', padding: '0.875rem 1rem', fontFamily: "'Manrope'", fontSize: '0.875rem', color: '#f4f6fe', border: '2px solid transparent', outline: 'none', transition: 'border-color 150ms' }}
-                onFocus={e => e.target.style.borderColor = '#ff9159'} onBlur={e => e.target.style.borderColor = 'transparent'} />
-            ))}
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={lang === 'hi' ? 'कुछ खास बात (वैकल्पिक)' : 'Special instructions (optional)'} rows={2}
-              style={{ background: '#151a20', borderRadius: '0.75rem', padding: '0.875rem 1rem', fontFamily: "'Manrope'", fontSize: '0.875rem', color: '#f4f6fe', border: '2px solid transparent', outline: 'none', resize: 'vertical', transition: 'border-color 150ms' }}
-              onFocus={e => e.target.style.borderColor = '#ff9159'} onBlur={e => e.target.style.borderColor = 'transparent'} />
-          </div>
-        </div>
-
-        {/* WhatsApp info */}
-        <div style={{ background: '#151a2080', borderRadius: '1rem', padding: '1rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <i className="ph-fill ph-whatsapp-logo" style={{ color: '#22c55e', fontSize: '1.25rem' }}></i>
-          </div>
-          <div>
-            <p style={{ fontFamily: "'Manrope'", fontSize: '0.8125rem', fontWeight: 700, color: '#f4f6fe' }}>
-              {lang === 'hi' ? 'WhatsApp से बुक होई' : 'Booking via WhatsApp'}
-            </p>
-            <p style={{ fontFamily: "'Manrope'", fontSize: '0.6875rem', color: '#72767c' }}>
-              {lang === 'hi' ? 'अपना सब डिटेल सीधे सेवा प्रदाता के WhatsApp पर जाई' : 'Your details will be sent directly to the service provider on WhatsApp'}
-            </p>
-          </div>
-        </div>
-
-        {/* Trust badges */}
-        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', marginBottom: '1.25rem' }}>
-          {[{ icon: 'ph-shield-check', label: 'Verified' }, { icon: 'ph-lock-simple', label: 'Safe' }, { icon: 'ph-headset', label: '24/7 Support' }].map((b, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <i className={`ph-fill ${b.icon}`} style={{ fontSize: '0.875rem', color: '#34d399' }}></i>
-              <span style={{ fontFamily: "'Manrope'", fontSize: '0.625rem', fontWeight: 600, color: '#72767c' }}>{b.label}</span>
+        {/* User Details - Claymorphic Inputs */}
+        <motion.div variants={sectionVariants} style={{ marginBottom: '2rem' }}>
+          <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 900, color: 'var(--on-surface)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <i className="ph-fill ph-identification-card" style={{ color: 'var(--primary)', fontSize: '1.25rem' }} />
+            {lang === 'hi' ? 'अपन परिचय' : 'Booking Identity'}
+          </h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+            <div className="input-field" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0 1.25rem' }}>
+               <i className="ph ph-user" style={{ color: 'var(--primary)', fontSize: '1.25rem' }} />
+               <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Full Name *" style={{ background: 'none', border: 'none', borderLeft: '1px solid var(--outline-variant)', padding: '1rem 0 1rem 0.75rem', color: '#fff', outline: 'none', flex: 1, fontWeight: 700 }} />
             </div>
-          ))}
-        </div>
-
-        {/* Book via WhatsApp CTA */}
-        {canBook ? (
-          <button onClick={handleBookViaWhatsApp} disabled={!name || !phone || !selectedTime} style={{
-            width: '100%', fontFamily: "'Plus Jakarta Sans'", fontSize: '1rem', fontWeight: 700,
-            background: (!name || !phone || !selectedTime) ? '#21262e' : 'linear-gradient(135deg, #22c55e, #16a34a)',
-            color: (!name || !phone || !selectedTime) ? '#72767c' : '#fff',
-            padding: '1rem', borderRadius: '1rem', border: 'none',
-            cursor: (!name || !phone || !selectedTime) ? 'not-allowed' : 'pointer',
-            boxShadow: (!name || !phone || !selectedTime) ? 'none' : '0 8px 25px rgba(34,197,94,0.3)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-          }}>
-            <i className="ph-fill ph-whatsapp-logo" style={{ fontSize: '1.25rem' }}></i>
-            {lang === 'hi' ? 'WhatsApp पर बुक करीं' : 'Book on WhatsApp'}
-          </button>
-        ) : (
-          <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '1.25rem', borderRadius: '1.25rem', textAlign: 'center', fontFamily: "'Plus Jakarta Sans'", fontSize: '0.875rem', fontWeight: 800, border: '1px solid rgba(239, 68, 68, 0.2)', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.1)' }}>
-            <i className="ph-fill ph-warning-circle" style={{ fontSize: '1.75rem', marginBottom: '0.5rem', display: 'block' }}></i>
-            {isCategoryPaused 
-               ? (lang === 'hi' ? 'ई सेवा अभी बंद बा। कृपया बाद में प्रयास करीं।' : 'This service category is currently paused.')
-               : (lang === 'hi' ? 'बुकिंग अभी बंद है। कृपया बाद में प्रयास करें।' : 'Bookings are currently paused. Please try again later.')
-            }
+            <div className="input-field" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0 1.25rem' }}>
+               <i className="ph ph-phone" style={{ color: 'var(--primary)', fontSize: '1.25rem' }} />
+               <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone Number *" style={{ background: 'none', border: 'none', borderLeft: '1px solid var(--outline-variant)', padding: '1rem 0 1rem 0.75rem', color: '#fff', outline: 'none', flex: 1, fontWeight: 700 }} />
+            </div>
+            <div className="input-field" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0 1.25rem' }}>
+               <i className="ph ph-map-pin" style={{ color: 'var(--primary)', fontSize: '1.25rem' }} />
+               <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="Patna Address *" style={{ background: 'none', border: 'none', borderLeft: '1px solid var(--outline-variant)', padding: '1rem 0 1rem 0.75rem', color: '#fff', outline: 'none', flex: 1, fontWeight: 700 }} />
+            </div>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any special instructions? (Optional)" rows={2} className="input-field" style={{ padding: '1rem 1.25rem', color: '#fff', outline: 'none', flex: 1, fontWeight: 700, resize: 'none' }} />
           </div>
-        )}
-      </div>
+        </motion.div>
+
+        {/* Global Protection Chip */}
+        <motion.div variants={sectionVariants} style={{ background: 'var(--surface-container-high)', borderRadius: '1.25rem', padding: '1rem 1.25rem', marginBottom: '2.5rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid var(--outline-variant)' }}>
+           <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i className="ph-fill ph-shield-check" style={{ color: '#22c55e', fontSize: '1.5rem' }} />
+           </div>
+           <div>
+              <p style={{ fontSize: '0.8125rem', fontWeight: 800, color: 'var(--on-surface)' }}>{lang === 'hi' ? 'सुरक्षित और सत्यापित' : 'Secure & Verified'}</p>
+              <p style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'var(--on-surface-variant)' }}>Verified experts. Secure WhatsApp routing.</p>
+           </div>
+        </motion.div>
+
+        {/* Book Button */}
+        <motion.div variants={sectionVariants}>
+          {canBook ? (
+            <motion.button 
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              onClick={handleBookViaWhatsApp} 
+              disabled={!name || !phone || !address || !selectedTime} 
+              style={{
+                width: '100%', padding: '1.25rem', borderRadius: '1.5rem',
+                background: (!name || !phone || !address || !selectedTime) ? 'var(--surface-container-highest)' : 'var(--gradient-primary)',
+                color: (!name || !phone || !address || !selectedTime) ? 'var(--on-surface-variant)' : '#fff',
+                border: 'none', fontFamily: 'var(--font-display)', fontSize: '1.125rem', fontWeight: 950,
+                cursor: 'pointer', boxShadow: (!name || !phone || !address || !selectedTime) ? 'none' : 'var(--shadow-glow)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem'
+              }}
+            >
+              <i className="ph-fill ph-whatsapp-logo" style={{ fontSize: '1.5rem' }}></i>
+              {lang === 'hi' ? 'WhatsApp पर बुक करीं' : 'Book on WhatsApp'}
+            </motion.button>
+          ) : (
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '1.5rem', borderRadius: '1.5rem', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+              <i className="ph-fill ph-warning-circle" style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block' }}></i>
+              <p style={{ fontWeight: 900 }}>{isCategoryPaused ? 'Service Category Paused' : 'Bookings Currently Offline'}</p>
+            </div>
+          )}
+        </motion.div>
+
+      </motion.div>
     </div>
   );
 }

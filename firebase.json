@@ -9,6 +9,20 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "headers": [
+      {
+        "source": "/**/*.@(js|css|woff2|jpg|png|svg|webp)",
+        "headers": [
+          { "key": "Cache-Control", "value": "max-age=31536000" }
+        ]
+      },
+      {
+        "source": "/(sw.js|firebase-messaging-sw.js|manifest.json)",
+        "headers": [
+          { "key": "Cache-Control", "value": "max-age=0, no-cache, no-store, must-revalidate" }
+        ]
+      }
+    ],
     "rewrites": [
       {
         "source": "**",

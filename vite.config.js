@@ -13,9 +13,14 @@ export default defineConfig({
     rollupOptions: {
       external: ['api/**', 'functions/**'],
       output: {
-        manualChunks: {
-          'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/messaging'],
-          'vendor-ui': ['framer-motion', '@phosphor-icons/react', 'react-router-dom'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('firebase')) return 'vendor-firebase';
+            if (id.includes('framer-motion')) return 'vendor-motion';
+            if (id.includes('@phosphor-icons')) return 'vendor-icons';
+            if (id.includes('react')) return 'vendor-react-core';
+            return 'vendor-others';
+          }
         }
       }
     }

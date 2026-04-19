@@ -61,35 +61,47 @@ export default function Explore() {
         </div>
 
         {/* Result Cards */}
-        <div style={{ padding: '0 1.25rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <div style={{ padding: '0 1.25rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', position: 'relative' }}>
           {filteredCategories.length === 0 ? (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem 1rem' }}>
-               <i className="ph-bold ph-magnifying-glass" style={{ fontSize: '2rem', opacity: 0.3 }} />
-               <p style={{ marginTop: '0.5rem', fontWeight: 800 }}>No categories found</p>
-            </div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '5rem 1.5rem', background: 'var(--surface-container-low)', borderRadius: '2rem', border: '1px dashed var(--outline-variant)' }}>
+               <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--surface-container-high)', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 <i className="ph-fill ph-magnifying-glass" style={{ fontSize: '1.75rem', color: 'var(--on-surface-variant)', opacity: 0.5 }} />
+               </div>
+               <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1rem', color: 'var(--on-surface)' }}>No services found</h3>
+               <p style={{ marginTop: '0.25rem', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--on-surface-variant)' }}>Try searching for 'Plumber' or 'Clinic'</p>
+            </motion.div>
           ) : (
             filteredCategories.map((cat, i) => (
-              <div
+              <motion.div
                 key={cat.id}
                 onClick={() => navigate(`/service/${cat.id}`)}
-                className="clay-card"
+                initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                whileHover={{ y: -5, boxShadow: '0 12px 32px rgba(0,0,0,0.1)' }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ duration: 0.4, delay: i * 0.04, ease: [0.16, 1, 0.3, 1] }}
+                className="clay-card liquid-glass"
                 style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem',
-                  padding: '1.25rem 0.75rem', cursor: 'pointer',
-                  animation: `fadeUpPlus 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${Math.min(i, 8) * 0.05}s both`
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem',
+                  padding: '1.75rem 0.75rem', cursor: 'pointer', background: 'var(--surface-container-low)',
+                  border: '1px solid var(--glass-border)'
                 }}
               >
                 <div style={{
-                  width: '56px', height: '56px', borderRadius: '50%',
-                  background: cat.gradient ? `linear-gradient(135deg, ${cat.gradient[0]}15, ${cat.gradient[1]}15)` : 'var(--primary-container)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  width: '64px', height: '64px', borderRadius: '20px',
+                  background: cat.gradient ? `linear-gradient(135deg, ${cat.gradient[0]}20, ${cat.gradient[1]}20)` : 'var(--primary-container)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: `inset 0 1px 1px rgba(255,255,255,0.4), 0 10px 20px ${cat.gradient ? cat.gradient[0] : 'var(--primary)'}15`
                 }}>
-                  <i className={`ph-fill ${cat.icon || 'ph-gear'}`} style={{ fontSize: '1.75rem', color: cat.gradient ? cat.gradient[0] : 'var(--primary)' }} />
+                  <i className={`ph-fill ${cat.icon || 'ph-gear'}`} style={{ fontSize: '2rem', color: cat.gradient ? cat.gradient[0] : 'var(--primary)' }} />
                 </div>
-                <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.8125rem', fontWeight: 900, textAlign: 'center' }}>
-                  {cat.name}
-                </p>
-              </div>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.875rem', fontWeight: 950, color: 'var(--on-surface)' }}>
+                    {cat.name}
+                  </p>
+                  <p style={{ fontSize: '0.625rem', fontWeight: 900, color: 'var(--primary)', letterSpacing: '0.05em', textTransform: 'uppercase', marginTop: '0.25rem' }}>View Experts</p>
+                </div>
+              </motion.div>
             ))
           )}
         </div>

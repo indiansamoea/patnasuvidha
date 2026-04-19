@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 
 export default function BottomNav() {
@@ -15,68 +16,81 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="liquid-glass" style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-      paddingBottom: 'env(safe-area-inset-bottom)', borderTopLeftRadius: '32px', borderTopRightRadius: '32px', borderLeft: 'none', borderRight: 'none', borderBottom: 'none'
-    }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-around',
-        maxWidth: '480px', margin: '0 auto', padding: '0.75rem 0.5rem 0.5rem',
-        position: 'relative'
-      }}>
+    <div style={{ position: 'fixed', bottom: '1.5rem', left: '1.25rem', right: '1.25rem', zIndex: 100, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+      <motion.nav 
+        initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+        style={{
+          pointerEvents: 'auto',
+          maxWidth: '440px', width: '100%',
+          background: 'rgba(30,30,35,0.8)', backdropFilter: 'blur(24px)',
+          padding: '0.625rem', borderRadius: '2.25rem',
+          border: '1px solid hsla(var(--p-h), 100%, 50%, 0.15)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1)'
+        }}
+      >
         {items.map((item, idx) => {
           const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path);
           const text = lang === 'hi' ? item.labelHi : item.label;
 
-          // The center FLOATING Action Button
           if (item.isCenter) {
             return (
-              <div key="center" style={{ position: 'relative', width: '64px', display: 'flex', justifyContent: 'center' }}>
-                <button onClick={() => navigate(item.path)} style={{
-                  position: 'absolute', bottom: '-10px',
-                  width: '58px', height: '58px', borderRadius: '20px',
+              <motion.button 
+                key="center"
+                whileHover={{ scale: 1.1, y: -4 }} whileTap={{ scale: 0.9 }}
+                onClick={() => navigate(item.path)}
+                style={{
+                  width: '56px', height: '56px', borderRadius: '18px',
                   background: 'var(--gradient-primary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 8px 24px rgba(255,153,51,0.45)',
-                  border: '3px solid var(--surface)',
-                  transition: 'transform var(--transition-base), box-shadow var(--transition-base)',
+                  boxShadow: 'var(--shadow-glow)',
+                  border: 'none', cursor: 'pointer', position: 'relative'
                 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
-                >
-                  <i className={isActive ? item.iconFill : item.icon} style={{ fontSize: '1.5rem', color: 'var(--on-primary)', fontWeight: 'bold' }}></i>
-                  {/* Small red dot for notifications indicator could be added here */}
-                </button>
-              </div>
+              >
+                <i className={isActive ? item.iconFill : item.icon} style={{ fontSize: '1.5rem', color: '#fff' }}></i>
+                {isActive && (
+                   <motion.div 
+                    layoutId="pill-active"
+                    style={{ position: 'absolute', inset: '-4px', borderRadius: '22px', border: '2px solid var(--primary)', opacity: 0.5 }} 
+                   />
+                )}
+              </motion.button>
             );
           }
 
           return (
-            <button key={idx} onClick={() => navigate(item.path)} style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem',
-              padding: '0.5rem 1rem', background: isActive ? 'var(--primary-container)' : 'transparent',
-              borderRadius: '20px', border: 'none',
-              transition: 'all var(--transition-fast)',
-              flex: 1, maxWidth: '80px',
-              transform: isActive ? 'scale(1.05)' : 'scale(1)',
-            }}>
+            <motion.button 
+              key={idx} 
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate(item.path)} 
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                padding: '0.5rem', borderRadius: '1.25rem', border: 'none',
+                background: 'transparent', cursor: 'pointer', flex: 1, position: 'relative'
+              }}
+            >
               <i className={isActive ? item.iconFill : item.icon} style={{
-                fontSize: '1.375rem',
-                color: isActive ? 'var(--primary)' : 'var(--on-surface)',
-                opacity: isActive ? 1 : 0.65,
-                transition: 'color var(--transition-fast)',
+                fontSize: '1.5rem',
+                color: isActive ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
+                transform: isActive ? 'translateY(-2px)' : 'none',
+                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
               }}></i>
               <span style={{
-                fontSize: '0.625rem', fontWeight: isActive ? 800 : 600,
-                color: isActive ? 'var(--primary)' : 'var(--on-surface)',
-                opacity: isActive ? 1 : 0.65,
-                fontFamily: "'Manrope', sans-serif",
-                letterSpacing: '0.02em',
+                fontSize: '0.625rem', fontWeight: 900,
+                color: isActive ? '#fff' : 'rgba(255,255,255,0.3)',
+                textTransform: 'uppercase', letterSpacing: '0.05em'
               }}>{text}</span>
-            </button>
+              
+              {isActive && (
+                <motion.div 
+                  layoutId="dot-active"
+                  style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--primary)', marginTop: '2px', boxShadow: '0 0 8px var(--primary)' }} 
+                />
+              )}
+            </motion.button>
           );
         })}
-      </div>
-    </nav>
+      </motion.nav>
+    </div>
   );
 }

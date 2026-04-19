@@ -3,6 +3,7 @@ import { getFirestore, initializeFirestore, persistentLocalCache, persistentMult
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 import { getFunctions } from 'firebase/functions';
+import { getMessaging } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -18,6 +19,7 @@ export let db = null;
 export let storage = null;
 export let auth = null;
 export let functions = null;
+export let messaging = null;
 
 if (firebaseConfig.apiKey) {
   try {
@@ -36,6 +38,11 @@ if (firebaseConfig.apiKey) {
     storage = getStorage(app);
     auth = getAuth(app);
     functions = getFunctions(app, 'us-central1');
+    
+    // Messaging only in browser
+    if (typeof window !== 'undefined') {
+       try { messaging = getMessaging(app); } catch (e) { console.warn("Messaging init failed:", e); }
+    }
   } catch (err) {
     console.error("Firebase init failed:", err);
   }

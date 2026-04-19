@@ -1,12 +1,10 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../context/AppContext';
 import { toast } from 'react-hot-toast';
 import { useSmartSlots } from '../hooks/useSmartSlots';
 
-// ─────────────────────────────────────────────────────────
-// DEFAULT FALLBACK META
-// ─────────────────────────────────────────────────────────
 const DEFAULT_META = {
   hero: 'https://images.unsplash.com/photo-1556742400-b5b7a512a36e?auto=format&fit=crop&w=1200&q=80',
   title: 'Professional Services',
@@ -17,9 +15,18 @@ const DEFAULT_META = {
   services: [],
 };
 
-// ─────────────────────────────────────────────────────────
-// BOOKING STEP 1 SHEET — Date, Time & Address
-// ─────────────────────────────────────────────────────────
+const sheetVariants = {
+  hidden: { y: '100%' },
+  visible: { y: 0, transition: { type: 'spring', damping: 25, stiffness: 200 } },
+  exit: { y: '100%', transition: { ease: 'easeInOut' } }
+};
+
+const backdropVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+  exit: { opacity: 0 }
+};
+
 function BookingStep1({ meta, category, isHi, onClose, onProceedToPayment }) {
   const { currentUser, savedAddresses, addAddress } = useAppContext();
   const navigate = useNavigate();
@@ -73,22 +80,16 @@ function BookingStep1({ meta, category, isHi, onClose, onProceedToPayment }) {
   }, [isHi]);
 
   const selectedDateObj = dates[selectedDateIndex];
-
-  // ── Smart Slots Integration ──
   const { 
     isSlotUnavailable, isSlotBooked, isSlotPast, isSlotPreferred,
     suggestedSlot, userHistory, isLoading: isLoadingSlots,
     totalSlotsAvailable, activeProvidersCount
   } = useSmartSlots(category, selectedDateObj.full, currentUser);
 
-  // Auto-select the suggested slot when it becomes available
   useEffect(() => {
-    if (suggestedSlot && !selectedSlot) {
-      setSelectedSlot(suggestedSlot);
-    }
+    if (suggestedSlot && !selectedSlot) setSelectedSlot(suggestedSlot);
   }, [suggestedSlot]);
 
-  // Pre-fill address from user history if none selected
   useEffect(() => {
     if (userHistory?.address && !selectedAddressId && savedAddresses.length === 0 && !newAddress) {
       setNewAddress(userHistory.address);
@@ -109,133 +110,109 @@ function BookingStep1({ meta, category, isHi, onClose, onProceedToPayment }) {
       try {
         await addAddress(newAddress.trim());
         finalAddress = newAddress.trim();
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsSavingAddress(false);
-      }
+      } catch (e) { console.error(e); } finally { setIsSavingAddress(false); }
     }
     const dateStr = `${selectedDateObj.day}, ${selectedDateObj.date} ${selectedDateObj.month}`;
     onProceedToPayment({ date: dateStr, dateFull: selectedDateObj.full, time: selectedSlot, address: finalAddress });
   };
 
   const ALL_TIME_SLOTS_DATA = [
-    { id: 'morning1',   label: '9:00 AM',   period: 'Morning' },
-    { id: 'morning2',   label: '10:00 AM',  period: 'Morning' },
-    { id: 'morning3',   label: '11:00 AM',  period: 'Morning' },
-    { id: 'afternoon1', label: '12:00 PM',  period: 'Afternoon' },
-    { id: 'afternoon2', label: '2:00 PM',   period: 'Afternoon' },
-    { id: 'afternoon3', label: '3:00 PM',   period: 'Afternoon' },
-    { id: 'evening1',   label: '5:00 PM',   period: 'Evening' },
-    { id: 'evening2',   label: '6:00 PM',   period: 'Evening' },
-    { id: 'evening3',   label: '7:00 PM',   period: 'Evening' },
+    { id: 'm1', label: '9:00 AM' }, { id: 'm2', label: '10:00 AM' }, { id: 'm3', label: '11:00 AM' },
+    { id: 'a1', label: '12:00 PM' }, { id: 'a2', label: '2:00 PM' }, { id: 'a3', label: '3:00 PM' },
+    { id: 'e1', label: '5:00 PM' }, { id: 'e2', label: '6:00 PM' }, { id: 'e3', label: '7:00 PM' },
   ];
 
   const categoryName = isHi ? (meta.nameHi || meta.name) : meta.name;
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-      <div className="animate-slide-up" style={{ position: 'relative', zIndex: 1, background: 'var(--surface)', borderRadius: '24px 24px 0 0', maxHeight: '92vh', overflowY: 'auto', paddingBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '0.75rem 0' }}>
-          <div style={{ width: '40px', height: '4px', borderRadius: '99px', background: 'var(--outline-variant)' }} />
+      <motion.div initial="hidden" animate="visible" exit="exit" variants={backdropVariants} onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }} />
+      <motion.div 
+        initial="hidden" animate="visible" exit="exit" variants={sheetVariants}
+        style={{ position: 'relative', zIndex: 1, background: 'var(--surface)', borderRadius: '2.5rem 2.5rem 0 0', maxHeight: '92vh', overflowY: 'auto', paddingBottom: '3rem', boxShadow: '0 -20px 40px rgba(0,0,0,0.2)' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem 0' }}>
+          <div style={{ width: '48px', height: '6px', borderRadius: '99px', background: 'var(--outline-variant)', opacity: 0.5 }} />
         </div>
-        <div style={{ padding: '0 1.25rem', maxWidth: '480px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 800 }}>{isHi ? 'समय और पता चुनें' : 'Time & Address'}</h2>
-            <button onClick={onClose} style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--surface-container-high)', border: 'none', cursor: 'pointer' }}>
-               <i className="ph-bold ph-x" />
-            </button>
+        <div style={{ padding: '0 1.5rem', maxWidth: '480px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.375rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.01em' }}>{isHi ? 'समय और पता चुनें' : 'Time & Address'}</h2>
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={onClose} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--surface-container-high)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               <i className="ph-bold ph-x" style={{ fontSize: '1.25rem' }} />
+            </motion.button>
           </div>
 
-          {/* Smart Slot Status Banner OR Empty Category State */}
-          <div style={{ 
-            padding: '0.625rem 1rem', borderRadius: '12px', marginBottom: '1.25rem',
-            background: isLoadingSlots ? 'var(--surface-container)' : activeProvidersCount === 0 ? 'rgba(255,145,89,0.1)' : totalSlotsAvailable > 3 ? 'rgba(34,197,94,0.1)' : totalSlotsAvailable > 0 ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.1)',
-            border: isLoadingSlots ? 'none' : activeProvidersCount === 0 ? '1px dashed var(--primary)' : totalSlotsAvailable > 3 ? '1px solid rgba(34,197,94,0.2)' : totalSlotsAvailable > 0 ? '1px solid rgba(245,158,11,0.2)' : '1px solid rgba(239,68,68,0.2)',
-            display: 'flex', alignItems: 'center', gap: '0.5rem'
-          }}>
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            style={{ 
+              padding: '0.75rem 1rem', borderRadius: '1rem', marginBottom: '1.5rem',
+              background: isLoadingSlots ? 'var(--surface-container)' : activeProvidersCount === 0 ? 'hsla(var(--p-h), 100%, 50%, 0.1)' : totalSlotsAvailable > 0 ? 'hsla(142, 76%, 36%, 0.1)' : 'hsla(0, 72%, 51%, 0.1)',
+              border: `1px solid ${isLoadingSlots ? 'transparent' : activeProvidersCount === 0 ? 'var(--primary)' : totalSlotsAvailable > 0 ? 'var(--secondary)' : 'var(--error)'}`,
+              display: 'flex', alignItems: 'center', gap: '0.75rem'
+            }}
+          >
             {isLoadingSlots ? (
-              <><div className="spinner" style={{ width: '14px', height: '14px' }} /><span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--on-surface-variant)' }}>Checking availability...</span></>
+              <><div className="spinner" style={{ width: '16px', height: '16px' }} /><span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--on-surface-variant)' }}>Analyzing availability...</span></>
             ) : (
               <>
-                <i className={`ph-fill ${activeProvidersCount === 0 ? 'ph-rocket-launch' : totalSlotsAvailable > 3 ? 'ph-check-circle' : totalSlotsAvailable > 0 ? 'ph-warning' : 'ph-x-circle'}`} 
-                  style={{ color: activeProvidersCount === 0 ? 'var(--primary)' : totalSlotsAvailable > 3 ? '#22c55e' : totalSlotsAvailable > 0 ? '#f59e0b' : '#ef4444', fontSize: '1rem' }} />
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--on-surface)' }}>
+                <i className={`ph-fill ${activeProvidersCount === 0 ? 'ph-rocket-launch' : totalSlotsAvailable > 0 ? 'ph-check-circle' : 'ph-x-circle'}`} 
+                   style={{ color: activeProvidersCount === 0 ? 'var(--primary)' : totalSlotsAvailable > 0 ? 'var(--secondary)' : 'var(--error)', fontSize: '1.25rem' }} />
+                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--on-surface)' }}>
                   {activeProvidersCount > 0 
-                    ? (totalSlotsAvailable > 0 
-                        ? `${totalSlotsAvailable} slots available across ${activeProvidersCount} active experts` 
-                        : 'All experts are busy for this date')
-                    : (isHi ? `हम जल्द ही ${categoryName} के लिए आ रहे हैं!` : `Partnering with more experts for ${categoryName}...`)}
+                    ? (totalSlotsAvailable > 0 ? `${totalSlotsAvailable} slots open today` : 'Experts fully booked today')
+                    : (isHi ? `जल्द ही ${categoryName} के लिए आ रहे हैं!` : `Onboarding experts for ${categoryName}...`)}
                 </span>
               </>
             )}
-          </div>
+          </motion.div>
 
-          {/* Date Selector */}
-          <section style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem' }}>{isHi ? 'तारीख' : 'Date'}</h3>
-            <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto' }} className="hide-scrollbar">
+          <section style={{ marginBottom: '2rem' }}>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '0.875rem', fontWeight: 900, marginBottom: '1rem', textTransform: 'uppercase', color: 'var(--on-surface-variant)' }}>{isHi ? 'तारीख' : 'Select Date'}</h3>
+            <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem' }} className="hide-scrollbar">
               {dates.map((d, i) => (
-                <button key={i} onClick={() => { setSelectedDateIndex(i); setSelectedSlot(null); }} style={{ flexShrink: 0, width: '60px', padding: '0.6rem 0', borderRadius: '12px', background: selectedDateIndex === i ? 'var(--gradient-primary)' : 'var(--surface-container)', color: selectedDateIndex === i ? '#fff' : 'inherit', border: 'none', cursor: 'pointer' }}>
-                  <p style={{ fontSize: '0.625rem' }}>{d.day}</p>
-                  <p style={{ fontSize: '1.125rem', fontWeight: 800 }}>{d.date}</p>
-                </button>
+                <motion.button 
+                  key={i} whileTap={{ scale: 0.95 }}
+                  onClick={() => { setSelectedDateIndex(i); setSelectedSlot(null); }} 
+                  style={{ 
+                    flexShrink: 0, width: '68px', padding: '0.75rem 0', borderRadius: '1.25rem', 
+                    background: selectedDateIndex === i ? 'var(--gradient-primary)' : 'var(--surface-container)', 
+                    color: selectedDateIndex === i ? '#fff' : 'inherit', border: 'none', cursor: 'pointer',
+                    boxShadow: selectedDateIndex === i ? 'var(--shadow-md)' : 'none'
+                  }}
+                >
+                  <p style={{ fontSize: '0.625rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.8 }}>{d.day}</p>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 900 }}>{d.date}</p>
+                </motion.button>
               ))}
             </div>
           </section>
 
-          {/* Time Slots Section */}
-          <section className="animate-fade-up-plus delay-3" style={{ marginBottom: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1rem', fontWeight: 800, color: 'var(--on-surface)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                {activeProvidersCount > 0 ? (isHi ? 'टाइम चुनें' : 'Available Slots') : (isHi ? 'जल्द आ रहा है' : 'Service Coming Soon')}
-              </h3>
-            </div>
-
+          <section style={{ marginBottom: '2.5rem' }}>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '0.875rem', fontWeight: 900, marginBottom: '1rem', textTransform: 'uppercase', color: 'var(--on-surface-variant)' }}>{isHi ? 'टाइम' : 'Select Slot'}</h3>
             {activeProvidersCount === 0 ? (
-              <div className="clay-card" style={{ padding: '2.5rem 1.5rem', textAlign: 'center', background: 'var(--surface-container-low)', border: '1px dashed var(--outline-variant)' }}>
-                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255,145,89,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
-                  <i className="ph-fill ph-rocket-launch" style={{ color: 'var(--primary)', fontSize: '2rem' }} />
-                </div>
-                <h4 style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: '1.125rem', fontWeight: 900, marginBottom: '0.5rem' }}>
-                  {isHi ? 'हम आपके क्षेत्र में आ रहे हैं!' : 'Coming to your area!'}
-                </h4>
-                <p style={{ fontFamily: "'Manrope'", fontSize: '0.8125rem', color: 'var(--on-surface-variant)', lineHeight: 1.6 }}>
-                  {isHi ? `हम ${categoryName} के लिए बेहतरीन विशेषज्ञों को शामिल कर रहे हैं। जल्द ही यहाँ सर्विस शुरू होगी!` : `We are currently vetting and onboarding the best local experts for ${categoryName}. Check back soon!`}
-                </p>
-                <button 
-                  onClick={() => navigate('/services')}
-                  style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 800 }}
-                >
-                  {isHi ? 'अन्य सेवाएं देखें' : 'Explore Other Services'}
-                </button>
+              <div style={{ padding: '2rem', textAlign: 'center', background: 'var(--surface-container-low)', borderRadius: '1.5rem', border: '1px dashed var(--outline-variant)' }}>
+                 <p style={{ fontWeight: 800, color: 'var(--primary)' }}>Coming Soon!</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
                 {ALL_TIME_SLOTS_DATA.map(slot => {
-                  const booked = isSlotBooked(slot.label);
-                  const past  = isSlotPast(slot.label);
-                  const unavail = booked || past;
-                  const isSuggested = slot.label === suggestedSlot;
+                  const unavail = isSlotBooked(slot.label) || isSlotPast(slot.label);
+                  const isPref = isSlotPreferred(slot.label);
                   const isSelected = selectedSlot === slot.label;
-
                   return (
-                    <button key={slot.id} disabled={unavail} onClick={() => setSelectedSlot(slot.label)}
+                    <motion.button 
+                      key={slot.id} disabled={unavail} whileTap={unavail ? {} : { scale: 0.95 }}
+                      onClick={() => setSelectedSlot(slot.label)}
                       style={{
-                        padding: '0.75rem 0.25rem', borderRadius: '10px', position: 'relative',
-                        background: isSelected ? 'var(--primary-container)' : isSuggested ? 'rgba(255,140,0,0.08)' : 'var(--surface-container)',
-                        border: isSelected ? '2px solid var(--primary)' : isSuggested ? '1px dashed var(--primary)' : '1px solid transparent',
-                        opacity: unavail ? 0.35 : 1,
-                        cursor: unavail ? 'not-allowed' : 'pointer',
-                        fontSize: '0.8125rem', fontWeight: 700,
-                        textDecoration: past ? 'line-through' : 'none',
-                        color: booked ? 'var(--on-surface-variant)' : 'inherit'
-                      }}>
-                      {slot.label}
-                      {isSlotPreferred(slot.label) && <div style={{ position: 'absolute', top: '-6px', right: '-4px', background: 'var(--primary)', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', fontWeight: 900, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>EXPERT</div>}
-                      {booked && !isSlotPreferred(slot.label) && <span style={{ position: 'absolute', top: '2px', right: '4px', fontSize: '0.5rem', fontWeight: 900, color: '#f59e0b' }}>●</span>}
-                    </button>
+                        padding: '1rem 0.5rem', borderRadius: '1rem', position: 'relative',
+                        background: isSelected ? 'var(--primary-container)' : isPref ? 'hsla(var(--p-h), 100%, 50%, 0.05)' : 'var(--surface-container)',
+                        border: isSelected ? '2px solid var(--primary)' : isPref ? '1px dashed var(--primary)' : '1px solid transparent',
+                        opacity: unavail ? 0.4 : 1, cursor: unavail ? 'not-allowed' : 'pointer', transition: 'all 0.2s'
+                      }}
+                    >
+                      <span style={{ fontSize: '0.875rem', fontWeight: 800, color: isSelected ? 'var(--primary)' : 'inherit' }}>{slot.label}</span>
+                      {isPref && <div style={{ position: 'absolute', top: '-8px', right: '-4px', background: 'var(--primary)', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', fontWeight: 900 }}>PRO</div>}
+                    </motion.button>
                   );
                 })}
               </div>
@@ -244,89 +221,112 @@ function BookingStep1({ meta, category, isHi, onClose, onProceedToPayment }) {
 
           {activeProvidersCount > 0 && (
             <>
-              <section style={{ marginBottom: '1.5rem' }}>
-                <h3 style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem' }}>{isHi ? 'पता' : 'Address'}</h3>
+              <section style={{ marginBottom: '2.5rem' }}>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '0.875rem', fontWeight: 900, marginBottom: '1rem', textTransform: 'uppercase', color: 'var(--on-surface-variant)' }}>{isHi ? 'पता' : 'Service Address'}</h3>
                 {savedAddresses.map(addr => (
-                  <button key={addr.id} onClick={() => { setSelectedAddressId(addr.id); setShowAddressForm(false); }} style={{ width: '100%', padding: '1rem', borderRadius: '12px', marginBottom: '0.5rem', textAlign: 'left', background: selectedAddressId === addr.id ? 'var(--primary-container)' : 'var(--surface-container)', border: 'none' }}>
-                    {addr.label}
-                  </button>
+                  <motion.button 
+                    key={addr.id} whileTap={{ scale: 0.98 }}
+                    onClick={() => { setSelectedAddressId(addr.id); setShowAddressForm(false); }} 
+                    style={{ width: '100%', padding: '1.25rem', borderRadius: '1rem', marginBottom: '0.75rem', textAlign: 'left', background: selectedAddressId === addr.id ? 'var(--primary-container)' : 'var(--surface-container-low)', border: selectedAddressId === addr.id ? '1.5px solid var(--primary)' : '1px solid var(--outline-variant)', display: 'flex', alignItems: 'center', gap: '1rem' }}
+                  >
+                    <i className="ph-fill ph-house" style={{ color: selectedAddressId === addr.id ? 'var(--primary)' : 'var(--on-surface-variant)' }} />
+                    <span style={{ fontWeight: 700, fontSize: '0.9375rem' }}>{addr.label}</span>
+                  </motion.button>
                 ))}
-                <button onClick={() => { setShowAddressForm(true); setSelectedAddressId(null); }} style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: '1px dashed var(--primary)', background: 'transparent', color: 'var(--primary)', fontWeight: 800 }}>
-                  + {isHi ? 'नया पता' : 'New Address'}
-                </button>
-                {showAddressForm && (
-                  <div style={{ marginTop: '0.75rem', position: 'relative' }}>
-                    <input className="input-field" value={newAddress} onChange={e => setNewAddress(e.target.value)} placeholder="Type address..." style={{ paddingRight: '2.5rem' }} />
-                    <button onClick={handleRetrieveLocation} disabled={isFetchingLocation} style={{ position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--primary)' }}>
-                      {isFetchingLocation ? <div className="spinner" style={{ width: '14px', height: '14px' }} /> : <i className="ph-fill ph-target" />}
-                    </button>
-                  </div>
-                )}
+                <motion.button 
+                  whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+                  onClick={() => { setShowAddressForm(true); setSelectedAddressId(null); }} 
+                  style={{ width: '100%', padding: '1.25rem', borderRadius: '1rem', border: '2px dashed var(--primary)', background: 'transparent', color: 'var(--primary)', fontWeight: 900, fontSize: '0.9375rem' }}
+                >
+                  + {isHi ? 'नया पता जोड़ें' : 'Add New Address'}
+                </motion.button>
+                <AnimatePresence>
+                  {showAddressForm && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ marginTop: '1rem', position: 'relative', overflow: 'hidden' }}>
+                      <input className="input-field" value={newAddress} onChange={e => setNewAddress(e.target.value)} placeholder="Type full address here..." style={{ paddingRight: '3rem', borderRadius: '1rem' }} />
+                      <motion.button whileTap={{ scale: 0.8 }} onClick={handleRetrieveLocation} disabled={isFetchingLocation} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--primary)' }}>
+                        {isFetchingLocation ? <div className="spinner" style={{ width: '16px', height: '16px' }} /> : <i className="ph-fill ph-target" style={{ fontSize: '1.25rem' }} />}
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </section>
 
-              <button onClick={handleSaveAndProceed} disabled={!canProceed || isSavingAddress} style={{ width: '100%', padding: '1rem', borderRadius: '16px', background: canProceed ? 'var(--gradient-primary)' : 'var(--surface-container-high)', color: canProceed ? '#fff' : 'var(--on-surface-variant)', fontWeight: 800, border: 'none', cursor: canProceed ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}>
-                {isSavingAddress ? 'Saving...' : (isHi ? 'पुष्टि करें' : 'Confirm & Proceed')}
-              </button>
+              <motion.button 
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                onClick={handleSaveAndProceed} disabled={!canProceed || isSavingAddress} 
+                style={{ width: '100%', padding: '1.25rem', borderRadius: '1.5rem', background: canProceed ? 'var(--gradient-primary)' : 'var(--surface-container-highest)', color: canProceed ? '#fff' : 'var(--on-surface-variant)', fontWeight: 900, fontSize: '1.125rem', border: 'none', cursor: canProceed ? 'pointer' : 'not-allowed', boxShadow: canProceed ? 'var(--shadow-lg)' : 'none', transition: 'all 0.3s' }}
+              >
+                {isSavingAddress ? 'Finalizing...' : (isHi ? 'आगे बढ़ें' : 'Confirm & Proceed')}
+              </motion.button>
             </>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────
-// BOOKING STEP 2 — Payment Sheet
-// ─────────────────────────────────────────────────────────
-function BookingStep2({ meta, selectedService, bookingDetails, isHi, onBack, onPayLater, onPayNow, isSubmitting }) {
-  const servicePrice = selectedService?.price || 0;
+function BookingStep2({ selectedService, bookingDetails, isHi, onBack, onPayLater, onPayNow, isSubmitting }) {
+  const price = selectedService?.price || 0;
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-      <div onClick={onBack} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }} />
-      <div className="animate-slide-up" style={{ position: 'relative', zIndex: 1, background: 'var(--surface)', borderRadius: '24px 24px 0 0', maxHeight: '90vh', overflowY: 'auto', paddingBottom: '2.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '0.75rem 0' }}><div style={{ width: '40px', height: '4px', borderRadius: '99px', background: 'var(--outline-variant)' }} /></div>
-        <div style={{ padding: '0 1.25rem', maxWidth: '480px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-            <button onClick={onBack} style={{ border: 'none', background: 'var(--surface-container-high)', width: '36px', height: '36px', borderRadius: '50%' }}><i className="ph-bold ph-arrow-left" /></button>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{isHi ? 'भुगतान चुनें' : 'Choose Payment'}</h2>
+      <motion.div initial="hidden" animate="visible" exit="exit" variants={backdropVariants} onClick={onBack} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)' }} />
+      <motion.div 
+        initial="hidden" animate="visible" exit="exit" variants={sheetVariants}
+        style={{ position: 'relative', zIndex: 1, background: 'var(--surface)', borderRadius: '2.5rem 2.5rem 0 0', maxHeight: '90vh', overflowY: 'auto', paddingBottom: '3.5rem' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem 0' }}><div style={{ width: '48px', height: '6px', borderRadius: '99px', background: 'var(--outline-variant)', opacity: 0.5 }} /></div>
+        <div style={{ padding: '0 1.5rem', maxWidth: '480px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+            <motion.button whileTap={{ scale: 0.9 }} onClick={onBack} style={{ border: 'none', background: 'var(--surface-container-high)', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="ph-bold ph-arrow-left" /></motion.button>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.375rem', fontWeight: 900 }}>{isHi ? 'भुगतान का तरीका' : 'Payment Method'}</h2>
           </div>
 
-          <div style={{ padding: '1rem', background: 'var(--surface-container)', borderRadius: '16px', marginBottom: '1.5rem' }}>
-            <p style={{ fontSize: '0.75rem', fontWeight: 800, marginBottom: '0.5rem' }}>SUMMARY</p>
-            <p style={{ fontSize: '0.875rem' }}>{selectedService?.name} · {bookingDetails.date} · {bookingDetails.time}</p>
-            <p style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--primary)', marginTop: '0.5rem' }}>₹{servicePrice.toLocaleString('en-IN')}</p>
+          <div className="clay-card" style={{ padding: '1.5rem', marginBottom: '2rem', background: 'var(--primary-container)', border: '1.5px solid var(--primary)' }}>
+            <p style={{ fontSize: '0.625rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>Summary</p>
+            <h4 style={{ fontSize: '1.125rem', fontWeight: 900, marginBottom: '0.25rem' }}>{selectedService?.name}</h4>
+            <p style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--on-surface-variant)' }}>{bookingDetails.date} @ {bookingDetails.time}</p>
+            <div style={{ height: '1px', background: 'var(--primary)', opacity: 0.1, margin: '1rem 0' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontWeight: 800 }}>Total Payable</span>
+              <span style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--primary)' }}>₹{price}</span>
+            </div>
           </div>
 
-          <button onClick={onPayLater} disabled={isSubmitting} style={{ marginBottom: '1rem', width: '100%', padding: '1.25rem', borderRadius: '16px', border: '1px solid var(--outline-variant)', background: 'var(--surface)', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-             <i className="ph-fill ph-hand-coins" style={{ fontSize: '1.5rem', color: 'var(--secondary)' }} />
-             <div><p style={{ fontWeight: 800 }}>{isHi ? 'सेवा के बाद भुगतान' : 'Pay After Service'}</p><p style={{ fontSize: '0.75rem' }}>Cash or UPI to worker</p></div>
-          </button>
+          <motion.button 
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            onClick={onPayLater} disabled={isSubmitting} 
+            style={{ marginBottom: '1rem', width: '100%', padding: '1.5rem', borderRadius: '1.5rem', border: '1.5px solid var(--outline-variant)', background: 'var(--surface)', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '1.25rem', transition: 'all 0.2s' }}
+          >
+             <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'hsla(142, 76%, 36%, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <i className="ph-fill ph-hand-coins" style={{ fontSize: '1.5rem', color: 'var(--secondary)' }} />
+             </div>
+             <div>
+               <p style={{ fontWeight: 900, fontSize: '1rem' }}>{isHi ? 'काम के बाद नकद' : 'Cash After Service'}</p>
+               <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--on-surface-variant)' }}>Pay via Cash/UPI to partner</p>
+             </div>
+          </motion.button>
 
-          <button onClick={onPayNow} disabled={isSubmitting} style={{ width: '100%', padding: '1.25rem', borderRadius: '16px', background: 'var(--gradient-primary)', color: '#fff', textAlign: 'left', border: 'none', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-             <i className="ph-fill ph-lightning" style={{ fontSize: '1.5rem' }} />
-             <div><p style={{ fontWeight: 800 }}>{isHi ? 'अभी भुगतान करें' : 'Pay Now Online'}</p><p style={{ fontSize: '0.75rem', opacity: 0.9 }}>Securely pay ₹{servicePrice}</p></div>
-          </button>
+          <motion.button 
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            onClick={onPayNow} disabled={isSubmitting} 
+            style={{ width: '100%', padding: '1.5rem', borderRadius: '1.5rem', background: 'var(--gradient-primary)', color: '#fff', textAlign: 'left', border: 'none', display: 'flex', alignItems: 'center', gap: '1.25rem', boxShadow: 'var(--shadow-lg)' }}
+          >
+             <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <i className="ph-fill ph-lightning" style={{ fontSize: '1.5rem' }} />
+             </div>
+             <div>
+               <p style={{ fontWeight: 900, fontSize: '1rem' }}>{isHi ? 'अभी ऑनलाइन पे' : 'Pay Online Now'}</p>
+               <p style={{ fontSize: '0.8125rem', fontWeight: 700, opacity: 0.9 }}>100% Secure & Super Fast</p>
+             </div>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────
-// UI HELPERS
-// ─────────────────────────────────────────────────────────
-function SectionTitle({ title, subtitle, isHi }) {
-  return (
-    <div style={{ marginBottom: '1.25rem', marginTop: '2rem' }}>
-      <h2 style={{ fontSize: '1.25rem', fontWeight: 900, fontFamily: 'var(--font-display)', color: 'var(--primary)', letterSpacing: '-0.02em' }}>{title}</h2>
-      {subtitle && <p style={{ fontSize: '0.8125rem', color: 'var(--on-surface-variant)', fontWeight: 600 }}>{subtitle}</p>}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────
-// MAIN PAGE COMPONENT
-// ─────────────────────────────────────────────────────────
 export default function ServiceLanding() {
   const { category: categoryId } = useParams();
   const navigate = useNavigate();
@@ -336,18 +336,16 @@ export default function ServiceLanding() {
   const services = useMemo(() => meta.services || [], [meta]);
 
   const [selectedService, setSelectedService] = useState(null);
-  const [step, setStep] = useState('landing'); // landing, step1, step2
+  const [step, setStep] = useState('landing'); 
   const [bookingDetails, setBookingDetails] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [openFaq, setOpenFaq] = useState(null);
 
   useEffect(() => {
     if (services.length > 0 && !selectedService) setSelectedService(services[0]);
   }, [services]);
 
   const isHi = lang === 'hi';
-  const isCategoryPaused = (settings.pausedCategories || []).includes(categoryId);
-  const canBook = bookingsEnabled && !isCategoryPaused;
+  const canBook = bookingsEnabled && !(settings.pausedCategories || []).includes(categoryId);
 
   const handleProceed = () => {
     if (!selectedService) return;
@@ -360,249 +358,229 @@ export default function ServiceLanding() {
     setIsSubmitting(true);
     try {
       const bId = await addBooking({
-        ...bookingDetails,
-        service: selectedService.name,
-        amount: selectedService.price,
-        paymentMethod: 'pay_later',
-        categoryId: categoryId,
-        category: meta.name || categoryId,
+        ...bookingDetails, service: selectedService.name, amount: selectedService.price,
+        paymentMethod: 'pay_later', categoryId, category: meta.name || categoryId,
       });
       navigate(`/booking-success?biz=${encodeURIComponent(isHi ? (meta.nameHi || meta.name) : meta.name)}&service=${encodeURIComponent(selectedService.name)}&date=${encodeURIComponent(bookingDetails.date)}&time=${encodeURIComponent(bookingDetails.time)}&payment=pay_later&id=${bId}`);
-    } catch (e) {
-      toast.error("Booking failed");
-    } finally {
-      setIsSubmitting(false);
-    }
+    } catch (e) { toast.error("Booking failed"); } finally { setIsSubmitting(false); }
   };
 
   const handlePayNow = async () => {
      const key = settings.razorpayKey || 'rzp_live_SSIUQLBgFOF2M7';
      const rzpOptions = {
-       key,
-       amount: selectedService.price * 100,
-       currency: "INR",
-       name: "Patna Suvidha",
+       key, amount: selectedService.price * 100, currency: "INR", name: "Patna Suvidha",
        description: `Booking for ${selectedService.name}`,
        handler: async (res) => {
          const bId = await addBooking({
-           ...bookingDetails,
-           service: selectedService.name,
-           amount: selectedService.price,
-           paymentMethod: 'pay_now',
-           paymentId: res.razorpay_payment_id,
-           categoryId: categoryId,
-           category: meta.name || categoryId,
+           ...bookingDetails, service: selectedService.name, amount: selectedService.price,
+           paymentMethod: 'pay_now', paymentId: res.razorpay_payment_id, categoryId, category: meta.name || categoryId,
          });
          navigate(`/booking-success?biz=${encodeURIComponent(isHi ? (meta.nameHi || meta.name) : meta.name)}&service=${encodeURIComponent(selectedService.name)}&date=${encodeURIComponent(bookingDetails.date)}&time=${encodeURIComponent(bookingDetails.time)}&payment=pay_now&id=${bId}`);
        },
        prefill: { name: currentUser?.displayName, contact: currentUser?.phoneNumber },
        theme: { color: "#FF8C00" }
      };
-     const rzp = new window.Razorpay(rzpOptions);
-     rzp.open();
+     new window.Razorpay(rzpOptions).open();
   };
 
   const stats = meta.stats || { rating: '4.9', bookings: '1k+', experience: '5+ Years' };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--surface)', paddingBottom: '10rem' }}>
-      {/* Hero Section */}
-      <div style={{ position: 'relative', height: '320px', overflow: 'hidden' }}>
-        <img src={meta.hero} alt={meta.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--surface) 5%, transparent 60%, rgba(0,0,0,0.4) 100%)' }} />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ minHeight: '100vh', background: 'var(--surface)', paddingBottom: '12rem' }}>
+      
+      {/* ─── Immersive Cinema Header ─── */}
+      <div style={{ position: 'relative', height: '440px', overflow: 'hidden' }}>
+        <motion.img 
+          initial={{ scale: 1.15, filter: 'blur(10px)' }} animate={{ scale: 1, filter: 'blur(0px)' }} transition={{ duration: 1.2, ease: "easeOut" }}
+          src={meta.hero} alt={meta.name} 
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+        />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--surface) 0%, transparent 60%, rgba(0,0,0,0.4) 100%)' }} />
         
-        {/* Back Button */}
-        <button onClick={() => navigate(-1)} style={{ position: 'absolute', top: '1rem', left: '1rem', width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
-          <i className="ph-bold ph-arrow-left" style={{ fontSize: '1.25rem' }} />
-        </button>
+        {/* Navigation Actions */}
+        <div style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', right: '1.5rem', display: 'flex', justifyContent: 'space-between', zInteger: 20 }}>
+          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => navigate(-1)} style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+            <i className="ph-bold ph-arrow-left" style={{ fontSize: '1.25rem' }} />
+          </motion.button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+             <motion.button whileTap={{ scale: 0.9 }} style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><i className="ph-bold ph-share-network" /></motion.button>
+          </div>
+        </div>
 
-        {/* Floating Stat Badges */}
-        <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.25rem', right: '1.25rem' }}>
-          <h1 className="animate-fade-in-up" style={{ fontSize: '2rem', fontWeight: 900, color: '#fff', textShadow: '0 4px 12px rgba(0,0,0,0.3)', marginBottom: '1rem', lineHeight: 1.1, fontFamily: 'var(--font-display)' }}>
-             {isHi ? (meta.nameHi || meta.name) : (meta.name || meta.title)}
-          </h1>
+        {/* Hero Meta Content */}
+        <div style={{ position: 'absolute', bottom: '3rem', left: '1.5rem', right: '1.5rem' }}>
+           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--primary)', background: 'rgba(0,0,0,0.6)', padding: '0.5rem 1rem', borderRadius: '999px', backdropFilter: 'blur(8px)', border: '1px solid var(--primary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1rem', display: 'inline-block' }}>
+                 Verified Patna Expert
+              </span>
+              <h1 style={{ fontSize: '3rem', fontWeight: 950, color: '#fff', textShadow: '0 8px 24px rgba(0,0,0,0.5)', marginBottom: '1.25rem', lineHeight: 0.9, fontFamily: 'var(--font-display)', letterSpacing: '-0.04em' }}>
+                 {isHi ? (meta.nameHi || meta.name) : (meta.name || meta.title)}
+              </h1>
+           </motion.div>
+           
+           {/* Floating Liquid Stats */}
+           <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto' }} className="hide-scrollbar">
+              {[
+                { icon: 'ph-star', label: stats.rating, sub: 'Rating', color: '#FFD700' },
+                { icon: 'ph-users', label: stats.bookings, sub: 'Booked', color: 'var(--primary)' },
+                { icon: 'ph-medal', label: stats.experience, sub: 'Exp', color: 'var(--secondary)' }
+              ].map((s, i) => (
+                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 + i * 0.1 }} key={i} className="liquid-glass" style={{ padding: '0.875rem 1.25rem', borderRadius: '1.5rem', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.875rem', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.1)' }}>
+                   <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <i className={`ph-fill ${s.icon}`} style={{ color: s.color, fontSize: '1.125rem' }} />
+                   </div>
+                   <div>
+                      <p style={{ fontSize: '1rem', fontWeight: 950, color: '#fff', lineHeight: 1 }}>{s.label}</p>
+                      <p style={{ fontSize: '0.625rem', fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', marginTop: '2px' }}>{s.sub}</p>
+                   </div>
+                </motion.div>
+              ))}
+           </div>
+        </div>
+      </div>
+
+      {/* ─── Content Body ─── */}
+      <div style={{ position: 'relative', marginTop: '-3rem', background: 'var(--surface)', borderRadius: '3.5rem 3.5rem 0 0', padding: '3.5rem 1.5rem 5rem', boxShadow: '0 -20px 40px rgba(0,0,0,0.1)' }}>
+        
+        {/* Trust & Features Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '3rem' }}>
+          {[
+            { icon: 'ph-shield-check', label: '30-Day', sub: 'Warranty', color: 'var(--secondary)' },
+            { icon: 'ph-user-check', label: 'Verified', sub: 'Experts', color: 'var(--primary)' },
+            { icon: 'ph-clock-afternoon', label: 'Express', sub: 'Booking', color: '#06b6d4' }
+          ].map((f, i) => (
+            <motion.div key={i} whileHover={{ y: -5 }} className="clay-card" style={{ padding: '1rem 0.75rem', textAlign: 'center' }}>
+               <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: `${f.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem', border: `1px solid ${f.color}30` }}>
+                  <i className={`ph-fill ${f.icon}`} style={{ color: f.color, fontSize: '1.25rem' }} />
+               </div>
+               <p style={{ fontSize: '0.75rem', fontWeight: 900, lineHeight: 1.1, color: 'var(--on-surface)' }}>{f.label}<br/><span style={{ fontWeight: 600, fontSize: '0.625rem', opacity: 0.6 }}>{f.sub}</span></p>
+            </motion.div>
+          ))}
+        </div>
+
+        <section style={{ marginBottom: '4rem' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '1.5rem' }}>
+             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 950, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>Available Plans</h3>
+             <div style={{ flex: 1, height: '2px', background: 'var(--outline-variant)', opacity: 0.3 }} />
+          </div>
           
-          <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto' }} className="hide-scrollbar">
-             <div className="liquid-glass" style={{ padding: '0.625rem 0.875rem', borderRadius: '16px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <i className="ph-fill ph-star" style={{ color: '#FFD700' }} />
-                <span style={{ fontSize: '0.8125rem', fontWeight: 800 }}>{stats.rating} Rating</span>
-             </div>
-             <div className="liquid-glass" style={{ padding: '0.625rem 0.875rem', borderRadius: '16px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <i className="ph-fill ph-users" style={{ color: 'var(--primary)' }} />
-                <span style={{ fontSize: '0.8125rem', fontWeight: 800 }}>{stats.bookings} Booked</span>
-             </div>
-             <div className="liquid-glass" style={{ padding: '0.625rem 0.875rem', borderRadius: '16px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <i className="ph-fill ph-medal" style={{ color: '#16A34A' }} />
-                <span style={{ fontSize: '0.8125rem', fontWeight: 800 }}>{stats.experience}</span>
-             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container" style={{ position: 'relative', marginTop: '-1.5rem', background: 'var(--surface)', borderRadius: '24px 24px 0 0', padding: '2rem 1.25rem' }}>
-        
-        {/* Trust Badges */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '2rem' }}>
-          <div className="clay-card" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(22,163,74,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-               <i className="ph-fill ph-shield-check" style={{ color: '#16A34A' }} />
-            </div>
-            <span style={{ fontSize: '0.75rem', fontWeight: 800 }}>Service Warranty</span>
-          </div>
-          <div className="clay-card" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,140,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-               <i className="ph-fill ph-user-check" style={{ color: '#FF8C00' }} />
-            </div>
-            <span style={{ fontSize: '0.75rem', fontWeight: 800 }}>Verified Experts</span>
-          </div>
-        </div>
-
-        {/* Description */}
-        <p style={{ fontSize: '0.9375rem', color: 'var(--on-surface-variant)', lineHeight: 1.6, marginBottom: '2.5rem' }}>
-          {isHi ? (meta.descHi || meta.desc) : meta.desc}
-        </p>
-
-        {/* Services Selection */}
-        <section>
-          <SectionTitle title={isHi ? 'उपलब्ध सेवाएं' : 'Select Service'} subtitle="Fixed pricing, no hidden costs" />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-            {services.map((s, i) => (
-              <button key={i} onClick={() => setSelectedService(s)} 
-                className={selectedService?.name === s.name ? "animate-pulse-glow" : ""}
-                style={{ 
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', 
-                  borderRadius: '20px', background: selectedService?.name === s.name ? 'var(--primary-container)' : 'var(--surface-container-low)', 
-                  border: selectedService?.name === s.name ? '2px solid var(--primary)' : '1px solid var(--outline-variant)',
-                  transition: 'all 0.3s ease'
-                }}>
-                <div style={{ textAlign: 'left' }}>
-                  <p style={{ fontWeight: 800, fontSize: '1rem' }}>{s.name}</p>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--on-surface-variant)' }}>Professional Quality Guarantee</p>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontWeight: 900, fontSize: '1.125rem', color: 'var(--primary)' }}>₹{s.price}</p>
-                  <p style={{ fontSize: '0.625rem', letterSpacing: '0.05em', fontWeight: 800 }}>INCL. TAXES</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Features Section */}
-        {meta.features && meta.features.length > 0 && (
-          <section>
-            <SectionTitle title={isHi ? 'हमारी विशेषताएं' : 'Why Patna Suvidha?'} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-              {meta.features.map((f, i) => (
-                <div key={i} className="card-flat" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--surface-container-highest)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                    <i className={f.icon || 'ph-check-circle'} style={{ fontSize: '1.25rem' }} />
-                  </div>
-                  <p style={{ fontWeight: 700, fontSize: '0.875rem' }}>{f.title}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* How it Works / Process */}
-        <section>
-          <SectionTitle title={isHi ? 'कैसे काम करता है?' : 'How it works'} />
-          <div style={{ position: 'relative', paddingLeft: '1.5rem' }}>
-            <div style={{ position: 'absolute', left: '4px', top: '10px', bottom: '10px', width: '2px', background: 'var(--outline-variant)', borderStyle: 'dashed' }} />
-            {[
-              { t: 'Book Session', d: 'Choose your service and schedule time.' },
-              { t: 'Expert Arrives', d: 'Background verified pro arrives at doorstep.' },
-              { t: 'Service & Smile', d: 'Top quality work with service warranty.' }
-            ].map((step, i) => (
-              <div key={i} style={{ marginBottom: '1.5rem', position: 'relative' }}>
-                <div style={{ position: 'absolute', left: '-20px', top: '4px', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--primary)', border: '3px solid var(--surface)' }} />
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 800 }}>{step.t}</h4>
-                <p style={{ fontSize: '0.75rem', color: 'var(--on-surface-variant)' }}>{step.d}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Reviews (Feedback) Section */}
-        {meta.reviews && meta.reviews.length > 0 && (
-          <section>
-            <SectionTitle title={isHi ? 'ग्राहकों की राय' : 'Customer Feedback'} subtitle="Real stories from verified customers" />
-            <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem' }} className="hide-scrollbar">
-              {meta.reviews.map((r, i) => (
-                <div key={i} className="clay-card" style={{ flexShrink: 0, width: '260px', padding: '1.25rem', background: 'var(--surface-container-low)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.75rem', fontWeight: 900 }}>
-                      {r.user.charAt(0)}
-                    </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {services.map((s, i) => {
+              const isSelected = selectedService?.name === s.name;
+              return (
+                <motion.button 
+                  key={i} 
+                  initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + i * 0.1 }}
+                  whileTap={{ scale: 0.98 }} 
+                  onClick={() => setSelectedService(s)} 
+                  className={isSelected ? 'clay-card' : ''}
+                  style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.75rem', 
+                    borderRadius: '1.75rem', 
+                    background: isSelected ? 'var(--primary-container)' : 'var(--surface-container-low)', 
+                    border: isSelected ? '2px solid var(--primary)' : '1px solid var(--outline-variant)',
+                    cursor: 'pointer', textAlign: 'left', transition: 'all 0.3s'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: isSelected ? 'var(--primary)' : 'var(--outline-variant)' }} />
                     <div>
-                      <p style={{ fontSize: '0.8125rem', fontWeight: 800 }}>{r.user}</p>
-                      <div style={{ display: 'flex', color: '#FFD700', fontSize: '0.625rem' }}>
-                        {[...Array(5)].map((_, star) => <i key={star} className={star < r.rating ? "ph-fill ph-star" : "ph-star"} />)}
-                      </div>
+                       <p style={{ fontSize: '1.125rem', fontWeight: 900, color: isSelected ? 'var(--on-primary-container)' : 'var(--on-surface)' }}>{s.name}</p>
+                       <p style={{ fontSize: '0.75rem', fontWeight: 600, color: isSelected ? 'var(--primary)' : 'var(--on-surface-variant)' }}>Verified Suvidha Expert</p>
                     </div>
                   </div>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--on-surface-variant)', fontStyle: 'italic', lineHeight: 1.5 }}>"{r.text}"</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* FAQ Section */}
-        {meta.faqs && meta.faqs.length > 0 && (
-          <section>
-            <SectionTitle title={isHi ? 'अक्सर पूछे जाने वाले सवाल' : 'FAQs'} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {meta.faqs.map((f, i) => (
-                <div key={i} className="card-flat" style={{ overflow: 'hidden' }}>
-                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ width: '100%', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left' }}>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 700 }}>{f.q}</span>
-                    <i className={openFaq === i ? "ph-bold ph-minus" : "ph-bold ph-plus"} style={{ fontSize: '0.75rem', color: 'var(--primary)' }} />
-                  </button>
-                  {openFaq === i && (
-                    <div className="animate-fade-in" style={{ padding: '0 1rem 1rem 1rem', fontSize: '0.8125rem', color: 'var(--on-surface-variant)' }}>
-                       {f.a}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-      </div>
-
-      {/* Sticky Bottom Booking Bar */}
-      <div style={{ position: 'fixed', bottom: 0, width: '100%', maxWidth: '600px', left: '50%', transform: 'translateX(-50%)', padding: '1rem 1.25rem 2.5rem', background: 'var(--glass-bg)', backdropFilter: 'blur(20px)', borderTop: '1px solid var(--outline-variant)', zIndex: 100, borderRadius: '24px 24px 0 0', boxShadow: '0 -10px 40px rgba(0,0,0,0.08)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-          <div>
-            <p style={{ fontSize: '0.6875rem', fontWeight: 800, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Selected Plan</p>
-            <p style={{ fontSize: '0.9375rem', fontWeight: 900 }}>{selectedService ? selectedService.name : '--'}</p>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 950, color: isSelected ? 'var(--primary)' : 'var(--on-surface)' }}>₹{s.price}</p>
+                </motion.button>
+              );
+            })}
+            {services.length === 0 && (
+              <div style={{ padding: '3rem 1.5rem', textAlign: 'center', background: 'var(--surface-container-low)', borderRadius: '2rem', border: '1px dashed var(--outline-variant)' }}>
+                 <i className="ph-bold ph-warning-circle" style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '1rem', display: 'block' }} />
+                 <p style={{ fontWeight: 800, color: 'var(--on-surface)' }}>{isHi ? 'कोई सेवा विकल्प उपलब्ध नहीं है' : 'No service options available'}</p>
+                 <p style={{ fontSize: '0.875rem', color: 'var(--on-surface-variant)', marginTop: '0.5rem' }}>{isHi ? 'कृपया बाद में पुनः प्रयास करें या एडमिन से संपर्क करें।' : 'Please check back later or contact support.'}</p>
+              </div>
+            )}
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--primary)' }}>₹{selectedService ? selectedService.price : '0'}</p>
           </div>
+        </section>
+
+        {/* Why Choose Us Redesign */}
+        <section style={{ marginBottom: '4rem' }}>
+           <div className="clay-card" style={{ padding: '2rem', background: 'var(--surface-container-highest)', border: 'none' }}>
+              <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '1.125rem', fontWeight: 950, marginBottom: '1.5rem' }}>Why Patna Suvidha?</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                 {[
+                   "Zero hidden charges or prepayments",
+                   "Verified professionals with 5+ yrs exp",
+                   "Immediate 24-hr re-fix guarantee",
+                   "Localized Patna support team"
+                 ].map((text, i) => (
+                   <div key={i} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                      <i className="ph-fill ph-check-circle" style={{ color: 'var(--secondary)', fontSize: '1.25rem' }} />
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--on-surface-variant)' }}>{text}</span>
+                   </div>
+                 ))}
+              </div>
+           </div>
+        </section>
+
+        {/* Floating Checkout Bar */}
+        <div style={{ 
+          position: 'fixed', bottom: '2rem', left: '1.5rem', right: '1.5rem', zIndex: 100,
+          background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(32px)',
+          padding: '1.25rem', borderRadius: '2.5rem', border: '1px solid rgba(255,255,255,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.15)'
+        }}>
+           <div style={{ marginLeft: '1rem' }}>
+              <p style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                 {selectedService ? selectedService.name : 'Select a pack'}
+              </p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 950, color: 'var(--on-surface)', lineHeight: 1 }}>
+                 ₹{selectedService ? selectedService.price : '0'}
+              </p>
+           </div>
+           <motion.button 
+             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+             onClick={handleProceed} 
+             disabled={!canBook || !selectedService} 
+             className="btn-primary animate-pulse-glow" 
+             style={{ padding: '1.125rem 2.5rem', borderRadius: '1.75rem', fontSize: '1rem', border: 'none' }}
+           >
+              {!canBook ? (isHi ? 'बंद है' : 'Paused') : (isHi ? 'बुक करें' : 'Book Now')}
+           </motion.button>
         </div>
-        <button onClick={handleProceed} disabled={!canBook || !selectedService} className="btn-primary animate-pulse-glow" style={{ width: '100%', padding: '1.125rem', fontSize: '1rem' }}>
-           {!canBook ? (isHi ? 'अस्थायी रूप से बंद' : 'Service Paused') : (isHi ? 'बुक करें' : 'Book Professional Now')}
-        </button>
+
+      {/* Modals Stays Functional */}
+      <AnimatePresence>
+        {step === 'step1' && (
+          <BookingStep1 
+            meta={meta} category={categoryId} isHi={isHi} 
+            onClose={() => setStep('landing')} 
+            onProceedToPayment={(d) => { setBookingDetails(d); setStep('step2'); }} 
+          />
+        )}
+        {step === 'step2' && (
+          <BookingStep2 
+            meta={meta} selectedService={selectedService} bookingDetails={bookingDetails} isHi={isHi} 
+            onBack={() => setStep('step1')} onPayLater={handlePayLater} onPayNow={handlePayNow} isSubmitting={isSubmitting} 
+          />
+        )}
+      </AnimatePresence>
       </div>
 
-      {/* Modals */}
-      {step === 'step1' && (
-        <BookingStep1 
-          meta={meta} category={categoryId} isHi={isHi} 
-          onClose={() => setStep('landing')} 
-          onProceedToPayment={(d) => { setBookingDetails(d); setStep('step2'); }} 
-        />
-      )}
-      {step === 'step2' && (
-        <BookingStep2 
-          meta={meta} selectedService={selectedService} bookingDetails={bookingDetails} isHi={isHi} 
-          onBack={() => setStep('step1')} onPayLater={handlePayLater} onPayNow={handlePayNow} isSubmitting={isSubmitting} 
-        />
-      )}
-    </div>
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes pulse-glow {
+          0% { box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.4); }
+          70% { box-shadow: 0 0 0 15px rgba(255, 140, 0, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(255, 140, 0, 0); }
+        }
+        .animate-pulse-glow {
+          animation: pulse-glow 2s infinite;
+        }
+      `}</style>
+    </motion.div>
   );
 }

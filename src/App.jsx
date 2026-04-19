@@ -7,6 +7,7 @@ import GreetingPopup from './components/GreetingPopup';
 import MarqueeBanner from './components/MarqueeBanner';
 import { Toaster } from 'react-hot-toast';
 import { usePushNotifications } from './hooks/usePushNotifications';
+import { usePageTitle } from './hooks/usePageTitle';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import BookService from './pages/BookService';
@@ -19,6 +20,7 @@ import Bookings from './pages/Bookings';
 import Updates from './pages/Updates';
 import AiAssistant from './components/AiAssistant';
 import InstallPrompt from './components/InstallPrompt';
+import NotificationBridge from './components/NotificationBridge';
 import Onboarding from './pages/Onboarding';
 import { useAppContext } from './context/AppContext';
 
@@ -36,7 +38,8 @@ function AppLayout() {
   const isAdmin = location.pathname.startsWith('/admin');
   const isOnboarding = location.pathname === '/onboarding';
   const { userData, currentUser, loading } = useAppContext();
-  const { requestPermission } = usePushNotifications();
+  const { listenForMessages } = usePushNotifications();
+  usePageTitle();
 
   // Onboarding Gate: If user is logged in but profile is incomplete, force onboarding
   useEffect(() => {
@@ -45,12 +48,10 @@ function AppLayout() {
     }
   }, [currentUser, userData, loading, isOnboarding]);
 
-  // Listen for push permissions on mount
+  // Start listening for notifications on mount
   useEffect(() => {
-    if (!isAdmin && !isOnboarding) {
-      requestPermission().catch(console.error);
-    }
-  }, [isAdmin, isOnboarding]);
+    listenForMessages();
+  }, [listenForMessages]);
 
   const isServiceLanding = location.pathname.startsWith('/service/');
 
@@ -92,6 +93,7 @@ function AppLayout() {
         </Suspense>
         {!isAdmin && !isOnboarding && <AiAssistant />}
         {!isAdmin && !isOnboarding && <InstallPrompt />}
+        {!isAdmin && !isOnboarding && <NotificationBridge />}
         {!isAdmin && !isOnboarding && !isServiceLanding && <BottomNav />}
       </div>
     </>

@@ -1,17 +1,3 @@
-/**
- * useSmartSlots — Real-time Firestore-backed slot availability with Provider Logic
- * 
- * Logic:
- * 1. Fetches all ACTIVE providers for the category (Real-time).
- * 2. Fetches all booked slots for the date (Real-time).
- * 3. A slot is UNAVAILABLE if:
- *    - It's in the past.
- *    - Total active providers in category <= Total bookings in that slot.
- * 4. User History:
- *    - Finds the user's last booked provider for this category.
- *    - Checks if THAT specific provider is free in a slot.
- */
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { collection, query, where, onSnapshot, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -27,7 +13,7 @@ function getPastSlots(dateStr) {
   if (dateStr !== todayStr) return new Set();
 
   const now = new Date();
-  const bufferMs = 30 * 60 * 1000; // 30 mins buffer
+  const bufferMs = 90 * 60 * 1000; // 90 mins buffer for readiness
 
   const pastSlots = new Set();
   for (const slotLabel of ALL_TIME_SLOTS) {
@@ -47,12 +33,12 @@ function getPastSlots(dateStr) {
 }
 
 export function useSmartSlots(categoryId, selectedDateStr, currentUser) {
-  const [bookedSlots, setBookedSlots] = useState({}); // Map: slotLabel -> providerIds[]
+  const [bookedSlots, setBookedSlots] = useState({});
   const [activeProviders, setActiveProviders] = useState([]);
   const [userHistory, setUserHistory] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. Fetch ACTIVE providers for this category (Real-time)
+  // 1. Fetch ACTIVE providers (Real-time)
   useEffect(() => {
     if (!categoryId || !db) return;
     
@@ -63,16 +49,15 @@ export function useSmartSlots(categoryId, selectedDateStr, currentUser) {
     );
 
     const unsub = onSnapshot(q, (snap) => {
-      const provs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      setActiveProviders(provs);
+      setActiveProviders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }, (err) => {
-      console.error('useSmartSlots: Providers Listener Error:', err);
+      console.error('Provider fetch error:', err);
     });
 
     return () => unsub();
   }, [categoryId]);
 
-  // 2. Fetch all bookings for category + date (Real-time)
+  // 2. Fetch bookings for date (Real-time)
   useEffect(() => {
     if (!categoryId || !selectedDateStr || !db) return;
     setIsLoading(true);
@@ -85,29 +70,27 @@ export function useSmartSlots(categoryId, selectedDateStr, currentUser) {
     );
 
     const unsub = onSnapshot(q, (snap) => {
-      const slotMap = {}; // label -> [providerId]
+      const slotMap = {};
       snap.forEach(doc => {
         const data = doc.data();
         if (data.time) {
           if (!slotMap[data.time]) slotMap[data.time] = [];
-          if (data.providerId) slotMap[data.time].push(data.providerId);
-          else slotMap[data.time].push('unassigned');
+          slotMap[data.time].push(data.providerId || 'unassigned');
         }
       });
       setBookedSlots(slotMap);
       setIsLoading(false);
     }, (err) => {
-      console.error('useSmartSlots: Bookings Listener Error:', err);
+      console.error('Bookings fetch error:', err);
       setIsLoading(false);
     });
 
     return () => unsub();
   }, [categoryId, selectedDateStr]);
 
-  // 3. Fetch user's history for this category (One-time check is fine here)
+  // 3. User History
   useEffect(() => {
     if (!currentUser || !categoryId || !db) return;
-
     const fetchHistory = async () => {
       try {
         const q = query(
@@ -118,44 +101,34 @@ export function useSmartSlots(categoryId, selectedDateStr, currentUser) {
           limit(1)
         );
         const snap = await getDocs(q);
-        if (!snap.empty) {
-          setUserHistory({ id: snap.docs[0].id, ...snap.docs[0].data() });
-        } else {
-          setUserHistory(null);
-        }
-      } catch (e) {
-        setUserHistory(null);
-      }
+        if (!snap.empty) setUserHistory({ id: snap.docs[0].id, ...snap.docs[0].data() });
+      } catch (e) {}
     };
-
     fetchHistory();
   }, [currentUser, categoryId]);
 
   const pastSlots = useMemo(() => getPastSlots(selectedDateStr), [selectedDateStr]);
 
-  // 4. Capacity and Preference Logic
   const slotStats = useMemo(() => {
     const stats = {};
-    const totalCapacity = activeProviders.length || 1; // Fallback to 1
+    const totalCapacity = Math.max(activeProviders.length, 1);
 
     ALL_TIME_SLOTS.forEach(slot => {
       const bookings = bookedSlots[slot] || [];
       const bookedCount = bookings.length;
       const isPast = pastSlots.has(slot);
-      
       const isFull = bookedCount >= totalCapacity;
-      const isUnavailable = isPast || isFull;
-
+      
       const prevProviderId = userHistory?.providerId;
       const isPrevProviderFree = prevProviderId && !bookings.includes(prevProviderId);
 
       stats[slot] = {
-        isUnavailable,
+        isUnavailable: isPast || isFull,
         isFull,
         isPast,
         bookedCount,
         capacity: totalCapacity,
-        isPreferred: isPrevProviderFree && !isUnavailable
+        isPreferred: isPrevProviderFree && !(isPast || isFull)
       };
     });
     return stats;
@@ -167,18 +140,13 @@ export function useSmartSlots(categoryId, selectedDateStr, currentUser) {
     return ALL_TIME_SLOTS.find(s => !slotStats[s].isUnavailable) || null;
   }, [slotStats]);
 
-  const isSlotUnavailable = useCallback((slot) => slotStats[slot]?.isUnavailable, [slotStats]);
-  const isSlotBooked = useCallback((slot) => slotStats[slot]?.bookedCount > 0, [slotStats]);
-  const isSlotPast = useCallback((slot) => slotStats[slot]?.isPast, [slotStats]);
-  const isSlotPreferred = useCallback((slot) => slotStats[slot]?.isPreferred, [slotStats]);
-
   return {
-    isSlotUnavailable,
-    isSlotBooked,
-    isSlotPast,
-    isSlotPreferred,
+    isSlotUnavailable: (slot) => slotStats[slot]?.isUnavailable,
+    isSlotBooked: (slot) => slotStats[slot]?.bookedCount > 0,
+    isSlotPast: (slot) => slotStats[slot]?.isPast,
+    isSlotPreferred: (slot) => slotStats[slot]?.isPreferred,
+    slotStats,
     suggestedSlot,
-    userHistory,
     isLoading,
     activeProvidersCount: activeProviders.length,
     totalSlotsAvailable: ALL_TIME_SLOTS.filter(s => !slotStats[s].isUnavailable).length,

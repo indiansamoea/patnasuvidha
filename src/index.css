@@ -4,128 +4,107 @@
 
 /* --- CSS Custom Properties (Design Tokens) --- */
 :root, .light-theme {
-  /* High-Contrast Tricolor Saffron */
-  --primary: #FF8C00;
-  --primary-container: #FFF5E6;
-  --primary-dim: #E67E00;
+  /* HSL Palette for better modulation */
+  --p-h: 33; --p-s: 100%; --p-l: 50%; /* Primary Saffron */
+  --s-h: 142; --s-s: 76%; --s-l: 36%; /* Secondary Green */
+  
+  --primary: hsl(var(--p-h), var(--p-s), var(--p-l));
+  --primary-container: hsl(var(--p-h), var(--p-s), 96%);
+  --primary-dim: hsl(var(--p-h), var(--p-s), 40%);
   --on-primary: #ffffff;
-  --on-primary-container: #4D2600;
+  --on-primary-container: hsl(var(--p-h), var(--p-s), 15%);
 
-  /* High-Contrast Tricolor Green */
-  --secondary: #16A34A;
-  --secondary-container: #DCFCE7;
+  --secondary: hsl(var(--s-h), var(--s-s), var(--s-l));
+  --secondary-container: hsl(var(--s-h), var(--s-s), 94%);
   --on-secondary: #ffffff;
 
-  /* High-Contrast Tertiary (Navy) */
-  --tertiary: #000080;
-  --tertiary-container: #E0E0FF;
+  --tertiary: hsl(240, 100%, 25%);
+  --tertiary-container: hsl(240, 100%, 94%);
   --on-tertiary: #ffffff;
 
-  /* Surfaces (Clean Light Mode) */
-  --surface: #F8FAFC;
-  --surface-dim: #F1F5F9;
+  /* Surfaces */
+  --surface: hsl(210, 40%, 98%);
+  --surface-dim: hsl(210, 40%, 94%);
   --surface-bright: #ffffff;
   --surface-container-lowest: #ffffff;
-  --surface-container-low: #F8FAFC;
+  --surface-container-low: hsl(210, 40%, 98%);
   --surface-container: #ffffff;
-  --surface-container-high: #F1F5F9;
-  --surface-container-highest: #E2E8F0;
-  --surface-variant: #64748B;
+  --surface-container-high: hsl(210, 40%, 94%);
+  --surface-container-highest: hsl(210, 40%, 88%);
+  --surface-variant: hsl(215, 16%, 47%);
 
-  /* On-surface Text (Enhanced Contrast) */
-  --on-surface: #0F172A;
-  --on-surface-variant: #475569;
+  --on-surface: hsl(222, 47%, 11%);
+  --on-surface-variant: hsl(215, 25%, 27%);
 
-  /* Outlines */
-  --outline: #CBD5E1;
-  --outline-variant: #E2E8F0;
+  --outline: hsl(214, 32%, 85%);
+  --outline-variant: hsl(214, 32%, 91%);
 
-  /* Error */
-  --error: #DC2626;
+  --error: hsl(0, 72%, 51%);
   --on-error: #ffffff;
 
-  /* Gradients (Vibrant) */
-  --gradient-primary: linear-gradient(135deg, #FF8C00, #E67E00);
-  --gradient-amber: linear-gradient(135deg, #FF8C00, #16A34A);
-  --gradient-subtle: linear-gradient(135deg, rgba(255,140,0,0.08), rgba(22,163,74,0.08));
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(33, 100%, 55%), hsl(25, 100%, 45%));
+  --gradient-secondary: linear-gradient(135deg, hsl(142, 76%, 45%), hsl(142, 76%, 35%));
+  --gradient-mesh: radial-gradient(at 0% 0%, hsla(33,100%,50%,0.15) 0, transparent 50%), 
+                   radial-gradient(at 50% 0%, hsla(0,0%,100%,1) 0, transparent 50%), 
+                   radial-gradient(at 100% 0%, hsla(142,76%,40%,0.15) 0, transparent 50%);
+  --gradient-subtle: linear-gradient(135deg, hsla(33,100%,50%,0.05), hsla(142,76%,40%,0.05));
 
-  /* Glassmorphism (More Opaque for Visibility) */
-  --glass-bg: rgba(255, 255, 255, 0.95);
-  --glass-border: rgba(0, 0, 0, 0.05);
+  /* Elevation & Effects */
+  --shadow-sm: 0 4px 12px hsla(222, 47%, 11%, 0.03);
+  --shadow-md: 0 12px 32px hsla(222, 47%, 11%, 0.06);
+  --shadow-lg: 0 24px 64px hsla(222, 47%, 11%, 0.08);
+  --shadow-glow: 0 0 40px hsla(33, 100%, 50%, 0.15);
+
+  --glass-bg: hsla(0, 0%, 100%, 0.85);
+  --glass-border: hsla(0, 0%, 0%, 0.05);
   --glass-blur: 24px;
 
-  /* Shadows */
-  --shadow-sm: 0 4px 12px rgba(15,23,42,0.03);
-  --shadow-md: 0 12px 32px rgba(15,23,42,0.06);
-  --shadow-lg: 0 24px 64px rgba(15,23,42,0.08);
-  --shadow-glow: 0 0 40px rgba(255,140,0,0.2);
-
-  /* ... (Typography, Spacing, Radii remain same) ... */
-  --font-display: 'Plus Jakarta Sans', sans-serif;
-  --font-body: 'Manrope', sans-serif;
-  --space-xs: 0.25rem; --space-sm: 0.5rem; --space-md: 1rem; --space-lg: 1.5rem; --space-xl: 2rem; --space-2xl: 3rem; --space-3xl: 4rem;
-  --radius-sm: 0.5rem; --radius-md: 1rem; --radius-lg: 1.5rem; --radius-xl: 2rem; --radius-2xl: 2.5rem; --radius-full: 9999px;
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1); --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Clay & Liquid Effects */
+  /* Clay & Liquid */
   --clay-bg: #ffffff;
-  --clay-shadow-out-1: rgba(148,163,184,0.4);
+  --clay-shadow-out-1: hsla(215, 25%, 85%, 0.5);
   --clay-shadow-out-2: #ffffff;
   --clay-shadow-in-1: #ffffff;
-  --clay-shadow-in-2: rgba(148,163,184,0.2);
-  
-  --liquid-glass-bg: rgba(255, 255, 255, 0.6);
-  --liquid-border: rgba(255, 140, 0, 0.15);
+  --clay-shadow-in-2: hsla(215, 25%, 85%, 0.3);
+
+  --liquid-glass-bg: hsla(0, 0%, 100%, 0.4);
+  --liquid-border: hsla(33, 100%, 50%, 0.1);
 }
 
 .dark-theme {
-  --primary: #FF9933;
-  --primary-container: #331A00;
-  --primary-dim: #E67E00;
-  --on-primary: #ffffff;
-  --on-primary-container: #FFDAB3;
+  --surface: hsl(222, 47%, 4%);
+  --surface-dim: hsl(222, 47%, 2%);
+  --surface-bright: hsl(222, 47%, 12%);
+  --surface-container-lowest: hsl(222, 47%, 0%);
+  --surface-container-low: hsl(222, 47%, 4%);
+  --surface-container: hsl(222, 47%, 8%);
+  --surface-container-high: hsl(222, 47%, 12%);
+  --surface-container-highest: hsl(222, 47%, 16%);
+  --surface-variant: hsl(215, 25%, 27%);
 
-  --secondary: #22C55E;
-  --secondary-container: #064E3B;
-  --on-secondary: #ffffff;
+  --on-surface: hsl(210, 40%, 98%);
+  --on-surface-variant: hsl(215, 20%, 65%);
 
-  --tertiary: #6366F1;
-  --tertiary-container: #1E1B4B;
-  --on-tertiary: #ffffff;
+  --outline: hsl(215, 25%, 27%);
+  --outline-variant: hsl(215, 25%, 20%);
 
-  --surface: #0a0e13;
-  --surface-dim: #05070a;
-  --surface-bright: #1E293B;
-  --surface-container-lowest: #000000;
-  --surface-container-low: #0F172A;
-  --surface-container: #1E293B;
-  --surface-container-high: #334155;
-  --surface-container-highest: #475569;
-  --surface-variant: #334155;
+  --glass-bg: hsla(222, 47%, 4%, 0.85);
+  --glass-border: hsla(0, 0%, 100%, 0.08);
 
-  --on-surface: #F8FAFC;
-  --on-surface-variant: #94A3B8;
+  --shadow-sm: 0 4px 16px hsla(0, 0%, 0%, 0.6);
+  --shadow-md: 0 12px 32px hsla(0, 0%, 0%, 0.8);
+  --shadow-lg: 0 24px 64px hsla(0, 0%, 0%, 0.9);
 
-  --outline: #475569;
-  --outline-variant: #334155;
+  --clay-bg: hsl(222, 47%, 10%);
+  --clay-shadow-out-1: hsla(222, 47%, 0%, 0.8);
+  --clay-shadow-out-2: hsla(222, 47%, 15%, 0.5);
+  --clay-shadow-in-1: hsla(0, 0%, 100%, 0.05);
+  --clay-shadow-in-2: hsla(0, 0%, 0%, 0.8);
 
-  --glass-bg: rgba(15, 23, 42, 0.9);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  
-  --shadow-sm: 0 4px 16px rgba(0,0,0,0.5);
-  --shadow-md: 0 12px 32px rgba(0,0,0,0.7);
-  --shadow-lg: 0 24px 64px rgba(0,0,0,0.9);
-  --shadow-glow: 0 0 40px rgba(255,140,0,0.15);
-
-  --clay-bg: #1E293B;
-  --clay-shadow-out-1: #020617;
-  --clay-shadow-out-2: #334155;
-  --clay-shadow-in-1: rgba(255, 255, 255, 0.05);
-  --clay-shadow-in-2: rgba(0, 0, 0, 0.8);
-
-  --liquid-glass-bg: rgba(15, 23, 42, 0.5);
-  --liquid-border: rgba(255, 255, 255, 0.15);
+  --liquid-glass-bg: hsla(222, 47%, 8%, 0.4);
+  --liquid-border: hsla(0, 0%, 100%, 0.1);
 }
+
 
 /* --- Base Reset --- */
 *, *::before, *::after {

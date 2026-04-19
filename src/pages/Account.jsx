@@ -589,6 +589,34 @@ export default function Account() {
               <i className="ph-bold ph-arrow-up-right" style={{ color: 'var(--on-surface-variant)', fontSize: '1rem', flexShrink: 0, opacity: 0.6 }}></i>
             </a>
           ))}
+
+          {/* Bespoke Partner Hub CTA */}
+          <div className="clay-card liquid-glass" style={{ 
+            marginTop: '1.5rem', padding: '1.5rem', 
+            background: 'var(--gradient-primary-soft)', 
+            border: '1px solid hsla(var(--p-h), 100%, 50%, 0.1)',
+            position: 'relative', overflow: 'hidden' 
+          }}>
+             <div className="glass-reflection" style={{ opacity: 0.2 }} />
+             <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
+                   <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                      <i className="ph-fill ph-handshake" style={{ fontSize: '1.5rem' }} />
+                   </div>
+                   <div>
+                      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 950, color: '#fff' }}>Partner with Us</h3>
+                      <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>Join Patna's most elite directory.</p>
+                   </div>
+                </div>
+                <motion.button 
+                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                   onClick={() => window.open('https://wa.me/917764812598?text=Hello! I want to list my business on Patna Suvidha.', '_blank')}
+                   style={{ width: '100%', padding: '0.875rem', borderRadius: '1rem', background: '#fff', color: 'var(--primary)', border: 'none', fontWeight: 950, fontSize: '0.8125rem', cursor: 'pointer', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
+                >
+                   LIST YOUR BUSINESS
+                </motion.button>
+             </div>
+          </div>
         </section>
 
         {/* Contact */}

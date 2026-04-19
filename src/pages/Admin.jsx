@@ -571,186 +571,11 @@ export default function Admin() {
   const [seeding, setSeeding] = useState(false);
 
   // Seeding Data
-  const SEED_DATA = {
-    plumber: {
-      hero: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=1200&q=80',
-      title: 'Professional Plumbing Services', titleHi: 'प्रोफेशनल प्लंबिंग सेवा',
-      desc: 'Leaky taps, pipe bursts, bathroom renovation, RO installation — our verified plumbers handle it all, fast and affordably right at your doorstep in Patna.',
-      descHi: 'हमारे सत्यापित प्लंबर पटना में आपके दरवाजे पर तेजी और किफायती तरीके से काम करते हैं।',
-      icon: 'ph-wrench',
-      stats: { rating: '4.8', bookings: '2k+', experience: '8+ Years' },
-      services: [
-        { name: 'Tap Repair', price: 149 }, { name: 'Pipe Fitting', price: 249 }, { name: 'Toilet Repair', price: 199 },
-        { name: 'Water Tank Cleaning', price: 499 }, { name: 'RO Service', price: 349 }, { name: 'Water Heater Repair', price: 299 },
-      ],
-      features: [
-        { icon: 'ph-shield-check', title: '30-Day Service Warranty' },
-        { icon: 'ph-user-check', title: 'Background Verified Experts' },
-        { icon: 'ph-clock', title: '60 Min Express Arrival' },
-      ],
-      faqs: [
-        { q: 'Is there any visiting charge?', a: 'We charge a minimal ₹99 as visiting fees which is adjusted in your final bill.' },
-        { q: 'What if the issue recurs?', a: 'All our plumbing services come with a 30-day rework warranty.' }
-      ],
-      reviews: [
-        { user: 'Amit Kumar', rating: 5, text: 'Very professional. Fixed the leaky tap in 10 minutes!' },
-        { user: 'Priya Singh', rating: 4, text: 'Good service, but arrived 15 mins late. The work was perfect though.' }
-      ]
-    },
-    electrician: {
-      hero: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=1200&q=80',
-      title: 'Certified Electrical Services', titleHi: 'प्रमाणित इलेक्ट्रिकल सेवा',
-      desc: 'Fan installation, full-house wiring, MCB repair, inverter setup — our certified electricians solve every electrical issue safely and on time.',
-      descHi: 'हमारे प्रमाणित इलेक्ट्रीशियन हर बिजली की समस्या सुरक्षित और समय पर हल करते हैं।',
-      icon: 'ph-lightning',
-      stats: { rating: '4.9', bookings: '5k+', experience: '12+ Years' },
-      services: [
-        { name: 'Fan Installation', price: 199 }, { name: 'House Wiring', price: 999 }, { name: 'Switch Repair', price: 99 },
-        { name: 'MCB/Fuse Repair', price: 149 }, { name: 'Inverter Setup', price: 399 },
-      ],
-      features: [
-        { icon: 'ph-lightning', title: 'Safe & Certified Equipment' },
-        { icon: 'ph-certificate', title: 'Govt. Licensed Electricians' },
-        { icon: 'ph-check-circle', title: 'Genuine Spare Parts Only' }
-      ],
-      faqs: [
-        { q: 'Do you provide parts?', a: 'Yes, we provide genuine parts at market rates with a proper bill.' }
-      ],
-      reviews: [
-        { user: 'Sanjay Verma', rating: 5, text: 'Best electrician in Patna. Very knowledgeable.' }
-      ]
-    },
-    'ac-repair': {
-      hero: 'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=1200&q=80',
-      title: 'Expert AC Repair & Service', titleHi: 'एक्सपर्ट एसी रिपेयर और सर्विस',
-      desc: 'Gas refill, deep cleaning, installation, and all-brand AC repair. Same-day service available across Patna.',
-      descHi: 'गैस रिफिल, डीप क्लीनिंग, इंस्टालेशन और सभी ब्रांड एसी मरम्मत।',
-      icon: 'ph-snowflake',
-      services: [
-        { name: 'AC Gas Refill', price: 799 }, { name: 'AC Deep Clean', price: 599 }, { name: 'AC Installation', price: 999 },
-        { name: 'AC Repair', price: 449 }, { name: 'AMC Plan', price: 1499 },
-      ],
-    },
-    salon: {
-      hero: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80',
-      title: 'Premium Salon & Spa Services', titleHi: 'प्रीमियम सैलून और स्पा सेवा',
-      desc: 'Haircuts, colour, facials, bridal makeup, and more. Experienced stylists, hygienic environment — book your slot today.',
-      descHi: 'हेयरकट, कलर, फेशियल, ब्राइडल मेकअप और अधिक।',
-      icon: 'ph-scissors',
-      services: [
-        { name: 'Haircut (Men)', price: 149 }, { name: 'Haircut (Women)', price: 249 }, { name: 'Hair Colour', price: 799 },
-        { name: 'Facial', price: 499 }, { name: 'Bridal Makeup', price: 2999 }, { name: 'Waxing', price: 199 },
-      ],
-    },
-    cleaning: {
-      hero: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=80',
-      title: 'Professional Home Cleaning', titleHi: 'प्रोफेशनल होम क्लीनिंग',
-      desc: 'Deep cleaning, sofa wash, bathroom sanitization, and post-construction cleanup. Eco-safe products used.',
-      descHi: 'डीप क्लीनिंग, सोफा वॉश, बाथरूम सैनिटाइज़ेशन।',
-      icon: 'ph-broom',
-      services: [
-        { name: 'Full Home Deep Clean', price: 1499 }, { name: 'Sofa Cleaning', price: 699 }, { name: 'Bathroom Deep Clean', price: 349 },
-        { name: 'Kitchen Deep Clean', price: 449 }, { name: 'Post-Construction Cleanup', price: 1999 },
-      ],
-    },
-    doctor: {
-      hero: 'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&w=1200&q=80',
-      title: 'Trusted Doctor Consultations', titleHi: 'विश्वसनीय डॉक्टर परामर्श',
-      desc: 'Book verified doctors for general consultations, health checkups, dental care, and eye care in Patna.',
-      descHi: 'पटना में सत्यापित डॉक्टरों से परामर्श।',
-      icon: 'ph-first-aid-kit',
-      services: [
-        { name: 'General Consultation', price: 299 }, { name: 'Health Checkup', price: 799 }, { name: 'Follow-up Visit', price: 149 },
-        { name: 'Dental Checkup', price: 399 }, { name: 'Eye Checkup', price: 349 },
-      ],
-    },
-    carpenter: {
-      hero: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=1200&q=80',
-      title: 'Expert Carpentry Services', titleHi: 'एक्सपर्ट बढ़ईगिरी सेवा',
-      desc: 'Custom furniture, modular kitchens, wardrobe design, door and window repair. Skilled carpenters, on demand.',
-      descHi: 'कस्टम फर्नीचर, मॉड्यूलर किचन, वार्डरोब डिज़ाइन।',
-      icon: 'ph-hammer',
-      services: [
-        { name: 'Door Repair', price: 249 }, { name: 'Modular Kitchen', price: 4999 }, { name: 'Wardrobe Design', price: 2999 },
-        { name: 'Bed Repair', price: 499 }, { name: 'Furniture Polish', price: 699 },
-      ],
-    },
-    catering: {
-      hero: 'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&q=80',
-      title: 'Catering for Every Occasion', titleHi: 'हर अवसर के लिए कैटरिंग',
-      desc: 'Authentic Bihari cuisine for weddings, parties, and corporate events.',
-      descHi: 'शादियों, पार्टियों और कॉर्पोरेट इवेंट के लिए असली बिहारी व्यंजन।',
-      icon: 'ph-cooking-pot',
-      services: [
-        { name: 'Veg Thali', price: 149 }, { name: 'Non-Veg Thali', price: 199 }, { name: 'Wedding Package', price: 9999 },
-        { name: 'Birthday Party Setup', price: 2999 }, { name: 'Corporate Lunch', price: 1499 },
-      ],
-    },
-    photography: {
-      hero: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?auto=format&fit=crop&w=1200&q=80',
-      title: 'Professional Photography', titleHi: 'प्रोफेशनल फोटोग्राफी',
-      desc: 'Wedding photography, pre-wedding shoots, product photography by top Patna studios.',
-      descHi: 'वेडिंग फोटोग्राफी, प्री-वेडिंग शूट।',
-      icon: 'ph-camera',
-      services: [
-        { name: 'Wedding Photography', price: 14999 }, { name: 'Pre-Wedding Shoot', price: 4999 }, { name: 'Portrait Session', price: 999 },
-        { name: 'Passport Photo', price: 99 }, { name: 'Event Coverage', price: 2999 },
-      ],
-    },
-    'packers-movers': {
-      hero: 'https://images.unsplash.com/photo-1600518464441-9154a4dea21b?auto=format&fit=crop&w=1200&q=80',
-      title: 'Packers & Movers Patna', titleHi: 'पैकर्स और मूवर्स पटना',
-      desc: 'Local and intercity shifting, household goods, office relocation, and vehicle transport — all insured.',
-      descHi: 'लोकल और इंटरसिटी शिफ्टिंग — सभी बीमित।',
-      icon: 'ph-truck',
-      services: [
-        { name: 'Local Shifting (1BHK)', price: 1999 }, { name: 'Local Shifting (2BHK)', price: 2999 }, { name: 'Office Shifting', price: 4999 },
-        { name: 'Intercity Moving', price: 7999 }, { name: 'Vehicle Transport', price: 3999 },
-      ],
-    },
-    laundry: {
-      hero: 'https://images.unsplash.com/photo-1545173168-9f1947eebb7f?auto=format&fit=crop&w=1200&q=80',
-      title: 'Laundry & Dry Cleaning', titleHi: 'लॉन्ड्री और ड्राई क्लीनिंग',
-      desc: 'Wash & fold, dry cleaning, ironing, and stain removal. Free pickup & delivery in Patna.',
-      descHi: 'वॉश एंड फोल्ड, ड्राई क्लीनिंग। पटना में मुफ्त पिकअप।',
-      icon: 'ph-t-shirt',
-      services: [
-        { name: 'Wash & Iron', price: 49 }, { name: 'Dry Clean', price: 149 }, { name: 'Bulk Wash', price: 299 },
-        { name: 'Iron Only', price: 29 }, { name: 'Stain Removal', price: 99 },
-      ],
-    },
-    'gym-fitness': {
-      hero: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80',
-      title: 'Gym & Fitness Centers', titleHi: 'जिम और फिटनेस सेंटर',
-      desc: 'Modern gyms, yoga classes, Zumba, and personal trainers in Patna. Flexible memberships available.',
-      descHi: 'आधुनिक जिम, योगा क्लास, ज़ुम्बा।',
-      icon: 'ph-barbell',
-      services: [
-        { name: 'Monthly Membership', price: 799 }, { name: 'Quarterly Plan', price: 1999 }, { name: 'Personal Trainer', price: 2999 },
-        { name: 'Yoga Class', price: 499 }, { name: 'Trial Day Pass', price: 99 },
-      ],
-    },
-    tutor: {
-      hero: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
-      title: 'Home Tuition & Coaching', titleHi: 'होम ट्यूशन और कोचिंग',
-      desc: 'CBSE, ICSE, Bihar Board tutors for Classes 1-12. IIT-JEE, NEET, Spoken English coaching available.',
-      descHi: 'कक्षा 1-12 के लिए CBSE, ICSE, बिहार बोर्ड ट्यूटर।',
-      icon: 'ph-book-open',
-      services: [
-        { name: 'Class 1-5 Tuition', price: 999 }, { name: 'Class 6-10 Tuition', price: 1499 }, { name: 'Class 11-12 Science', price: 1999 },
-        { name: 'IIT-JEE Coaching', price: 3999 }, { name: 'Spoken English', price: 799 },
-      ],
-    },
-    painter: {
-      hero: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=1200&q=80',
-      title: 'Professional Painting Services', titleHi: 'प्रोफेशनल पेंटिंग सेवा',
-      desc: 'Interior & exterior painting, texture paint, waterproofing, and wall design. Quality finish guaranteed.',
-      descHi: 'इंटीरियर और एक्सटीरियर पेंटिंग।',
-      icon: 'ph-paint-roller',
-      services: [
-        { name: 'Interior Painting', price: 1999 }, { name: 'Exterior Painting', price: 2999 }, { name: 'Texture Paint', price: 3499 },
-        { name: 'POP Work', price: 1499 }, { name: 'Wallpaper Installation', price: 999 },
-      ],
+  const SEED_DATA = CATEGORIES.reduce((acc, cat) => {
+    if (cat.id === 'all') return acc;
+    acc[cat.id] = { ...cat };
+    return acc;
+  }, {});
     },
     'pest-control': {
       hero: 'https://images.unsplash.com/photo-1632142695542-42a3a9b30138?auto=format&fit=crop&w=1200&q=80',
@@ -1311,6 +1136,42 @@ export default function Admin() {
           </div>
         )}
 
+        {/* ─── Advanced Operations (Seed) ─── */}
+        {tab === 'settings' && (
+          <div className="animate-fade-in" style={{ marginTop: '2.5rem', padding: '1.5rem', background: 'var(--surface-container-highest)', borderRadius: '24px', border: '1px dashed var(--outline-variant)' }}>
+            <h4 style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--on-surface)', marginBottom: '0.5rem' }}>Danger Zone / System Init</h4>
+            <p style={{ fontSize: '0.75rem', color: 'var(--on-surface-variant)', marginBottom: '1.25rem' }}>
+              Restore high-fidelity default categories, landing pages, and service plan metadata. 
+              <br/><strong style={{color: 'var(--error)'}}>Warning: This will overwrite existing category metadata.</strong>
+            </p>
+            <button
+              id="seed-btn"
+              onClick={async () => {
+                if (!window.confirm("Seed default high-fidelity category data? This overwrites existing categories.")) return;
+                setSeeding(true);
+                try {
+                  for (const [id, data] of Object.entries(SEED_DATA)) {
+                    await updateCategory(id, { ...data, id });
+                  }
+                  toast.success("Database Seeded Successfully!");
+                } catch (e) {
+                  toast.error("Seeding failed");
+                } finally {
+                  setSeeding(false);
+                }
+              }}
+              disabled={seeding}
+              style={{
+                width: '100%', padding: '1rem', borderRadius: '16px',
+                background: 'rgba(0,0,0,0.05)', color: 'var(--on-surface)',
+                border: '1px solid var(--outline-variant)', fontWeight: 800, cursor: 'pointer'
+              }}
+            >
+              {seeding ? 'Seeding Database...' : 'Restore Default Categories & Services'}
+            </button>
+          </div>
+        )}
+
       </div>
 
       {/* Category Master Modal */}
@@ -1486,6 +1347,30 @@ function CategoryFormModal({ category, onClose, onSave }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <textarea className="input-field" style={{ minHeight: '60px' }} value={form.desc} onChange={e => setForm(p=>({...p, desc: e.target.value}))} placeholder="English description..." />
             <textarea className="input-field" style={{ minHeight: '60px' }} value={form.descHi} onChange={e => setForm(p=>({...p, descHi: e.target.value}))} placeholder="Hindi description..." />
+          </div>
+        </div>
+        
+        {/* Sub-Services / Plans Management */}
+        <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--surface-container)', borderRadius: '12px', border: '1px solid hsla(var(--p-h), 100%, 50%, 0.1)' }}>
+          <h4 style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--primary)' }}>Service Menu (Plans & Pricing)</h4>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+            <input className="input-field" style={{flex: 3}} placeholder="Service Name (e.g. Tap Repair)" value={newServiceName} onChange={e => setNewServiceName(e.target.value)} />
+            <input className="input-field" style={{flex: 1}} type="number" placeholder="Price" value={newServicePrice} onChange={e => setNewServicePrice(e.target.value)} />
+            <button onClick={handleAddService} style={{ padding: '0.75rem 1.25rem', background: 'var(--secondary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 800 }}>Add</button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {form.services?.map((s, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid var(--outline-variant)' }}>
+                <div>
+                  <p style={{ fontSize: '0.875rem', fontWeight: 700 }}>{s.name}</p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 800 }}>₹{s.price}</p>
+                </div>
+                <button onClick={() => removeService(i)} style={{ border: 'none', background: 'transparent', color: 'var(--error)', cursor: 'pointer' }}><i className="ph-fill ph-trash" /></button>
+              </div>
+            ))}
+            {(!form.services || form.services.length === 0) && (
+              <p style={{ fontSize: '0.75rem', opacity: 0.5, textAlign: 'center', padding: '1rem' }}>No service options added yet.</p>
+            )}
           </div>
         </div>
 

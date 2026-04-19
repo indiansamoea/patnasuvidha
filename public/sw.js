@@ -5,10 +5,12 @@ const ASSETS_TO_CACHE = [
   '/manifest.json',
   '/icon-192x192.png',
   '/icon-512x512.png',
-  'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Outfit:wght@100..900&display=swap',
-  'https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css',
-  'https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css',
-  'https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css'
+  '/logo.jpeg',
+  '/og-preview.png',
+  'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700;800&display=swap',
+  'https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css',
+  'https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css',
+  'https://unpkg.com/@phosphor-icons/web@2.0.3/src/bold/style.css'
 ];
 
 // Install Event: Cache essential assets
